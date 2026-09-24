@@ -61,11 +61,11 @@ export function AuthPage() {
           position: "relative",
           overflow: "hidden",
           p: 8,
-          color: "white",
+          color: "#111",
           flexDirection: "column",
           justifyContent: "space-between",
-          background:
-            "linear-gradient(145deg,#111827 0%,#172554 58%,#312e81 100%)",
+          background: "#dff4e8",
+          borderRight: "1px solid #b9d8c6",
         }}
       >
         <Brand />
@@ -75,7 +75,7 @@ export function AuthPage() {
             width: 440,
             height: 440,
             borderRadius: "50%",
-            border: "80px solid rgba(255,255,255,.04)",
+            border: "80px solid rgba(17,17,17,.06)",
             right: -180,
             top: 80,
           }}
@@ -94,7 +94,7 @@ export function AuthPage() {
           </Typography>
           <Typography
             fontSize={18}
-            sx={{ color: "#cbd5e1", mt: 3, lineHeight: 1.7 }}
+            sx={{ color: "#343430", mt: 3, lineHeight: 1.7 }}
           >
             A focused workspace for boards, assignments, discussions, and every
             detail your team needs to deliver.
@@ -111,13 +111,13 @@ export function AuthPage() {
                 spacing={1.5}
                 alignItems="center"
               >
-                <CheckCircleRounded sx={{ color: "#60a5fa" }} />
+                <CheckCircleRounded sx={{ color: "#111" }} />
                 <Typography>{item}</Typography>
               </Stack>
             ))}
           </Stack>
         </Box>
-        <Typography variant="caption" sx={{ color: "#94a3b8" }}>
+        <Typography variant="caption" sx={{ color: "#45453f", fontWeight: 700 }}>
           Built for modern, fast-moving teams.
         </Typography>
       </Box>
@@ -125,9 +125,9 @@ export function AuthPage() {
       <Box
         sx={{ display: "grid", placeItems: "center", p: { xs: 2.5, sm: 5 } }}
       >
-        <Box sx={{ width: "100%", maxWidth: 440 }}>
+          <Box sx={{ width: "100%", maxWidth: 440, borderTop: { xs: "7px solid #bcebd2", lg: 0 }, pt: { xs: 3, lg: 0 } }}>
           <Box sx={{ display: { lg: "none" }, mb: 5 }}>
-            <Brand dark />
+            <Brand />
           </Box>
           <Typography variant="h4">
             {mode === "login" ? "Welcome back" : "Create your account"}
@@ -220,23 +220,23 @@ export function AuthPage() {
   );
 }
 
-function Brand({ dark = false }: { dark?: boolean }) {
+function Brand() {
   return (
     <Stack
       direction="row"
       spacing={1.2}
       alignItems="center"
-      sx={{ color: dark ? "#111827" : "white" }}
+      sx={{ color: "#111" }}
     >
       <Box
         sx={{
           width: 38,
           height: 38,
           borderRadius: 2.5,
-          bgcolor: "#3b82f6",
+          bgcolor: "#25304f",
           display: "grid",
           placeItems: "center",
-          boxShadow: "0 8px 20px rgba(59,130,246,.3)",
+          color: "#bcebd2",
         }}
       >
         <DashboardRounded />

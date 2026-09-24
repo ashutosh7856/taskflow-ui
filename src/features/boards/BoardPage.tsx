@@ -3,6 +3,7 @@ import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import GroupAddRounded from "@mui/icons-material/GroupAddRounded";
 import HistoryRounded from "@mui/icons-material/HistoryRounded";
+import CloseRounded from "@mui/icons-material/CloseRounded";
 import {
   DndContext,
   type DragEndEvent,
@@ -16,6 +17,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {
   Box,
+  Avatar,
+  AvatarGroup,
   Alert,
   Button,
   Card,
@@ -51,9 +54,10 @@ export function BoardPage() {
   const client = useQueryClient();
   const [newListOpen, setNewListOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [activityOpen, setActivityOpen] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [notice, setNotice] = useState("");
+  const normalizedInviteEmail = inviteEmail.trim().toLowerCase();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, {
@@ -136,7 +140,12 @@ export function BoardPage() {
         <CircularProgress />
       </Box>
     );
+  if (board.isError)
+    return <Alert severity="error" sx={{ m: 4 }}>We couldn’t load this board. Check your connection and try again.</Alert>;
   if (!board.data) return <Typography p={4}>Board not found.</Typography>;
+  const memberAlreadyExists = board.data.members?.some(
+    (member) => member.user?.email?.trim().toLowerCase() === normalizedInviteEmail,
+  );
 
   return (
     <Box
@@ -145,30 +154,28 @@ export function BoardPage() {
         width: "100%",
         maxWidth: "100%",
         overflow: "hidden",
-        p: { xs: 1.5, sm: 2, lg: 3 },
-        background: "#eef0f4",
+        p: { xs: 2, sm: 3, lg: 4 },
+        background: "#f6f6f3",
       }}
     >
       <Stack
         direction="row"
         alignItems="center"
         gap={1}
-        mb={{ xs: 2, md: 3 }}
+        mb={{ xs: 3, md: 5 }}
         color="#111827"
         flexWrap="wrap"
         sx={{
-          bgcolor: "white",
-          border: "1px solid #e5e7eb",
-          borderRadius: 3,
-          p: { xs: 1, sm: 1.5 },
-          boxShadow: "0 6px 18px rgba(15,23,42,.04)",
+          borderBottom: "1px solid #c9c9c2",
+          pb: { xs: 2, sm: 2.5 },
         }}
       >
-        <IconButton onClick={() => navigate("/")} sx={{ color: "#64748b" }}>
+        <IconButton aria-label="Back to workspaces" onClick={() => navigate("/")} sx={{ color: "#4f4f49", bgcolor: "#e9e9e4", ml: -1, "&:hover": { bgcolor: "#ddddD6" } }}>
           <ArrowBackRounded />
         </IconButton>
         <Typography
-          variant="h5"
+          component="h1"
+          variant="h4"
           noWrap
           sx={{
             maxWidth: { xs: "calc(100% - 56px)", sm: "none" },
@@ -177,15 +184,6 @@ export function BoardPage() {
         >
           {board.data.name}
         </Typography>
-        <Chip
-          label={`${board.data.members?.length || 0} members`}
-          size="small"
-          sx={{
-            bgcolor: "#f1f5f9",
-            color: "#475569",
-            display: { xs: "none", sm: "inline-flex" },
-          }}
-        />
         <Box
           sx={{
             flexGrow: 1,
@@ -193,11 +191,13 @@ export function BoardPage() {
             height: { xs: 0, sm: "auto" },
           }}
         />
-        <Tooltip title="Activity">
+        <AvatarGroup max={3} total={board.data.members?.length || 0} sx={{ mr: .5, "& .MuiAvatar-root": { width: 32, height: 32, fontSize: 13, bgcolor: "#e2e2dc", color: "#282825", borderColor: "#f6f6f3", fontWeight: 800 } }}>
+          {board.data.members?.slice(0, 2).map((member) => <Avatar key={member.userId} alt={member.user?.name || "Member"}>{member.user?.name?.[0]?.toUpperCase() || "?"}</Avatar>)}
+        </AvatarGroup>
+        <Tooltip title={activityOpen ? "Hide activity" : "Show activity"}>
           <IconButton
-            onClick={() => setActivityOpen(true)}
+            onClick={() => setActivityOpen((value) => !value)}
             sx={{
-              display: { xs: "inline-flex", sm: "none" },
               color: "#475569",
             }}
           >
@@ -208,54 +208,29 @@ export function BoardPage() {
           <IconButton
             onClick={() => setInviteOpen(true)}
             sx={{
-              display: { xs: "inline-flex", sm: "none" },
+              display: { xs: "inline-flex", md: "none" },
               color: "#475569",
             }}
           >
             <GroupAddRounded />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Add list">
-          <IconButton
-            onClick={() => setNewListOpen(true)}
-            sx={{
-              display: { xs: "inline-flex", sm: "none" },
-              color: "#475569",
-            }}
-          >
-            <AddRounded />
-          </IconButton>
-        </Tooltip>
-        <Button
-          color="inherit"
-          startIcon={<HistoryRounded />}
-          onClick={() => setActivityOpen(true)}
-          sx={{ display: { xs: "none", sm: "inline-flex" }, color: "#475569" }}
-        >
-          Activity
-        </Button>
         <Button
           color="inherit"
           startIcon={<GroupAddRounded />}
           onClick={() => setInviteOpen(true)}
-          sx={{ display: { xs: "none", sm: "inline-flex" }, color: "#475569" }}
+          sx={{ display: { xs: "none", md: "inline-flex" }, color: "#343430" }}
         >
           Invite
         </Button>
-        <Button
-          variant="contained"
-          startIcon={<AddRounded />}
-          onClick={() => setNewListOpen(true)}
-          sx={{ display: { xs: "none", sm: "inline-flex" } }}
-        >
-          Add list
-        </Button>
       </Stack>
+      <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
+      <Box sx={{ minWidth: 0, flex: 1 }}>
       <DndContext sensors={sensors} onDragEnd={dragEnd}>
         <Stack
           direction="row"
           alignItems="flex-start"
-          spacing={2}
+            spacing={2.5}
           sx={{
             overflowX: "auto",
             width: "100%",
@@ -275,18 +250,25 @@ export function BoardPage() {
             startIcon={<AddRounded />}
             sx={{
               minWidth: { xs: "86vw", sm: 280 },
-              bgcolor: "white",
-              color: "#475569",
-              border: "1px dashed #cbd5e1",
+              bgcolor: "transparent",
+              color: "#343430",
+              border: "1px dashed #8a8a82",
               p: 2,
               justifyContent: "flex-start",
-              "&:hover": { bgcolor: "#f8fafc", borderColor: "#94a3b8" },
+              "&:hover": { bgcolor: "#fff", borderColor: "#111" },
             }}
           >
             Add another list
           </Button>
         </Stack>
       </DndContext>
+      </Box>
+      {activityOpen && <Box component="aside" aria-label="Board activity" sx={{ position: { xs: "fixed", lg: "static" }, inset: { xs: "64px 0 0 auto", lg: "auto" }, zIndex: { xs: 1250, lg: "auto" }, width: { xs: "min(88vw, 360px)", lg: 320 }, flex: "0 0 320px", bgcolor: "#fff", border: "1px solid #d7d7d0", borderRadius: { xs: 0, lg: 2 }, p: 2.5, maxHeight: { xs: "calc(100vh - 64px)", lg: "calc(100vh - 190px)" }, boxShadow: { xs: "-16px 0 40px rgba(0,0,0,.18)", lg: "none" }, overflowY: "auto" }}>
+        <Stack direction="row" alignItems="center" mb={2}><Typography fontWeight={800} sx={{ flex: 1 }}>Activity</Typography><IconButton size="small" aria-label="Close activity" onClick={() => setActivityOpen(false)}><CloseRounded fontSize="small" /></IconButton></Stack>
+        {activity.isLoading && <CircularProgress size={24} />}
+        <Stack spacing={2}>{activity.data?.map((entry) => <Box key={entry.id}><Typography variant="body2"><strong>{entry.user?.name || "A member"}</strong> {activityMessage(entry.action)}</Typography><Typography variant="caption" color="text.secondary">{new Date(entry.createdAt).toLocaleString()}</Typography></Box>)}{!activity.isLoading && !activity.data?.length && <Typography variant="body2" color="text.secondary">No activity yet.</Typography>}</Stack>
+      </Box>}
+      </Box>
       <CreateDialog
         open={newListOpen}
         title="Add list"
@@ -310,53 +292,19 @@ export function BoardPage() {
             type="email"
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
+            error={!!memberAlreadyExists}
+            helperText={memberAlreadyExists ? "This person is already a board member." : "Enter the teammate’s email address."}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setInviteOpen(false)}>Cancel</Button>
           <Button
             variant="contained"
-            disabled={!inviteEmail || invite.isPending}
+            disabled={!normalizedInviteEmail || !!memberAlreadyExists || invite.isPending}
             onClick={() => invite.mutate()}
           >
             Create invite
           </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
-        open={activityOpen}
-        onClose={() => setActivityOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Board activity</DialogTitle>
-        <DialogContent dividers>
-          {activity.isLoading && (
-            <Box sx={{ display: "grid", placeItems: "center", py: 5 }}>
-              <CircularProgress />
-            </Box>
-          )}
-          <Stack spacing={2}>
-            {activity.data?.map((entry) => (
-              <Box key={entry.id}>
-                <Typography>
-                  <strong>{entry.user?.name || "A member"}</strong>{" "}
-                  {activityMessage(entry.action)}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {new Date(entry.createdAt).toLocaleString()}
-                </Typography>
-              </Box>
-            ))}
-            {!activity.isLoading && !activity.data?.length && (
-              <Typography color="text.secondary">
-                No activity has been recorded yet.
-              </Typography>
-            )}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setActivityOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
       <CardDrawer board={board.data} />
@@ -417,23 +365,24 @@ function BoardList({ list, boardId }: { list: List; boardId: string }) {
     <Box
       ref={setNodeRef}
       sx={{
-        bgcolor: isOver ? "#eff6ff" : "#ffffff",
+        bgcolor: isOver ? "#fff5ad" : "transparent",
         width: { xs: "86vw", sm: 300 },
         minWidth: { xs: "86vw", sm: 300 },
         maxWidth: 340,
         scrollSnapAlign: "start",
-        borderRadius: 3,
-        border: "1px solid #dde2ea",
-        boxShadow: "0 6px 18px rgba(15,23,42,.045)",
-        p: 1.5,
+        borderRadius: 2,
+        border: isOver ? "2px solid #111" : "1px solid transparent",
+        boxShadow: "none",
+        p: 1,
         transition: ".15s",
       }}
     >
-      <Stack direction="row" alignItems="center" px={1} mb={1}>
+      <Stack direction="row" alignItems="center" px={1} mb={1.5} sx={{ borderBottom: "2px solid #111", pb: 1.25 }}>
         <Typography fontWeight={750}>{list.name}</Typography>
-        <Chip label={list.cards.length} size="small" sx={{ ml: 1 }} />
+        <Typography variant="caption" color="text.secondary" fontWeight={800} sx={{ ml: 1.25 }}>{list.cards.length}</Typography>
         <Box sx={{ flex: 1 }} />
         <IconButton
+          aria-label={`Delete ${list.name} list`}
           size="small"
           onClick={() => {
             if (confirm(`Delete ${list.name}?`)) remove.mutate();
@@ -442,7 +391,7 @@ function BoardList({ list, boardId }: { list: List; boardId: string }) {
           <DeleteOutlineRounded fontSize="small" />
         </IconButton>
       </Stack>
-      <Stack spacing={1}>
+      <Stack spacing={1.25}>
         {list.cards.map((card) => (
           <TaskCard key={card.id} card={card} listId={list.id} />
         ))}
@@ -450,7 +399,7 @@ function BoardList({ list, boardId }: { list: List; boardId: string }) {
       <Button
         fullWidth
         startIcon={<AddRounded />}
-        sx={{ mt: 1, justifyContent: "flex-start" }}
+        sx={{ mt: 1.25, justifyContent: "flex-start", color: "#565650" }}
         onClick={() => setNewCard(true)}
       >
         Add a card
@@ -481,14 +430,14 @@ function TaskCard({ card, listId }: { card: CardType; listId: string }) {
       }}
       sx={{
         borderRadius: 2,
-        boxShadow: "0 2px 7px rgba(15,23,42,.07)",
-        transition: "box-shadow .18s, transform .18s",
-        "&:hover": { boxShadow: "0 7px 18px rgba(15,23,42,.11)" },
+        boxShadow: "none",
+        transition: "border-color .15s, transform .15s",
+        "&:hover": { borderColor: "#111", transform: "translateY(-2px)", boxShadow: "0 8px 20px rgba(0,0,0,.08)" },
       }}
       {...listeners}
       {...attributes}
     >
-      <CardActionArea onClick={() => select(card.id)}>
+      <CardActionArea aria-label={`Open card: ${card.title}`} onClick={() => select(card.id)}>
         <CardContent sx={{ p: "12px !important" }}>
           <Stack
             direction="row"
@@ -501,12 +450,17 @@ function TaskCard({ card, listId }: { card: CardType; listId: string }) {
                 key={label.id}
                 title={label.name}
                 sx={{
-                  width: 36,
-                  height: 6,
-                  borderRadius: 4,
+                  minHeight: 22,
+                  px: .9,
+                  display: "flex",
+                  alignItems: "center",
+                  color: "white",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  borderRadius: 1,
                   bgcolor: label.color,
                 }}
-              />
+              >{label.name}</Box>
             ))}
           </Stack>
           <Typography fontWeight={600}>{card.title}</Typography>

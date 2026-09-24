@@ -14,7 +14,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Drawer,
   FormControlLabel,
   IconButton,
   LinearProgress,
@@ -49,6 +48,7 @@ export function CardDrawer({ board }: { board: Board }) {
   const [labelDialogOpen, setLabelDialogOpen] = useState(false);
   const [labelName, setLabelName] = useState("");
   const [labelColor, setLabelColor] = useState(labelColors[5]);
+  const [activeEmptyChecklist, setActiveEmptyChecklist] = useState<string | null>(null);
   const card = useQuery({
     queryKey: ["card", cardId],
     enabled: !!cardId,
@@ -76,9 +76,12 @@ export function CardDrawer({ board }: { board: Board }) {
     },
   });
   const addChecklist = useMutation({
-    mutationFn: () =>
-      api.post(`/cards/${cardId}/checklists`, { title: "Checklist" }),
-    onSuccess: refresh,
+    mutationFn: async () =>
+      (await api.post<Checklist>(`/cards/${cardId}/checklists`, { title: "Checklist" })).data,
+    onSuccess: (checklist) => {
+      setActiveEmptyChecklist(checklist.id);
+      refresh();
+    },
   });
   const addMember = useMutation({
     mutationFn: (userId: string) =>
@@ -116,33 +119,30 @@ export function CardDrawer({ board }: { board: Board }) {
   });
 
   return (
-    <Drawer
-      anchor="right"
+    <Dialog
       open={!!cardId}
       onClose={() => close(null)}
-      PaperProps={{
-        sx: {
-          width: { xs: "100%", sm: 560 },
-          p: { xs: 2, sm: 3 },
-          pb: { xs: 10, sm: 3 },
-        },
-      }}
+      fullWidth
+      fullScreen={false}
+      maxWidth="md"
+      PaperProps={{ sx: { minHeight: { sm: "72vh" }, maxHeight: { xs: "100%", sm: "88vh" }, borderRadius: { xs: 0, sm: 3 }, boxShadow: "0 24px 80px rgba(0,0,0,.28)" } }}
     >
-      <Stack direction="row" alignItems="center" mb={2}>
+      <Stack direction="row" alignItems="center" sx={{ px: { xs: 2, sm: 4 }, py: 2.5, borderBottom: "1px solid #deded8", position: "sticky", top: 0, bgcolor: "#fff", zIndex: 2 }}>
         <Typography variant="h5" sx={{ flex: 1 }}>
           {card.data?.title || "Card"}
         </Typography>
-        <IconButton onClick={() => close(null)}>
+        <IconButton aria-label="Close card details" onClick={() => close(null)}>
           <CloseRounded />
         </IconButton>
       </Stack>
+      <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
       {card.isLoading ? (
         <Box sx={{ display: "grid", placeItems: "center", py: 8 }}>
           <CircularProgress />
         </Box>
       ) : (
         card.data && (
-          <Stack spacing={3}>
+          <Stack spacing={4}>
             <Stack direction="row" gap={1} flexWrap="wrap">
               {card.data.members?.map(({ user }) => (
                 <Chip
@@ -197,18 +197,14 @@ export function CardDrawer({ board }: { board: Board }) {
                 value=""
                 onChange={(e) => addLabel.mutate(e.target.value)}
               >
-                {board.labels
-                  ?.filter(
-                    (label) =>
-                      !card.data?.labels?.some(
-                        (entry) => entry.labelId === label.id,
-                      ),
-                  )
-                  .map((label) => (
-                    <MenuItem key={label.id} value={label.id}>
-                      {label.name}
+                {board.labels?.map((label) => {
+                    const applied = card.data?.labels?.some((entry) => entry.labelId === label.id);
+                    return <MenuItem key={label.id} value={label.id} disabled={applied}>
+                      <Box component="span" sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: label.color, mr: 1 }} />
+                      {label.name}{applied ? " (applied)" : ""}
                     </MenuItem>
-                  ))}
+                  })}
+                {!board.labels?.length && <MenuItem disabled>No labels yet — create one</MenuItem>}
               </TextField>
               <TextField
                 type="date"
@@ -255,7 +251,7 @@ export function CardDrawer({ board }: { board: Board }) {
                   Add
                 </Button>
               </Stack>
-              {card.data.checklists?.map((checklist) => (
+              {card.data.checklists?.filter((checklist) => checklist.items.length > 0 || checklist.id === activeEmptyChecklist).map((checklist) => (
                 <ChecklistView
                   key={checklist.id}
                   checklist={checklist}
@@ -315,6 +311,7 @@ export function CardDrawer({ board }: { board: Board }) {
           </Stack>
         )
       )}
+      </DialogContent>
       <Dialog
         open={labelDialogOpen}
         onClose={() => setLabelDialogOpen(false)}
@@ -380,7 +377,7 @@ export function CardDrawer({ board }: { board: Board }) {
           </Button>
         </DialogActions>
       </Dialog>
-    </Drawer>
+    </Dialog>
   );
 }
 
@@ -413,7 +410,7 @@ function ChecklistView({
     },
   });
   return (
-    <Box sx={{ mb: 2, bgcolor: "#f8fafc", borderRadius: 2, p: 2 }}>
+    <Box sx={{ mb: 2, bgcolor: "#f4f4f0", border: "1px solid #d7d7d0", borderRadius: 1.5, p: 2 }}>
       <Typography fontWeight={650}>{checklist.title}</Typography>
       <Stack direction="row" alignItems="center" gap={1} my={1}>
         <LinearProgress
