@@ -9,6 +9,8 @@ import { AuthPage } from "./features/auth/AuthPage";
 import { BoardPage } from "./features/boards/BoardPage";
 import { InvitePage } from "./features/invites/InvitePage";
 import { DashboardPage } from "./features/workspaces/DashboardPage";
+import { BillingPage } from "./features/billing/BillingPage";
+import { LegalPage } from "./features/legal/LegalPage";
 import { useAuthStore } from "./store/auth";
 
 function ProtectedRoute() {
@@ -19,6 +21,8 @@ function ProtectedRoute() {
 const router = createBrowserRouter([
   { path: "/login", element: <AuthPage /> },
   { path: "/invites/:token", element: <InvitePage /> },
+  { path: "/privacy", element: <LegalPage /> },
+  { path: "/terms", element: <LegalPage /> },
   {
     element: <ProtectedRoute />,
     children: [
@@ -27,6 +31,7 @@ const router = createBrowserRouter([
         children: [
           { path: "/", element: <DashboardPage /> },
           { path: "/boards/:boardId", element: <BoardPage /> },
+          { path: "/billing", element: <BillingPage /> },
         ],
       },
     ],

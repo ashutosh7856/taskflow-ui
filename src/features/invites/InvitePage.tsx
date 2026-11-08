@@ -12,6 +12,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { api, errorMessage } from "../../lib/api";
 import { useAuthStore } from "../../store/auth";
+import { Brand } from "../../components/Brand";
 
 export function InvitePage() {
   const { token = "" } = useParams();
@@ -24,11 +25,50 @@ export function InvitePage() {
 
   return (
     <Box
-      sx={{ minHeight: "100vh", display: "grid", placeItems: "center", p: 2 }}
+      sx={{
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        p: 2,
+        bgcolor: "#181817",
+        position: "relative",
+        overflow: "hidden",
+      }}
     >
-      <Card sx={{ width: "100%", maxWidth: 460, p: 5, textAlign: "center" }}>
+      <Box
+        sx={{
+          position: "absolute",
+          width: 520,
+          height: 520,
+          borderRadius: "50%",
+          border: "1px solid rgba(216,255,99,.4)",
+          top: -260,
+          right: -120,
+        }}
+      />
+      <Card
+        sx={{
+          width: "100%",
+          maxWidth: 480,
+          p: { xs: 3, sm: 5 },
+          textAlign: "center",
+          borderRadius: 3,
+          bgcolor: "#fffef9",
+          boxShadow: "8px 8px 0 #ff5c35",
+        }}
+      >
         <Stack spacing={2} alignItems="center">
-          <Typography variant="h4">TaskFlow invitation</Typography>
+          <Brand />
+          <Typography
+            className="mono-label"
+            color="text.secondary"
+            sx={{ pt: 2 }}
+          >
+            A seat is waiting
+          </Typography>
+          <Typography variant="h4" sx={{ fontSize: 36 }}>
+            Join the work.
+          </Typography>
           <Typography color="text.secondary">
             Accept this invitation to join your team in TaskFlow.
           </Typography>

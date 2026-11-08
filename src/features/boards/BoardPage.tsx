@@ -4,6 +4,12 @@ import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import GroupAddRounded from "@mui/icons-material/GroupAddRounded";
 import HistoryRounded from "@mui/icons-material/HistoryRounded";
 import CloseRounded from "@mui/icons-material/CloseRounded";
+import AutoAwesomeRounded from "@mui/icons-material/AutoAwesomeRounded";
+import SearchRounded from "@mui/icons-material/SearchRounded";
+import InsightsRounded from "@mui/icons-material/InsightsRounded";
+import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
+import RadioButtonUncheckedRounded from "@mui/icons-material/RadioButtonUncheckedRounded";
+import EventRounded from "@mui/icons-material/EventRounded";
 import {
   DndContext,
   type DragEndEvent,
@@ -41,10 +47,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { CreateDialog } from "../../components/CreateDialog";
+import {
+  CreateCardDialog,
+  type NewCardInput,
+} from "../../components/CreateCardDialog";
 import { api } from "../../lib/api";
+import { categoryLabel } from "../../lib/workflows";
 import { useUiStore } from "../../store/ui";
 import type { Activity, Board, Card as CardType, List } from "../../types";
 import { CardDrawer } from "../cards/CardDrawer";
+import { AiPlannerDialog } from "../../components/AiPlannerDialog";
 
 export function BoardPage() {
   const { boardId = "" } = useParams();
@@ -57,6 +69,11 @@ export function BoardPage() {
   const [activityOpen, setActivityOpen] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [notice, setNotice] = useState("");
+  const [aiOpen, setAiOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [priority, setPriority] = useState<"all" | "high" | "urgent">("all");
+  const [status, setStatus] = useState<"all" | "active" | "completed">("all");
+  const [insightsOpen, setInsightsOpen] = useState(false);
   const normalizedInviteEmail = inviteEmail.trim().toLowerCase();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -141,10 +158,15 @@ export function BoardPage() {
       </Box>
     );
   if (board.isError)
-    return <Alert severity="error" sx={{ m: 4 }}>We couldn’t load this board. Check your connection and try again.</Alert>;
+    return (
+      <Alert severity="error" sx={{ m: 4 }}>
+        We couldn’t load this board. Check your connection and try again.
+      </Alert>
+    );
   if (!board.data) return <Typography p={4}>Board not found.</Typography>;
   const memberAlreadyExists = board.data.members?.some(
-    (member) => member.user?.email?.trim().toLowerCase() === normalizedInviteEmail,
+    (member) =>
+      member.user?.email?.trim().toLowerCase() === normalizedInviteEmail,
   );
 
   return (
@@ -155,22 +177,32 @@ export function BoardPage() {
         maxWidth: "100%",
         overflow: "hidden",
         p: { xs: 2, sm: 3, lg: 4 },
-        background: "#f6f6f3",
+        background: "#f2f0e9",
       }}
     >
       <Stack
         direction="row"
         alignItems="center"
         gap={1}
-        mb={{ xs: 3, md: 5 }}
-        color="#111827"
+        mb={{ xs: 3, md: 4 }}
+        color="#181817"
         flexWrap="wrap"
         sx={{
-          borderBottom: "1px solid #c9c9c2",
+          borderBottom: "1px solid #aaa59a",
           pb: { xs: 2, sm: 2.5 },
         }}
       >
-        <IconButton aria-label="Back to workspaces" onClick={() => navigate("/")} sx={{ color: "#4f4f49", bgcolor: "#e9e9e4", ml: -1, "&:hover": { bgcolor: "#ddddD6" } }}>
+        <IconButton
+          aria-label="Back to workspaces"
+          onClick={() => navigate("/")}
+          sx={{
+            color: "#181817",
+            bgcolor: "#d8ff63",
+            ml: -1,
+            border: "1px solid #181817",
+            "&:hover": { bgcolor: "#e5ff94" },
+          }}
+        >
           <ArrowBackRounded />
         </IconButton>
         <Typography
@@ -180,6 +212,8 @@ export function BoardPage() {
           sx={{
             maxWidth: { xs: "calc(100% - 56px)", sm: "none" },
             minWidth: 0,
+            fontSize: { xs: 28, md: 38 },
+            ml: 1,
           }}
         >
           {board.data.name}
@@ -191,8 +225,27 @@ export function BoardPage() {
             height: { xs: 0, sm: "auto" },
           }}
         />
-        <AvatarGroup max={3} total={board.data.members?.length || 0} sx={{ mr: .5, "& .MuiAvatar-root": { width: 32, height: 32, fontSize: 13, bgcolor: "#e2e2dc", color: "#282825", borderColor: "#f6f6f3", fontWeight: 800 } }}>
-          {board.data.members?.slice(0, 2).map((member) => <Avatar key={member.userId} alt={member.user?.name || "Member"}>{member.user?.name?.[0]?.toUpperCase() || "?"}</Avatar>)}
+        <AvatarGroup
+          max={3}
+          total={board.data.members?.length || 0}
+          sx={{
+            mr: 0.5,
+            "& .MuiAvatar-root": {
+              width: 32,
+              height: 32,
+              fontSize: 13,
+              bgcolor: "#181817",
+              color: "#d8ff63",
+              borderColor: "#f2f0e9",
+              fontWeight: 800,
+            },
+          }}
+        >
+          {board.data.members?.slice(0, 2).map((member) => (
+            <Avatar key={member.userId} alt={member.user?.name || "Member"}>
+              {member.user?.name?.[0]?.toUpperCase() || "?"}
+            </Avatar>
+          ))}
         </AvatarGroup>
         <Tooltip title={activityOpen ? "Hide activity" : "Show activity"}>
           <IconButton
@@ -216,6 +269,19 @@ export function BoardPage() {
           </IconButton>
         </Tooltip>
         <Button
+          variant="contained"
+          startIcon={<AutoAwesomeRounded />}
+          onClick={() => setAiOpen(true)}
+          sx={{
+            bgcolor: "#d8ff63",
+            color: "#181817",
+            boxShadow: "none",
+            "&:hover": { bgcolor: "#e5ff94", boxShadow: "none" },
+          }}
+        >
+          AI assist
+        </Button>
+        <Button
           color="inherit"
           startIcon={<GroupAddRounded />}
           onClick={() => setInviteOpen(true)}
@@ -225,49 +291,183 @@ export function BoardPage() {
         </Button>
       </Stack>
       <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
-      <Box sx={{ minWidth: 0, flex: 1 }}>
-      <DndContext sensors={sensors} onDragEnd={dragEnd}>
-        <Stack
-          direction="row"
-          alignItems="flex-start"
-            spacing={2.5}
-          sx={{
-            overflowX: "auto",
-            width: "100%",
-            maxWidth: "100%",
-            pb: 3,
-            mx: { xs: -1.5, sm: 0 },
-            px: { xs: 1.5, sm: 0 },
-            scrollSnapType: { xs: "x proximity", sm: "none" },
-            WebkitOverflowScrolling: "touch",
-          }}
-        >
-          {board.data.lists?.map((list) => (
-            <BoardList key={list.id} list={list} boardId={boardId} />
-          ))}
-          <Button
-            onClick={() => setNewListOpen(true)}
-            startIcon={<AddRounded />}
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            gap={1.25}
+            mb={2.5}
+            alignItems={{ sm: "center" }}
+          >
+            <TextField
+              size="small"
+              placeholder="Search cards, labels or descriptions"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <SearchRounded sx={{ mr: 1, color: "#77736b" }} />
+                  ),
+                },
+              }}
+              sx={{ width: { xs: "100%", sm: 360 } }}
+            />
+            <Stack direction="row" gap={0.75}>
+              {(["all", "high", "urgent"] as const).map((value) => (
+                <Chip
+                  key={value}
+                  label={value === "all" ? "All priorities" : value}
+                  onClick={() => setPriority(value)}
+                  sx={{
+                    bgcolor: priority === value ? "#181817" : "#e8e5dc",
+                    color: priority === value ? "#fff" : "#4b4842",
+                    textTransform: "capitalize",
+                  }}
+                />
+              ))}
+            </Stack>
+            <Stack direction="row" gap={0.75}>
+              {(["all", "active", "completed"] as const).map((value) => (
+                <Chip
+                  key={value}
+                  label={value === "all" ? "Any status" : value}
+                  onClick={() => setStatus(value)}
+                  sx={{
+                    bgcolor: status === value ? "#356000" : "transparent",
+                    color: status === value ? "#fff" : "#4b4842",
+                    border: "1px solid #aaa59a",
+                    textTransform: "capitalize",
+                  }}
+                />
+              ))}
+            </Stack>
+            <Box sx={{ flex: 1 }} />
+            <Button
+              startIcon={<InsightsRounded />}
+              onClick={() => setInsightsOpen(true)}
+            >
+              Insights
+            </Button>
+          </Stack>
+          <DndContext sensors={sensors} onDragEnd={dragEnd}>
+            <Stack
+              direction="row"
+              className="board-scroll"
+              alignItems="flex-start"
+              spacing={2}
+              sx={{
+                overflowX: "auto",
+                width: "100%",
+                maxWidth: "100%",
+                pb: 3,
+                mx: { xs: -1.5, sm: 0 },
+                px: { xs: 1.5, sm: 0 },
+                scrollSnapType: { xs: "x proximity", sm: "none" },
+                WebkitOverflowScrolling: "touch",
+              }}
+            >
+              {board.data.lists?.map((list) => (
+                <BoardList
+                  key={list.id}
+                  list={list}
+                  boardId={boardId}
+                  search={search}
+                  priority={priority}
+                  status={status}
+                  board={board.data}
+                />
+              ))}
+              <Button
+                onClick={() => setNewListOpen(true)}
+                startIcon={<AddRounded />}
+                sx={{
+                  minWidth: { xs: "86vw", sm: 280 },
+                  bgcolor: "rgba(255,254,249,.55)",
+                  color: "#3e3b36",
+                  border: "1px dashed #807c73",
+                  borderRadius: 3,
+                  p: 2,
+                  justifyContent: "flex-start",
+                  "&:hover": { bgcolor: "#fff", borderColor: "#111" },
+                }}
+              >
+                Add another list
+              </Button>
+            </Stack>
+          </DndContext>
+        </Box>
+        {activityOpen && (
+          <Box
+            component="aside"
+            aria-label="Board activity"
             sx={{
-              minWidth: { xs: "86vw", sm: 280 },
-              bgcolor: "transparent",
-              color: "#343430",
-              border: "1px dashed #8a8a82",
-              p: 2,
-              justifyContent: "flex-start",
-              "&:hover": { bgcolor: "#fff", borderColor: "#111" },
+              position: { xs: "fixed", lg: "static" },
+              inset: { xs: "68px 0 0 auto", lg: "auto" },
+              zIndex: { xs: 1250, lg: "auto" },
+              width: { xs: "min(88vw, 360px)", lg: 320 },
+              flex: "0 0 320px",
+              bgcolor: "#181817",
+              color: "#fff",
+              border: "1px solid #181817",
+              borderRadius: { xs: 0, lg: 3 },
+              p: 2.5,
+              maxHeight: {
+                xs: "calc(100vh - 68px)",
+                lg: "calc(100vh - 190px)",
+              },
+              boxShadow: {
+                xs: "-16px 0 40px rgba(0,0,0,.18)",
+                lg: "5px 5px 0 #ff5c35",
+              },
+              overflowY: "auto",
             }}
           >
-            Add another list
-          </Button>
-        </Stack>
-      </DndContext>
-      </Box>
-      {activityOpen && <Box component="aside" aria-label="Board activity" sx={{ position: { xs: "fixed", lg: "static" }, inset: { xs: "64px 0 0 auto", lg: "auto" }, zIndex: { xs: 1250, lg: "auto" }, width: { xs: "min(88vw, 360px)", lg: 320 }, flex: "0 0 320px", bgcolor: "#fff", border: "1px solid #d7d7d0", borderRadius: { xs: 0, lg: 2 }, p: 2.5, maxHeight: { xs: "calc(100vh - 64px)", lg: "calc(100vh - 190px)" }, boxShadow: { xs: "-16px 0 40px rgba(0,0,0,.18)", lg: "none" }, overflowY: "auto" }}>
-        <Stack direction="row" alignItems="center" mb={2}><Typography fontWeight={800} sx={{ flex: 1 }}>Activity</Typography><IconButton size="small" aria-label="Close activity" onClick={() => setActivityOpen(false)}><CloseRounded fontSize="small" /></IconButton></Stack>
-        {activity.isLoading && <CircularProgress size={24} />}
-        <Stack spacing={2}>{activity.data?.map((entry) => <Box key={entry.id}><Typography variant="body2"><strong>{entry.user?.name || "A member"}</strong> {activityMessage(entry.action)}</Typography><Typography variant="caption" color="text.secondary">{new Date(entry.createdAt).toLocaleString()}</Typography></Box>)}{!activity.isLoading && !activity.data?.length && <Typography variant="body2" color="text.secondary">No activity yet.</Typography>}</Stack>
-      </Box>}
+            <Stack direction="row" alignItems="center" mb={2}>
+              <Box
+                sx={{
+                  width: 9,
+                  height: 9,
+                  borderRadius: "50%",
+                  bgcolor: "#d8ff63",
+                  mr: 1.5,
+                }}
+              />
+              <Typography fontWeight={800} sx={{ flex: 1 }}>
+                Live activity
+              </Typography>
+              <IconButton
+                size="small"
+                aria-label="Close activity"
+                onClick={() => setActivityOpen(false)}
+                sx={{ color: "#fff" }}
+              >
+                <CloseRounded fontSize="small" />
+              </IconButton>
+            </Stack>
+            {activity.isLoading && <CircularProgress size={24} />}
+            <Stack spacing={2}>
+              {activity.data?.map((entry) => (
+                <Box
+                  key={entry.id}
+                  sx={{ pl: 2, borderLeft: "1px solid #4b4a47" }}
+                >
+                  <Typography variant="body2">
+                    <strong>{entry.user?.name || "A member"}</strong>{" "}
+                    {activityMessage(entry.action)}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: "#918f88" }}>
+                    {new Date(entry.createdAt).toLocaleString()}
+                  </Typography>
+                </Box>
+              ))}
+              {!activity.isLoading && !activity.data?.length && (
+                <Typography variant="body2" sx={{ color: "#918f88" }}>
+                  No activity yet.
+                </Typography>
+              )}
+            </Stack>
+          </Box>
+        )}
       </Box>
       <CreateDialog
         open={newListOpen}
@@ -293,14 +493,22 @@ export function BoardPage() {
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
             error={!!memberAlreadyExists}
-            helperText={memberAlreadyExists ? "This person is already a board member." : "Enter the teammate’s email address."}
+            helperText={
+              memberAlreadyExists
+                ? "This person is already a board member."
+                : "Enter the teammate’s email address."
+            }
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setInviteOpen(false)}>Cancel</Button>
           <Button
             variant="contained"
-            disabled={!normalizedInviteEmail || !!memberAlreadyExists || invite.isPending}
+            disabled={
+              !normalizedInviteEmail ||
+              !!memberAlreadyExists ||
+              invite.isPending
+            }
             onClick={() => invite.mutate()}
           >
             Create invite
@@ -308,6 +516,16 @@ export function BoardPage() {
         </DialogActions>
       </Dialog>
       <CardDrawer board={board.data} />
+      <AiPlannerDialog
+        open={aiOpen}
+        boardId={boardId}
+        onClose={() => setAiOpen(false)}
+      />
+      <BoardInsightsDialog
+        open={insightsOpen}
+        onClose={() => setInsightsOpen(false)}
+        board={board.data}
+      />
       <Snackbar
         open={!!notice}
         autoHideDuration={5000}
@@ -340,7 +558,21 @@ function activityMessage(action: string) {
   return messages[action] || action.replaceAll(".", " ");
 }
 
-function BoardList({ list, boardId }: { list: List; boardId: string }) {
+function BoardList({
+  list,
+  boardId,
+  search,
+  priority,
+  status,
+  board,
+}: {
+  list: List;
+  boardId: string;
+  search: string;
+  priority: "all" | "high" | "urgent";
+  status: "all" | "active" | "completed";
+  board: Board;
+}) {
   const [newCard, setNewCard] = useState(false);
   const client = useQueryClient();
   const { setNodeRef, isOver } = useDroppable({
@@ -350,8 +582,8 @@ function BoardList({ list, boardId }: { list: List; boardId: string }) {
   const invalidate = () =>
     client.invalidateQueries({ queryKey: ["board", boardId] });
   const create = useMutation({
-    mutationFn: (title: string) =>
-      api.post(`/lists/${list.id}/cards`, { title }),
+    mutationFn: (input: NewCardInput) =>
+      api.post(`/lists/${list.id}/cards`, input),
     onSuccess: () => {
       invalidate();
       setNewCard(false);
@@ -361,25 +593,62 @@ function BoardList({ list, boardId }: { list: List; boardId: string }) {
     mutationFn: () => api.delete(`/lists/${list.id}`),
     onSuccess: invalidate,
   });
+  const term = search.trim().toLowerCase();
+  const visibleCards = list.cards.filter((card) => {
+    const matchesText =
+      !term ||
+      card.title.toLowerCase().includes(term) ||
+      card.description?.toLowerCase().includes(term) ||
+      card.labels?.some(({ label }) => label.name.toLowerCase().includes(term));
+    const matchesStatus =
+      status === "all" ||
+      (status === "completed" ? card.isCompleted : !card.isCompleted);
+    return (
+      matchesText &&
+      matchesStatus &&
+      (priority === "all" || card.priority === priority)
+    );
+  });
   return (
     <Box
       ref={setNodeRef}
       sx={{
-        bgcolor: isOver ? "#fff5ad" : "transparent",
+        bgcolor: isOver ? "#e9f7b9" : "#e8e5dc",
         width: { xs: "86vw", sm: 300 },
         minWidth: { xs: "86vw", sm: 300 },
         maxWidth: 340,
         scrollSnapAlign: "start",
-        borderRadius: 2,
-        border: isOver ? "2px solid #111" : "1px solid transparent",
-        boxShadow: "none",
-        p: 1,
+        borderRadius: 3,
+        border: isOver ? "2px solid #181817" : "1px solid #d4d0c5",
+        boxShadow: isOver ? "5px 5px 0 #181817" : "none",
+        p: 1.25,
         transition: ".15s",
       }}
     >
-      <Stack direction="row" alignItems="center" px={1} mb={1.5} sx={{ borderBottom: "2px solid #111", pb: 1.25 }}>
-        <Typography fontWeight={750}>{list.name}</Typography>
-        <Typography variant="caption" color="text.secondary" fontWeight={800} sx={{ ml: 1.25 }}>{list.cards.length}</Typography>
+      <Stack
+        direction="row"
+        alignItems="center"
+        px={1}
+        mb={1.5}
+        sx={{ borderBottom: "1px solid #aaa59a", pb: 1.25 }}
+      >
+        <Box
+          sx={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            bgcolor: "#ff5c35",
+            mr: 1,
+          }}
+        />
+        <Typography fontWeight={800}>{list.name}</Typography>
+        <Typography
+          className="mono-label"
+          color="text.secondary"
+          sx={{ ml: 1.25 }}
+        >
+          {String(list.cards.length).padStart(2, "0")}
+        </Typography>
         <Box sx={{ flex: 1 }} />
         <IconButton
           aria-label={`Delete ${list.name} list`}
@@ -392,8 +661,14 @@ function BoardList({ list, boardId }: { list: List; boardId: string }) {
         </IconButton>
       </Stack>
       <Stack spacing={1.25}>
-        {list.cards.map((card) => (
-          <TaskCard key={card.id} card={card} listId={list.id} />
+        {visibleCards.map((card) => (
+          <TaskCard
+            key={card.id}
+            card={card}
+            listId={list.id}
+            boardId={boardId}
+            template={board.template}
+          />
         ))}
       </Stack>
       <Button
@@ -404,10 +679,10 @@ function BoardList({ list, boardId }: { list: List; boardId: string }) {
       >
         Add a card
       </Button>
-      <CreateDialog
+      <CreateCardDialog
         open={newCard}
-        title={`Add card to ${list.name}`}
-        label="Card title"
+        listName={list.name}
+        board={board}
         pending={create.isPending}
         error={create.error}
         onClose={() => setNewCard(false)}
@@ -417,8 +692,24 @@ function BoardList({ list, boardId }: { list: List; boardId: string }) {
   );
 }
 
-function TaskCard({ card, listId }: { card: CardType; listId: string }) {
+function TaskCard({
+  card,
+  listId,
+  boardId,
+  template,
+}: {
+  card: CardType;
+  listId: string;
+  boardId: string;
+  template?: string;
+}) {
   const select = useUiStore((state) => state.setSelectedCardId);
+  const client = useQueryClient();
+  const complete = useMutation({
+    mutationFn: () =>
+      api.patch(`/cards/${card.id}`, { isCompleted: !card.isCompleted }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["board", boardId] }),
+  });
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: card.id, data: { listId } });
   return (
@@ -429,15 +720,27 @@ function TaskCard({ card, listId }: { card: CardType; listId: string }) {
         opacity: isDragging ? 0.65 : 1,
       }}
       sx={{
-        borderRadius: 2,
+        borderRadius: 2.5,
         boxShadow: "none",
         transition: "border-color .15s, transform .15s",
-        "&:hover": { borderColor: "#111", transform: "translateY(-2px)", boxShadow: "0 8px 20px rgba(0,0,0,.08)" },
+        bgcolor: "#fffef9",
+        border: card.isCompleted
+          ? "1px solid #86a82c"
+          : "1px solid transparent",
+        opacity: card.isCompleted ? 0.78 : 1,
+        "&:hover": {
+          borderColor: "#181817",
+          transform: "translateY(-2px) rotate(-.3deg)",
+          boxShadow: "3px 3px 0 #181817",
+        },
       }}
       {...listeners}
       {...attributes}
     >
-      <CardActionArea aria-label={`Open card: ${card.title}`} onClick={() => select(card.id)}>
+      <CardActionArea
+        aria-label={`Open card: ${card.title}`}
+        onClick={() => select(card.id)}
+      >
         <CardContent sx={{ p: "12px !important" }}>
           <Stack
             direction="row"
@@ -451,7 +754,7 @@ function TaskCard({ card, listId }: { card: CardType; listId: string }) {
                 title={label.name}
                 sx={{
                   minHeight: 22,
-                  px: .9,
+                  px: 0.9,
                   display: "flex",
                   alignItems: "center",
                   color: "white",
@@ -460,17 +763,167 @@ function TaskCard({ card, listId }: { card: CardType; listId: string }) {
                   borderRadius: 1,
                   bgcolor: label.color,
                 }}
-              >{label.name}</Box>
+              >
+                {label.name}
+              </Box>
             ))}
           </Stack>
-          <Typography fontWeight={600}>{card.title}</Typography>
+          <Stack direction="row" alignItems="flex-start" gap={1}>
+            <Box
+              component="span"
+              role="checkbox"
+              tabIndex={0}
+              aria-checked={card.isCompleted}
+              aria-label={
+                card.isCompleted ? "Mark card active" : "Mark card complete"
+              }
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                complete.mutate();
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  complete.mutate();
+                }
+              }}
+              sx={{
+                display: "inline-flex",
+                cursor: "pointer",
+                color: card.isCompleted ? "#638000" : "#aaa59a",
+              }}
+            >
+              {card.isCompleted ? (
+                <CheckCircleRounded />
+              ) : (
+                <RadioButtonUncheckedRounded />
+              )}
+            </Box>
+            <Typography
+              fontWeight={700}
+              sx={{
+                letterSpacing: "-.015em",
+                textDecoration: card.isCompleted ? "line-through" : "none",
+                flex: 1,
+              }}
+            >
+              {card.title}
+            </Typography>
+          </Stack>
+          <Typography
+            className="mono-label"
+            color="text.secondary"
+            sx={{ mt: 1, textTransform: "uppercase" }}
+          >
+            {categoryLabel(template, card.category || "task")}
+          </Typography>
+          {card.priority && card.priority !== "medium" && (
+            <Typography
+              className="mono-label"
+              sx={{
+                display: "inline-block",
+                mt: 1,
+                color: card.priority === "urgent" ? "#b42318" : "#8a4b00",
+              }}
+            >
+              {card.priority} priority
+            </Typography>
+          )}
           {card.dueDate && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.75 }}
+            >
+              <EventRounded sx={{ fontSize: 14 }} />
               Due {new Date(card.dueDate).toLocaleDateString()}
             </Typography>
           )}
         </CardContent>
       </CardActionArea>
     </Card>
+  );
+}
+
+function BoardInsightsDialog({
+  open,
+  onClose,
+  board,
+}: {
+  open: boolean;
+  onClose: () => void;
+  board: Board;
+}) {
+  const allCards = board.lists?.flatMap((list) => list.cards) || [];
+  const now = Date.now();
+  const overdue = allCards.filter(
+    (card) =>
+      card.dueDate &&
+      new Date(card.dueDate).getTime() < now &&
+      !card.isArchived,
+  ).length;
+  const urgent = allCards.filter(
+    (card) => card.priority === "urgent" || card.priority === "high",
+  ).length;
+  const assigned = allCards.filter((card) => card.members?.length).length;
+  const completion = allCards.filter((card) => card.isCompleted).length;
+  const metrics = [
+    { label: "Total cards", value: allCards.length },
+    { label: "Completed", value: completion },
+    { label: "Overdue", value: overdue },
+    { label: "High priority", value: urgent },
+    { label: "Assigned", value: assigned },
+  ];
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      PaperProps={{ sx: { bgcolor: "#fffef9", borderRadius: 3 } }}
+    >
+      <DialogTitle>Board pulse</DialogTitle>
+      <DialogContent>
+        <Typography color="text.secondary" mb={3}>
+          A live operational snapshot based on the board right now.
+        </Typography>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2,1fr)",
+            gap: 1.5,
+          }}
+        >
+          {metrics.map((metric, index) => (
+            <Box
+              key={metric.label}
+              sx={{
+                bgcolor: index === 0 ? "#181817" : "#eeebe2",
+                color: index === 0 ? "#fff" : "#181817",
+                borderRadius: 2,
+                p: 2.5,
+                gridColumn: index === 0 ? "span 2" : "auto",
+              }}
+            >
+              <Typography
+                className="display-type"
+                sx={{ fontSize: index === 0 ? 52 : 36 }}
+              >
+                {metric.value}
+              </Typography>
+              <Typography
+                className="mono-label"
+                sx={{ color: index === 0 ? "#d8ff63" : "#67635b" }}
+              >
+                {metric.label}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      </DialogContent>
+    </Dialog>
   );
 }

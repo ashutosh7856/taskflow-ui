@@ -15,6 +15,8 @@ export interface Workspace {
   createdAt: string;
   boards?: Board[];
   members?: Membership[];
+  plan?: "free" | "pro" | "business";
+  billingStatus?: "inactive" | "active" | "past_due" | "cancelled";
 }
 
 export interface Membership {
@@ -29,6 +31,7 @@ export interface Board {
   workspaceId: string;
   name: string;
   backgroundColor: string;
+  template: "blank" | "software" | "marketing" | "operations";
   role?: Role;
   lists?: List[];
   labels?: Label[];
@@ -50,7 +53,12 @@ export interface Card {
   description?: string | null;
   position: number;
   dueDate?: string | null;
+  priority?: "low" | "medium" | "high" | "urgent";
+  estimateMinutes?: number | null;
   isArchived: boolean;
+  isCompleted: boolean;
+  completedAt?: string | null;
+  category: string;
   members?: Array<{ userId: string; user: User }>;
   labels?: Array<{ labelId: string; label: Label }>;
   checklists?: Checklist[];
