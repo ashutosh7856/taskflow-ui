@@ -32,10 +32,12 @@ export interface Board {
   name: string;
   backgroundColor: string;
   template: "blank" | "software" | "marketing" | "operations";
+  createdAt?: string;
   role?: Role;
   lists?: List[];
   labels?: Label[];
   members?: Membership[];
+  workspaceMembers?: Membership[];
 }
 
 export interface List {

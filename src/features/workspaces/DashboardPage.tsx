@@ -3,11 +3,13 @@ import ArrowOutwardRounded from "@mui/icons-material/ArrowOutwardRounded";
 import AutoAwesomeRounded from "@mui/icons-material/AutoAwesomeRounded";
 import SettingsRounded from "@mui/icons-material/SettingsRounded";
 import GridViewRounded from "@mui/icons-material/GridViewRounded";
+import InsightsRounded from "@mui/icons-material/InsightsRounded";
 import SpaceDashboardRounded from "@mui/icons-material/SpaceDashboardRounded";
 import {
   Alert,
   Box,
   Button,
+  Chip,
   Container,
   Skeleton,
   Stack,
@@ -216,6 +218,25 @@ export function DashboardPage() {
                     </Button>
                   )}
                 </Stack>
+                <Stack direction="row" gap={1} flexWrap="wrap" mt={3}>
+                  {[
+                    `${workspaces.data?.length || 0} workspaces`,
+                    "Notes → boards",
+                    "Live completion",
+                    "AI status updates",
+                  ].map((item) => (
+                    <Chip
+                      key={item}
+                      size="small"
+                      label={item}
+                      sx={{
+                        bgcolor: "#2d2d2a",
+                        color: "#d8ff63",
+                        border: "1px solid #51514c",
+                      }}
+                    />
+                  ))}
+                </Stack>
               </Box>
             </Box>
           </AnimatedContent>
@@ -299,6 +320,7 @@ function WorkspaceSection({
 }) {
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const navigate = useNavigate();
   const client = useQueryClient();
   const details = useQuery({
     queryKey: ["workspace", workspace.id],
@@ -344,8 +366,21 @@ function WorkspaceSection({
           color="text.secondary"
           sx={{ display: { xs: "none", sm: "block" } }}
         >
-          {workspace.plan || "free"} · {workspace.role}
+          {workspace.plan === "business" ? "team" : workspace.plan || "free"} ·{" "}
+          {workspace.role}
         </Typography>
+        {workspace.plan === "business" &&
+          (workspace.role === "owner" || workspace.role === "admin") && (
+            <Button
+              startIcon={<InsightsRounded />}
+              onClick={() =>
+                navigate(`/workspaces/${workspace.id}/command-center`)
+              }
+              sx={{ display: { xs: "none", md: "inline-flex" } }}
+            >
+              Workspace Pulse
+            </Button>
+          )}
         {(workspace.role === "owner" || workspace.role === "admin") && (
           <Button
             aria-label={`Settings for ${workspace.name}`}
@@ -359,6 +394,20 @@ function WorkspaceSection({
           New board
         </Button>
       </Stack>
+      {workspace.plan === "business" &&
+        (workspace.role === "owner" || workspace.role === "admin") && (
+          <Button
+            fullWidth
+            variant="outlined"
+            startIcon={<InsightsRounded />}
+            onClick={() =>
+              navigate(`/workspaces/${workspace.id}/command-center`)
+            }
+            sx={{ display: { xs: "flex", md: "none" }, mb: 2 }}
+          >
+            Open Workspace Pulse
+          </Button>
+        )}
       <Box
         sx={{
           display: "grid",
@@ -384,9 +433,23 @@ function WorkspaceSection({
             <span className="mono-label">
               Board / {String(i + 1).padStart(2, "0")}
             </span>
-            <strong>{board.name}</strong>
+            <span>
+              <strong>{board.name}</strong>
+              <span className="board-card-template">
+                {board.template === "blank" ? "Custom" : board.template}{" "}
+                workflow
+              </span>
+            </span>
             <span className="board-card-foot">
-              <span>Open board</span>
+              <span>
+                {board.template === "blank" ? "Custom" : board.template} ·{" "}
+                {board.createdAt
+                  ? new Date(board.createdAt).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })
+                  : "Active"}
+              </span>
               <ArrowOutwardRounded fontSize="small" />
             </span>
           </SpotlightCard>

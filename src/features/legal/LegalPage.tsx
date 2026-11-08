@@ -15,7 +15,7 @@ const updated = "November 8, 2026";
 const privacySections = [
   [
     "Information we collect",
-    "We collect account details such as name and email, workspace content you create, collaboration activity, basic device and log information, and billing status or subscription identifiers returned by PayPal. TaskFlow does not receive or store your full card number, bank credentials, or PayPal password.",
+    "We collect account details such as name and email, workspace content you create, collaboration activity, basic device and log information, and billing status or subscription identifiers returned by PayPal. Danto does not receive or store your full card number, bank credentials, or PayPal password.",
   ],
   [
     "How we use information",
@@ -45,12 +45,12 @@ const privacySections = [
 
 const termsSections = [
   [
-    "Using TaskFlow",
+    "Using Danto",
     "You must provide accurate account information, protect your credentials, and use the service lawfully. You are responsible for content added by you and for ensuring you have the right to share it with collaborators.",
   ],
   [
     "Plans and payment",
-    "Free and paid plan limits are shown before purchase. Paid subscriptions are billed monthly in USD through PayPal and renew automatically until cancelled. Taxes or currency conversion may be applied by the payment provider. TaskFlow does not store your payment credentials.",
+    "Free and paid plan limits are shown before purchase. Paid subscriptions are billed monthly in USD through PayPal and renew automatically until cancelled. Taxes or currency conversion may be applied by the payment provider. Danto does not store your payment credentials.",
   ],
   [
     "Cancellation and refunds",
@@ -58,19 +58,19 @@ const termsSections = [
   ],
   [
     "AI features",
-    "AI output may be incomplete or inaccurate and must be reviewed before use. Do not submit secrets or regulated personal data to AI features. Usage limits apply per plan and may reset on the stated billing cycle.",
+    "AI output may be incomplete or inaccurate and must be reviewed before use. Do not submit secrets or regulated personal data to AI features. Usage limits apply per plan and may reset on the stated billing cycle. Plans described as unlimited have no monthly action cap for normal product use, but hourly and daily fair-use limits still apply to prevent automation, abuse, resale, and service disruption.",
   ],
   [
     "Your content",
-    "You retain ownership of your content and grant TaskFlow the limited permission needed to host, process, back up, and display it to provide the service. You are responsible for exports or backups needed for your own compliance.",
+    "You retain ownership of your content and grant Danto the limited permission needed to host, process, back up, and display it to provide the service. You are responsible for exports or backups needed for your own compliance.",
   ],
   [
     "Availability and acceptable use",
-    "Do not attempt unauthorized access, disrupt the service, upload malicious code, abuse invitations, or use TaskFlow to violate another person's rights. We may limit or suspend access to protect users and the service.",
+    "Do not attempt unauthorized access, disrupt the service, upload malicious code, abuse invitations, or use Danto to violate another person's rights. We may limit or suspend access to protect users and the service.",
   ],
   [
     "Disclaimers and liability",
-    "The service is provided on an as-available basis. To the extent permitted by law, TaskFlow is not liable for indirect or consequential losses. Nothing in these terms excludes rights or liability that cannot legally be excluded.",
+    "The service is provided on an as-available basis. To the extent permitted by law, Danto is not liable for indirect or consequential losses. Nothing in these terms excludes rights or liability that cannot legally be excluded.",
   ],
   [
     "Changes and contact",
@@ -81,7 +81,7 @@ const termsSections = [
 export function LegalPage() {
   const privacy = useLocation().pathname === "/privacy";
   const supportEmail =
-    import.meta.env.VITE_SUPPORT_EMAIL || "support@taskflow.app";
+    import.meta.env.VITE_SUPPORT_EMAIL || "support@danto.app";
   const sections = privacy ? privacySections : termsSections;
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f2f0e9" }}>
@@ -110,8 +110,8 @@ export function LegalPage() {
         </Typography>
         <Typography fontSize={18} color="text.secondary" sx={{ maxWidth: 700 }}>
           {privacy
-            ? "This notice explains what TaskFlow collects, why it is used, and the choices available to you."
-            : "These terms explain the rules for using TaskFlow and the details of paid subscriptions."}
+            ? "This notice explains what Danto collects, why it is used, and the choices available to you."
+            : "These terms explain the rules for using Danto and the details of paid subscriptions."}
         </Typography>
         <Divider sx={{ my: 5 }} />
         <Stack spacing={4}>

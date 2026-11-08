@@ -44,7 +44,7 @@ export function AppShell() {
           zIndex: 1200,
         }}
       >
-        <Brand linked />
+        <Brand linked to="/app" />
         <Box sx={{ flex: 1 }} />
         <ButtonBase
           aria-label="Open account menu"
@@ -121,7 +121,7 @@ export function AppShell() {
       >
         <Stack direction="row" gap={2} alignItems="center" flexWrap="wrap">
           <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            © {new Date().getFullYear()} TaskFlow
+            © {new Date().getFullYear()} Danto
           </Typography>
           <Typography
             component="a"

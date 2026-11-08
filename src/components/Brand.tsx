@@ -4,14 +4,16 @@ import { Link } from "react-router-dom";
 export function Brand({
   linked = false,
   light = false,
+  to = "/",
 }: {
   linked?: boolean;
   light?: boolean;
+  to?: string;
 }) {
   return (
     <Stack
       component={linked ? Link : "div"}
-      to={linked ? "/" : undefined}
+      to={linked ? to : undefined}
       direction="row"
       alignItems="center"
       spacing={0.9}
@@ -20,21 +22,21 @@ export function Brand({
         textDecoration: "none",
         width: "fit-content",
       }}
-      aria-label={linked ? "TaskFlow home" : undefined}
+      aria-label={linked ? "Danto home" : undefined}
     >
       <Box
-        aria-hidden
+        component="img"
+        src="/assets/danto-mark.png"
+        alt=""
+        aria-hidden="true"
         sx={{
-          width: 11,
-          height: 11,
-          bgcolor: "#ff5c35",
-          borderRadius: "3px 7px 3px 7px",
-          transform: "rotate(12deg)",
-          boxShadow: "4px 4px 0 #d8ff63",
+          width: 32,
+          height: 32,
+          objectFit: "contain",
         }}
       />
       <Typography fontSize={20} fontWeight={850} letterSpacing="-.055em">
-        taskflow
+        danto
       </Typography>
     </Stack>
   );

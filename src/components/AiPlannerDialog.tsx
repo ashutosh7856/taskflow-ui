@@ -38,9 +38,47 @@ interface GeneratedPlan {
 
 interface AiUsage {
   used: number;
-  limit: number;
+  limit: number | null;
   plan: string;
 }
+
+const sourceTypes = [
+  {
+    value: "brief",
+    label: "Project brief",
+    detail: "Turn a goal, deadline, and constraints into an execution board.",
+    placeholder:
+      "Paste the project goal, deadline, constraints, people involved, and expected outcome…",
+  },
+  {
+    value: "meeting_notes",
+    label: "Meeting notes",
+    detail: "Extract decisions, owners, follow-ups, risks, and due work.",
+    placeholder:
+      "Paste raw meeting notes or a transcript. Danto will find decisions and follow-up work…",
+  },
+  {
+    value: "pull_request",
+    label: "PR / commit log",
+    detail: "Create release, QA, documentation, and follow-up tasks.",
+    placeholder:
+      "Paste a pull request description, git log, or commit messages here…",
+  },
+  {
+    value: "content_calendar",
+    label: "Creator content plan",
+    detail: "Build creation, approval, repurposing, and publishing tasks.",
+    placeholder:
+      "Paste content ideas, channels, dates, campaign notes, or an existing calendar…",
+  },
+  {
+    value: "email",
+    label: "Email or client request",
+    detail: "Separate requirements, questions, deliverables, and next actions.",
+    placeholder:
+      "Paste an email thread or client request. Remove anything sensitive first…",
+  },
+] as const;
 
 interface ExecutiveUpdate {
   overallStatus: "on_track" | "at_risk" | "off_track" | "unknown";
@@ -72,15 +110,21 @@ export function AiPlannerDialog({
   onClose: () => void;
 }) {
   const [mode, setMode] = useState<"plan" | "summary">("plan");
+  const [sourceType, setSourceType] =
+    useState<(typeof sourceTypes)[number]["value"]>("brief");
   const [prompt, setPrompt] = useState("");
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
   const [summary, setSummary] = useState<ExecutiveUpdate | null>(null);
   const [document, setDocument] = useState<ExecutiveDocument | null>(null);
   const [usage, setUsage] = useState<AiUsage | null>(null);
+  const selectedSource = sourceTypes.find(
+    (source) => source.value === sourceType,
+  )!;
   const client = useQueryClient();
   const generate = useMutation({
     mutationFn: async () =>
-      (await api.post(`/boards/${boardId}/ai/plan`, { prompt })).data as {
+      (await api.post(`/boards/${boardId}/ai/plan`, { prompt, sourceType }))
+        .data as {
         plan: GeneratedPlan;
         usage: AiUsage;
       },
@@ -168,7 +212,7 @@ export function AiPlannerDialog({
           </Box>
           <Box sx={{ flex: 1 }}>
             <Typography className="mono-label" sx={{ color: "#d8ff63" }}>
-              TaskFlow intelligence
+              Create from existing material
             </Typography>
             <Typography variant="h4" mt={0.5}>
               Move from idea to execution.
@@ -200,11 +244,16 @@ export function AiPlannerDialog({
       <DialogContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
         {usage && (
           <Alert
-            severity={usage.used >= usage.limit ? "warning" : "info"}
+            severity={
+              usage.limit !== null && usage.used >= usage.limit
+                ? "warning"
+                : "info"
+            }
             sx={{ mb: 2 }}
           >
-            {usage.used} of {usage.limit} AI actions used this period on the{" "}
-            {usage.plan} plan.
+            {usage.limit === null
+              ? `${usage.used} AI actions used this period · unlimited on the Team plan.`
+              : `${usage.used} of ${usage.limit} AI actions used this period on the ${usage.plan} plan.`}
           </Alert>
         )}
         {error && (
@@ -216,18 +265,46 @@ export function AiPlannerDialog({
           <Stack spacing={3}>
             <Box>
               <Typography fontWeight={800} mb={0.5}>
-                What are you shipping?
+                Paste the messy source. Get an execution plan.
               </Typography>
               <Typography color="text.secondary">
-                Describe the outcome, deadline, constraints, and team. AI will
-                propose a board you can review before anything is created.
+                Danto extracts concrete work from a brief, meeting, email, pull
+                request, commit log, or content plan. You review the board
+                before anything is created.
               </Typography>
             </Box>
+            <Box className="ai-source-grid">
+              {sourceTypes.map((source) => (
+                <Box
+                  component="button"
+                  type="button"
+                  key={source.value}
+                  className={`ai-source-option ${sourceType === source.value ? "selected" : ""}`}
+                  onClick={() => setSourceType(source.value)}
+                >
+                  <Typography fontWeight={850} fontSize={14}>
+                    {source.label}
+                  </Typography>
+                  <Typography fontSize={12} color="text.secondary" mt={0.5}>
+                    {source.detail}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+            <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+              {[
+                "1. Paste source",
+                "2. Review AI plan",
+                "3. Apply to board",
+              ].map((step) => (
+                <Chip key={step} label={step} size="small" variant="outlined" />
+              ))}
+            </Stack>
             <TextField
               multiline
               minRows={4}
               fullWidth
-              placeholder="Example: Launch a new customer portal in six weeks with design, frontend, backend, QA and a staged rollout..."
+              placeholder={selectedSource.placeholder}
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
             />
@@ -243,7 +320,7 @@ export function AiPlannerDialog({
               disabled={prompt.trim().length < 12 || generate.isPending}
               onClick={() => generate.mutate()}
             >
-              {plan ? "Regenerate plan" : "Generate project plan"}
+              {plan ? "Regenerate plan" : "Turn source into a board"}
             </Button>
             {plan && (
               <Box className="ai-plan-preview">

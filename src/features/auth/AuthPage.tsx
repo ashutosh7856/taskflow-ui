@@ -20,13 +20,15 @@ import { Brand } from "../../components/Brand";
 import { AnimatedContent } from "../../components/bits/AnimatedContent";
 
 export function AuthPage() {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState<"login" | "register">(
+    searchParams.get("mode") === "register" ? "register" : "login",
+  );
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const token = useAuthStore((state) => state.accessToken);
   const setSession = useAuthStore((state) => state.setSession);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
+  const redirect = searchParams.get("redirect") || "/app";
   const mutation = useMutation({
     mutationFn: async () => {
       const payload =
@@ -244,7 +246,7 @@ export function AuthPage() {
             textAlign="center"
             mt={3}
           >
-            By continuing, you agree to use TaskFlow responsibly.
+            By continuing, you agree to use Danto responsibly.
           </Typography>
         </Box>
       </Box>

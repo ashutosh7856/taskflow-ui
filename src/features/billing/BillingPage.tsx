@@ -30,17 +30,25 @@ interface BillingDetails {
   paypalSubscriptionId?: string | null;
   aiRequestsThisMonth: number;
   aiPeriodStart: string;
-  entitlements: { priceUsd: number; seats: number; aiRequests: number };
+  entitlements: {
+    priceUsd: number;
+    seats: number;
+    aiRequests: number | null;
+    workspaces: number | null;
+    boards: number | null;
+    collaboration: boolean;
+  };
   paypal: { configured: boolean; environment: "live" | "sandbox" };
 }
 
 export function BillingPage() {
   const supportEmail =
-    import.meta.env.VITE_SUPPORT_EMAIL || "support@taskflow.app";
+    import.meta.env.VITE_SUPPORT_EMAIL || "support@danto.app";
   const [plansOpen, setPlansOpen] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState<"pro" | "business" | null>(
     null,
   );
+  const [cancelledNotice, setCancelledNotice] = useState(false);
   const client = useQueryClient();
   const billing = useQuery({
     queryKey: ["billing"],
@@ -48,14 +56,19 @@ export function BillingPage() {
   });
   const cancel = useMutation({
     mutationFn: () => api.post("/billing/cancel"),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["billing"] }),
+    onSuccess: () => {
+      setCancelledNotice(true);
+      client.invalidateQueries({ queryKey: ["billing"] });
+    },
   });
   const data = billing.data;
   const aiPercent = data
-    ? Math.min(
-        100,
-        (data.aiRequestsThisMonth / data.entitlements.aiRequests) * 100,
-      )
+    ? data.entitlements.aiRequests === null
+      ? 100
+      : Math.min(
+          100,
+          (data.aiRequestsThisMonth / data.entitlements.aiRequests) * 100,
+        )
     : 0;
 
   return (
@@ -147,27 +160,34 @@ export function BillingPage() {
                 variant="h3"
                 sx={{ mt: 2, textTransform: "capitalize" }}
               >
-                {data.plan}
+                {data.plan === "business" ? "Team" : data.plan}
               </Typography>
               <Typography sx={{ color: "#b9b7af", mt: 1 }}>
-                ${data.entitlements.priceUsd} USD / month · Covers every
-                workspace you own
+                {planBillingLine(data)}
               </Typography>
               <Stack direction={{ xs: "column", sm: "row" }} gap={3} mt={4}>
                 <Box>
                   <Typography variant="h5">
-                    {data.entitlements.seats}
+                    {data.entitlements.collaboration
+                      ? data.entitlements.seats
+                      : "Solo"}
                   </Typography>
-                  <Typography color="#aaa8a1">team seats</Typography>
+                  <Typography color="#aaa8a1">
+                    {data.entitlements.collaboration
+                      ? "people account-wide"
+                      : "private workspaces"}
+                  </Typography>
                 </Box>
                 <Box>
                   <Typography variant="h5">
-                    {data.entitlements.aiRequests}
+                    {data.entitlements.aiRequests ?? "Unlimited"}
                   </Typography>
                   <Typography color="#aaa8a1">AI actions / month</Typography>
                 </Box>
                 <Box>
-                  <Typography variant="h5">Unlimited</Typography>
+                  <Typography variant="h5">
+                    {data.entitlements.boards ?? "Unlimited"}
+                  </Typography>
                   <Typography color="#aaa8a1">boards</Typography>
                 </Box>
               </Stack>
@@ -197,7 +217,9 @@ export function BillingPage() {
                   color="text.secondary"
                   fontSize={16}
                 >
-                  of {data.entitlements.aiRequests}
+                  {data.entitlements.aiRequests === null
+                    ? "used · unlimited"
+                    : `of ${data.entitlements.aiRequests}`}
                 </Typography>
               </Typography>
               <LinearProgress
@@ -207,7 +229,8 @@ export function BillingPage() {
               />
               <Typography variant="body2" color="text.secondary">
                 Shared across workspaces you own. The allowance resets on a
-                rolling 30-day billing period.
+                rolling 30-day billing period. Team has no monthly cap, with
+                fair-use rate limits that prevent automated abuse.
               </Typography>
             </Box>
           </Box>
@@ -220,8 +243,8 @@ export function BillingPage() {
               Pick the capacity that fits your team.
             </Typography>
             <Typography color="text.secondary" mb={3}>
-              Every plan includes unlimited boards. Paid plans cover all
-              workspaces owned by the account and renew monthly in USD.
+              Free includes three active boards. Pro unlocks unlimited private
+              boards. Team adds collaboration across every owned workspace.
             </Typography>
             <Box
               sx={{
@@ -342,7 +365,7 @@ export function BillingPage() {
               <TrustItem
                 icon={<LockRounded />}
                 title="No card storage"
-                body="TaskFlow never receives or stores your card number, bank credentials, or PayPal password."
+                body="Danto never receives or stores your card number, bank credentials, or PayPal password."
               />
               <TrustItem
                 icon={<ShieldRounded />}
@@ -354,6 +377,70 @@ export function BillingPage() {
               <Typography variant="body2" color="text.secondary" mt={3}>
                 PayPal subscription reference: ••••
                 {data.paypalSubscriptionId.slice(-8)}
+              </Typography>
+            )}
+          </Box>
+
+          <Box
+            sx={{
+              bgcolor: "#fffef9",
+              border: "1px solid #d4d0c5",
+              borderRadius: 3,
+              p: { xs: 3, md: 4 },
+            }}
+          >
+            <Typography className="mono-label" color="text.secondary">
+              Subscription management
+            </Typography>
+            <Typography variant="h5" mt={1}>
+              {data.paypalSubscriptionId
+                ? "Manage your PayPal renewal"
+                : "No recurring payment"}
+            </Typography>
+            {cancelledNotice && (
+              <Alert severity="success" sx={{ mt: 2 }}>
+                Your PayPal subscription was cancelled. No future renewal will
+                be charged.
+              </Alert>
+            )}
+            {data.paypalSubscriptionId ? (
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                gap={2}
+                alignItems={{ sm: "center" }}
+                mt={2}
+              >
+                <Typography color="text.secondary" sx={{ flex: 1 }}>
+                  {data.billingStatus === "cancelled"
+                    ? "This subscription is cancelled and will not renew."
+                    : data.currentPeriodEnd
+                      ? `Your next renewal is ${new Date(data.currentPeriodEnd).toLocaleDateString()}. Cancel before then to prevent the next charge.`
+                      : "Cancel to stop future PayPal subscription charges."}
+                </Typography>
+                {data.billingStatus === "active" && (
+                  <Button
+                    color="error"
+                    variant="outlined"
+                    disabled={cancel.isPending}
+                    onClick={() => {
+                      if (
+                        confirm(
+                          "Cancel PayPal renewal? Your subscription will not be charged again.",
+                        )
+                      ) {
+                        cancel.mutate();
+                      }
+                    }}
+                  >
+                    {cancel.isPending ? "Cancelling…" : "Cancel renewal"}
+                  </Button>
+                )}
+              </Stack>
+            ) : (
+              <Typography color="text.secondary" mt={1.5}>
+                {data.plan === "free"
+                  ? "The Free plan has no subscription and nothing to cancel."
+                  : "This plan was assigned without a PayPal subscription. You are not being charged automatically, so no cancellation is required."}
               </Typography>
             )}
           </Box>
@@ -375,22 +462,6 @@ export function BillingPage() {
               <Link to="/privacy">Privacy Policy</Link> and{" "}
               <Link to="/terms">Terms of Service</Link>.
             </Typography>
-            {data.paypalSubscriptionId && data.billingStatus === "active" && (
-              <Button
-                color="error"
-                disabled={cancel.isPending}
-                onClick={() => {
-                  if (
-                    confirm(
-                      "Cancel your subscription? You will not be charged again.",
-                    )
-                  )
-                    cancel.mutate();
-                }}
-              >
-                {cancel.isPending ? "Cancelling…" : "Cancel subscription"}
-              </Button>
-            )}
           </Box>
           <Typography variant="body2" color="text.secondary" textAlign="center">
             Billing question or an incorrect charge? Email{" "}
@@ -418,6 +489,16 @@ function billingStatusLabel(data: BillingDetails) {
   if (data.billingStatus === "cancelled") return "Cancelled";
   if (data.billingStatus === "active") return "Active";
   return "No paid subscription";
+}
+
+function planBillingLine(data: BillingDetails) {
+  if (data.plan === "free") {
+    return "$0 USD · No recurring payment";
+  }
+  if (!data.paypalSubscriptionId) {
+    return `Manual ${data.plan === "business" ? "Team" : data.plan} access · No recurring charge`;
+  }
+  return `$${data.entitlements.priceUsd} USD / month · Covers every workspace you own`;
 }
 
 function TrustItem({

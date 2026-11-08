@@ -10,6 +10,7 @@ import InsightsRounded from "@mui/icons-material/InsightsRounded";
 import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
 import RadioButtonUncheckedRounded from "@mui/icons-material/RadioButtonUncheckedRounded";
 import EventRounded from "@mui/icons-material/EventRounded";
+import PersonRemoveRounded from "@mui/icons-material/PersonRemoveRounded";
 import {
   DndContext,
   type DragEndEvent,
@@ -36,6 +37,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   IconButton,
   Stack,
   Snackbar,
@@ -51,7 +53,7 @@ import {
   CreateCardDialog,
   type NewCardInput,
 } from "../../components/CreateCardDialog";
-import { api } from "../../lib/api";
+import { api, errorMessage } from "../../lib/api";
 import { categoryLabel } from "../../lib/workflows";
 import { useUiStore } from "../../store/ui";
 import type { Activity, Board, Card as CardType, List } from "../../types";
@@ -66,7 +68,11 @@ export function BoardPage() {
   const client = useQueryClient();
   const [newListOpen, setNewListOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [activityOpen, setActivityOpen] = useState(true);
+  const [activityOpen, setActivityOpen] = useState(() =>
+    typeof window === "undefined"
+      ? false
+      : window.matchMedia("(min-width: 1200px)").matches,
+  );
   const [inviteEmail, setInviteEmail] = useState("");
   const [notice, setNotice] = useState("");
   const [aiOpen, setAiOpen] = useState(false);
@@ -138,6 +144,22 @@ export function BoardPage() {
       );
     },
   });
+  const addWorkspaceMember = useMutation({
+    mutationFn: (userId: string) =>
+      api.post(`/boards/${boardId}/members`, { userId, role: "member" }),
+    onSuccess: () => {
+      invalidate();
+      setNotice("Workspace member added to this board.");
+    },
+  });
+  const removeBoardMember = useMutation({
+    mutationFn: (userId: string) =>
+      api.delete(`/boards/${boardId}/members/${userId}`),
+    onSuccess: () => {
+      invalidate();
+      setNotice("Member removed from this board.");
+    },
+  });
 
   const dragEnd = ({ active, over }: DragEndEvent) => {
     if (!over) return;
@@ -168,6 +190,15 @@ export function BoardPage() {
     (member) =>
       member.user?.email?.trim().toLowerCase() === normalizedInviteEmail,
   );
+  const availableWorkspaceMembers =
+    board.data.workspaceMembers?.filter(
+      (workspaceMember) =>
+        !board.data?.members?.some(
+          (boardMember) => boardMember.userId === workspaceMember.userId,
+        ),
+    ) || [];
+  const canManageMembers =
+    board.data.role === "owner" || board.data.role === "admin";
 
   return (
     <Box
@@ -194,7 +225,7 @@ export function BoardPage() {
       >
         <IconButton
           aria-label="Back to workspaces"
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/app")}
           sx={{
             color: "#181817",
             bgcolor: "#d8ff63",
@@ -225,28 +256,48 @@ export function BoardPage() {
             height: { xs: 0, sm: "auto" },
           }}
         />
-        <AvatarGroup
-          max={3}
-          total={board.data.members?.length || 0}
-          sx={{
-            mr: 0.5,
-            "& .MuiAvatar-root": {
-              width: 32,
-              height: 32,
-              fontSize: 13,
-              bgcolor: "#181817",
-              color: "#d8ff63",
-              borderColor: "#f2f0e9",
-              fontWeight: 800,
-            },
-          }}
-        >
-          {board.data.members?.slice(0, 2).map((member) => (
-            <Avatar key={member.userId} alt={member.user?.name || "Member"}>
-              {member.user?.name?.[0]?.toUpperCase() || "?"}
-            </Avatar>
-          ))}
-        </AvatarGroup>
+        <Tooltip title="View and manage board members">
+          <Box
+            component="button"
+            type="button"
+            aria-label="View and manage board members"
+            onClick={() => setInviteOpen(true)}
+            sx={{
+              appearance: "none",
+              border: 0,
+              bgcolor: "transparent",
+              p: 0,
+              cursor: "pointer",
+              mr: 0.5,
+            }}
+          >
+            <AvatarGroup
+              max={4}
+              total={board.data.members?.length || 0}
+              sx={{
+                "& .MuiAvatar-root": {
+                  width: 32,
+                  height: 32,
+                  fontSize: 13,
+                  bgcolor: "#181817",
+                  color: "#d8ff63",
+                  borderColor: "#f2f0e9",
+                  fontWeight: 800,
+                },
+              }}
+            >
+              {board.data.members?.slice(0, 4).map((member) => (
+                <Avatar
+                  key={member.userId}
+                  alt={member.user?.name || "Member"}
+                  src={member.user?.avatarUrl || undefined}
+                >
+                  {member.user?.name?.[0]?.toUpperCase() || "?"}
+                </Avatar>
+              ))}
+            </AvatarGroup>
+          </Box>
+        </Tooltip>
         <Tooltip title={activityOpen ? "Hide activity" : "Show activity"}>
           <IconButton
             onClick={() => setActivityOpen((value) => !value)}
@@ -257,8 +308,9 @@ export function BoardPage() {
             <HistoryRounded />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Invite member">
+        <Tooltip title="Board members">
           <IconButton
+            aria-label="Open board members"
             onClick={() => setInviteOpen(true)}
             sx={{
               display: { xs: "inline-flex", md: "none" },
@@ -268,26 +320,39 @@ export function BoardPage() {
             <GroupAddRounded />
           </IconButton>
         </Tooltip>
-        <Button
-          variant="contained"
-          startIcon={<AutoAwesomeRounded />}
-          onClick={() => setAiOpen(true)}
-          sx={{
-            bgcolor: "#d8ff63",
-            color: "#181817",
-            boxShadow: "none",
-            "&:hover": { bgcolor: "#e5ff94", boxShadow: "none" },
-          }}
-        >
-          AI assist
-        </Button>
+        <Tooltip title="Paste meeting notes, PRs, commit logs, emails, briefs, or content plans">
+          <Button
+            variant="contained"
+            startIcon={<AutoAwesomeRounded />}
+            onClick={() => setAiOpen(true)}
+            sx={{
+              bgcolor: "#d8ff63",
+              color: "#181817",
+              boxShadow: "none",
+              "&:hover": { bgcolor: "#e5ff94", boxShadow: "none" },
+            }}
+          >
+            <Box
+              component="span"
+              sx={{ display: { xs: "none", sm: "inline" } }}
+            >
+              Import with AI
+            </Box>
+            <Box
+              component="span"
+              sx={{ display: { xs: "inline", sm: "none" } }}
+            >
+              AI import
+            </Box>
+          </Button>
+        </Tooltip>
         <Button
           color="inherit"
           startIcon={<GroupAddRounded />}
           onClick={() => setInviteOpen(true)}
           sx={{ display: { xs: "none", md: "inline-flex" }, color: "#343430" }}
         >
-          Invite
+          Members
         </Button>
       </Stack>
       <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
@@ -326,7 +391,11 @@ export function BoardPage() {
                 />
               ))}
             </Stack>
-            <Stack direction="row" gap={0.75}>
+            <Stack
+              direction="row"
+              gap={0.75}
+              sx={{ maxWidth: "100%", overflowX: "auto", pb: 0.25 }}
+            >
               {(["all", "active", "completed"] as const).map((value) => (
                 <Chip
                   key={value}
@@ -481,38 +550,171 @@ export function BoardPage() {
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
         fullWidth
-        maxWidth="xs"
+        maxWidth="sm"
       >
-        <DialogTitle>Invite to board</DialogTitle>
+        <DialogTitle>Board members</DialogTitle>
         <DialogContent sx={{ pt: "12px !important" }}>
-          <TextField
-            fullWidth
-            autoFocus
-            label="Email address"
-            type="email"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            error={!!memberAlreadyExists}
-            helperText={
-              memberAlreadyExists
-                ? "This person is already a board member."
-                : "Enter the teammate’s email address."
-            }
-          />
+          <Typography color="text.secondary" mb={2.5}>
+            {canManageMembers
+              ? "See everyone with board access, add an existing workspace member, or invite someone new by email."
+              : "See everyone who currently has access to this board."}
+          </Typography>
+          <Stack spacing={1}>
+            {board.data.members?.map((member) => (
+              <Stack
+                key={member.userId}
+                direction="row"
+                alignItems="center"
+                gap={1.5}
+                sx={{ p: 1.25, borderRadius: 2, bgcolor: "#eeebe2" }}
+              >
+                <Avatar
+                  src={member.user?.avatarUrl || undefined}
+                  sx={{ bgcolor: "#181817", color: "#d8ff63" }}
+                >
+                  {member.user?.name?.[0]?.toUpperCase() || "?"}
+                </Avatar>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography fontWeight={800} noWrap>
+                    {member.user?.name || "Board member"}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" noWrap>
+                    {member.user?.email}
+                  </Typography>
+                </Box>
+                <Chip
+                  size="small"
+                  label={member.role}
+                  sx={{ textTransform: "capitalize" }}
+                />
+                {canManageMembers && member.role !== "owner" && (
+                  <Button
+                    size="small"
+                    color="error"
+                    startIcon={<PersonRemoveRounded />}
+                    disabled={removeBoardMember.isPending}
+                    onClick={() => {
+                      const name = member.user?.name || "this member";
+                      if (
+                        confirm(
+                          `Remove ${name} from this board? Their card assignments on this board will also be removed. They will remain a workspace member.`,
+                        )
+                      ) {
+                        removeBoardMember.mutate(member.userId);
+                      }
+                    }}
+                    sx={{ minWidth: { xs: 44, sm: "auto" } }}
+                  >
+                    <Box
+                      component="span"
+                      sx={{ display: { xs: "none", sm: "inline" } }}
+                    >
+                      Remove
+                    </Box>
+                  </Button>
+                )}
+              </Stack>
+            ))}
+          </Stack>
+
+          {canManageMembers && !!availableWorkspaceMembers.length && (
+            <>
+              <Divider sx={{ my: 3 }} />
+              <Typography fontWeight={850}>Add from this workspace</Typography>
+              <Typography variant="body2" color="text.secondary" mb={1.5}>
+                These people already belong to the workspace, so no new invite
+                is needed.
+              </Typography>
+              <Stack spacing={1}>
+                {availableWorkspaceMembers.map((member) => (
+                  <Stack
+                    key={member.userId}
+                    direction="row"
+                    alignItems="center"
+                    gap={1.25}
+                    sx={{
+                      p: 1.25,
+                      border: "1px solid #d4d0c5",
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Avatar src={member.user?.avatarUrl || undefined}>
+                      {member.user?.name?.[0]?.toUpperCase() || "?"}
+                    </Avatar>
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Typography fontWeight={750} noWrap>
+                        {member.user?.name || "Workspace member"}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" noWrap>
+                        {member.user?.email}
+                      </Typography>
+                    </Box>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={addWorkspaceMember.isPending}
+                      onClick={() => {
+                        const name = member.user?.name || "this person";
+                        if (confirm(`Add ${name} to this board?`)) {
+                          addWorkspaceMember.mutate(member.userId);
+                        }
+                      }}
+                    >
+                      Add to board
+                    </Button>
+                  </Stack>
+                ))}
+              </Stack>
+            </>
+          )}
+
+          {canManageMembers && (
+            <>
+              <Divider sx={{ my: 3 }} />
+              <Typography fontWeight={850} mb={0.5}>
+                Invite someone new
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mb={1.5}>
+                We’ll email a secure seven-day invitation link.
+              </Typography>
+              <TextField
+                fullWidth
+                label="Email address"
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                error={!!memberAlreadyExists}
+                helperText={
+                  memberAlreadyExists
+                    ? "This person is already a board member."
+                    : "Enter the teammate’s email address."
+                }
+              />
+            </>
+          )}
+          {(addWorkspaceMember.error || removeBoardMember.error) && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {errorMessage(
+                addWorkspaceMember.error || removeBoardMember.error,
+              )}
+            </Alert>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setInviteOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            disabled={
-              !normalizedInviteEmail ||
-              !!memberAlreadyExists ||
-              invite.isPending
-            }
-            onClick={() => invite.mutate()}
-          >
-            Create invite
-          </Button>
+          <Button onClick={() => setInviteOpen(false)}>Close</Button>
+          {canManageMembers && (
+            <Button
+              variant="contained"
+              disabled={
+                !normalizedInviteEmail ||
+                !!memberAlreadyExists ||
+                invite.isPending
+              }
+              onClick={() => invite.mutate()}
+            >
+              Send invitation
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
       <CardDrawer board={board.data} />
@@ -553,6 +755,7 @@ function activityMessage(action: string) {
     "card.updated": "updated or moved a card",
     "card.deleted": "deleted a card",
     "card.member_added": "assigned a member to a card",
+    "board.member_removed": "removed a member from the board",
     "comment.created": "commented on a card",
   };
   return messages[action] || action.replaceAll(".", " ");

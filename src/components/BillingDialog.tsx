@@ -1,9 +1,6 @@
-import AccountBalanceRounded from "@mui/icons-material/AccountBalanceRounded";
 import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
 import CheckRounded from "@mui/icons-material/CheckRounded";
 import CloseRounded from "@mui/icons-material/CloseRounded";
-import CreditCardRounded from "@mui/icons-material/CreditCardRounded";
-import LanguageRounded from "@mui/icons-material/LanguageRounded";
 import RocketLaunchRounded from "@mui/icons-material/RocketLaunchRounded";
 import VerifiedUserRounded from "@mui/icons-material/VerifiedUserRounded";
 import {
@@ -14,11 +11,12 @@ import {
   Dialog,
   DialogContent,
   IconButton,
+  Radio,
   Stack,
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../lib/api";
 import { offers } from "../lib/billingPlans";
 import { useAuthStore } from "../store/auth";
@@ -53,6 +51,7 @@ export function BillingDialog({
   const [success, setSuccess] = useState(false);
   const user = useAuthStore((state) => state.user);
   const paypalNode = useRef<HTMLDivElement>(null);
+  const checkoutSection = useRef<HTMLDivElement>(null);
   const client = useQueryClient();
   const billing = useQuery({
     queryKey: ["billing"],
@@ -76,6 +75,17 @@ export function BillingDialog({
   useEffect(() => {
     if (open && initialPlan) setSelectedPlan(initialPlan);
   }, [initialPlan, open]);
+
+  useEffect(() => {
+    if (!checkout) return;
+    const frame = requestAnimationFrame(() => {
+      checkoutSection.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [checkout]);
 
   useEffect(() => {
     if (!checkout || !billing.data?.paypal?.clientId || !paypalNode.current)
@@ -163,11 +173,16 @@ export function BillingDialog({
       onClose={close}
       fullWidth
       maxWidth="lg"
+      scroll="paper"
       PaperProps={{
         sx: {
           bgcolor: "#f2f0e9",
           borderRadius: { xs: 0, sm: 3 },
           minHeight: { sm: 680 },
+          height: { xs: "100dvh", sm: "auto" },
+          maxHeight: { xs: "100dvh", sm: "calc(100% - 64px)" },
+          m: { xs: 0, sm: 4 },
+          overflow: "hidden",
         },
       }}
     >
@@ -178,6 +193,7 @@ export function BillingDialog({
           p: { xs: 3, md: 5 },
           position: "relative",
           overflow: "hidden",
+          flexShrink: 0,
         }}
       >
         <Box
@@ -210,7 +226,7 @@ export function BillingDialog({
             </Typography>
             <Typography sx={{ color: "#b9b7af", mt: 1 }}>
               {selectedPlan
-                ? "Review the plan, then choose how you want to pay."
+                ? "Review the plan, then continue securely with PayPal."
                 : "One plan covers every workspace you own. Cancel anytime."}
             </Typography>
           </Box>
@@ -219,7 +235,16 @@ export function BillingDialog({
           </IconButton>
         </Stack>
       </Box>
-      <DialogContent sx={{ p: { xs: 2, md: 4 } }}>
+      <DialogContent
+        sx={{
+          p: { xs: 2, md: 4 },
+          pb: { xs: "max(24px, env(safe-area-inset-bottom))", md: 4 },
+          minHeight: 0,
+          overflowY: "auto",
+          overscrollBehavior: "contain",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
         {(billing.error || setup.error || providerError) && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {providerError || errorMessage(billing.error || setup.error)}
@@ -275,7 +300,7 @@ export function BillingDialog({
                   / account / month
                 </Typography>
               </Stack>
-              <Stack spacing={1.2}>
+              <Stack spacing={1.2} sx={{ display: { xs: "none", sm: "flex" } }}>
                 {chosenOffer?.features.map((feature) => (
                   <Stack key={feature} direction="row" gap={1}>
                     <CheckRounded sx={{ color: "#d8ff63", fontSize: 18 }} />
@@ -290,34 +315,25 @@ export function BillingDialog({
             </Box>
             <Box sx={{ flex: 1, width: "100%" }}>
               <Typography className="mono-label" color="text.secondary">
-                Choose payment method
+                Payment method
               </Typography>
-              <Stack spacing={1.5} mt={1.5}>
-                <PaymentMethod
-                  icon={<LanguageRounded />}
-                  title="PayPal"
-                  detail="International cards, PayPal balance and supported local methods"
-                  badge="Available"
-                  active
+              <PaymentMethod />
+              {!checkout && (
+                <Button
+                  variant="contained"
+                  fullWidth
+                  disabled={setup.isPending}
                   onClick={() => {
                     setProviderError("");
                     setup.mutate(selectedPlan);
                   }}
-                  disabled={setup.isPending || !!checkout}
-                />
-                <PaymentMethod
-                  icon={<CreditCardRounded />}
-                  title="UPI AutoPay & cards"
-                  detail="Fast recurring mandate for Indian customers through Razorpay"
-                  badge="Recommended for India"
-                />
-                <PaymentMethod
-                  icon={<AccountBalanceRounded />}
-                  title="Bank mandate"
-                  detail="eMandate and netbanking for larger Indian business accounts"
-                  badge="Razorpay setup"
-                />
-              </Stack>
+                  sx={{ mt: 2, minHeight: 48 }}
+                >
+                  {setup.isPending
+                    ? "Preparing PayPal…"
+                    : "Continue with PayPal"}
+                </Button>
+              )}
               {setup.isPending && (
                 <Stack
                   direction="row"
@@ -345,12 +361,14 @@ export function BillingDialog({
               )}
               {checkout && (
                 <Box
+                  ref={checkoutSection}
                   sx={{
                     bgcolor: "#fffef9",
                     border: "1px solid #d4d0c5",
                     borderRadius: 3,
                     p: { xs: 2, sm: 3 },
                     mt: 2,
+                    scrollMarginTop: 12,
                   }}
                 >
                   <Stack direction="row" alignItems="center" gap={1} mb={2}>
@@ -376,7 +394,7 @@ export function BillingDialog({
               >
                 <VerifiedUserRounded fontSize="small" />
                 <Typography fontSize={12}>
-                  Encrypted checkout · No payment details stored by TaskFlow
+                  Encrypted checkout · No payment details stored by Danto
                 </Typography>
               </Stack>
             </Box>
@@ -463,72 +481,44 @@ export function BillingDialog({
   );
 }
 
-function PaymentMethod({
-  icon,
-  title,
-  detail,
-  badge,
-  active = false,
-  disabled = false,
-  onClick,
-}: {
-  icon: ReactNode;
-  title: string;
-  detail: string;
-  badge: string;
-  active?: boolean;
-  disabled?: boolean;
-  onClick?: () => void;
-}) {
+function PaymentMethod() {
   return (
     <Box
-      component="button"
-      type="button"
-      disabled={!active || disabled}
-      onClick={onClick}
       sx={{
         width: "100%",
-        appearance: "none",
-        textAlign: "left",
         display: "flex",
         alignItems: "center",
-        gap: 2,
-        p: 2,
-        border: active ? "2px solid #181817" : "1px solid #d4d0c5",
-        borderRadius: 2.5,
-        bgcolor: active ? "#fffef9" : "#e9e6de",
+        gap: 1.25,
+        p: { xs: 1.25, sm: 1.5 },
+        mt: 1.5,
+        border: "1px solid #b9b5aa",
+        borderRadius: 2,
+        bgcolor: "#fffef9",
         color: "#181817",
-        cursor: active && !disabled ? "pointer" : "default",
-        opacity: active ? 1 : 0.72,
-        "&:hover": active
-          ? { transform: "translateY(-1px)", boxShadow: "3px 3px 0 #181817" }
-          : {},
       }}
     >
+      <Radio
+        checked
+        readOnly
+        inputProps={{ "aria-label": "PayPal selected" }}
+        sx={{ p: 0.5, color: "#0070ba", "&.Mui-checked": { color: "#0070ba" } }}
+      />
       <Box
+        component="img"
+        src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-color.svg"
+        alt="PayPal"
         sx={{
-          width: 44,
-          height: 44,
-          display: "grid",
-          placeItems: "center",
-          borderRadius: 2,
-          bgcolor: active ? "#d8ff63" : "#d4d0c5",
+          width: 88,
+          height: 28,
+          objectFit: "contain",
+          objectPosition: "left center",
         }}
-      >
-        {icon}
-      </Box>
+      />
       <Box sx={{ flex: 1 }}>
-        <Typography fontWeight={850}>{title}</Typography>
-        <Typography fontSize={13} color="text.secondary">
-          {detail}
+        <Typography fontSize={13} color="text.secondary" textAlign="right">
+          Secure checkout
         </Typography>
       </Box>
-      <Typography
-        className="mono-label"
-        sx={{ color: active ? "#4f6c00" : "#77736b", textAlign: "right" }}
-      >
-        {badge}
-      </Typography>
     </Box>
   );
 }
@@ -561,7 +551,7 @@ function SuccessState({ close }: { close: () => void }) {
         allowance and seat limit are available immediately.
       </Typography>
       <Button variant="contained" onClick={close}>
-        Return to TaskFlow
+        Return to Danto
       </Button>
     </Stack>
   );

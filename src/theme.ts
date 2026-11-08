@@ -28,7 +28,12 @@ export const theme = createTheme({
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
-        root: { borderRadius: 999, minHeight: 44, paddingInline: 20 },
+        root: {
+          borderRadius: 999,
+          minHeight: 44,
+          paddingInline: 20,
+          "@media (max-width:600px)": { paddingInline: 14 },
+        },
         containedPrimary: {
           boxShadow: "3px 3px 0 #ff5c35",
           "&:hover": {
@@ -58,6 +63,14 @@ export const theme = createTheme({
           backgroundImage: "none",
           border: "1px solid #d4d0c5",
           boxShadow: "0 24px 70px rgba(24,24,23,.2)",
+          "@media (max-width:600px)": {
+            width: "100%",
+            maxWidth: "100%",
+            height: "100%",
+            maxHeight: "100%",
+            margin: 0,
+            borderRadius: 0,
+          },
         },
       },
     },

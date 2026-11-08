@@ -20,7 +20,7 @@ export function InvitePage() {
   const navigate = useNavigate();
   const accept = useMutation({
     mutationFn: () => api.post(`/invites/${token}/accept`),
-    onSuccess: () => navigate("/"),
+    onSuccess: () => navigate("/app"),
   });
 
   return (
@@ -70,7 +70,7 @@ export function InvitePage() {
             Join the work.
           </Typography>
           <Typography color="text.secondary">
-            Accept this invitation to join your team in TaskFlow.
+            Accept this invitation to join your team in Danto.
           </Typography>
           {accept.isError && (
             <Alert severity="error">{errorMessage(accept.error)}</Alert>
