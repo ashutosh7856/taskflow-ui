@@ -1,5 +1,4 @@
 import AutoAwesomeRounded from "@mui/icons-material/AutoAwesomeRounded";
-import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
 import CreditCardRounded from "@mui/icons-material/CreditCardRounded";
 import LockRounded from "@mui/icons-material/LockRounded";
 import ReceiptLongRounded from "@mui/icons-material/ReceiptLongRounded";
@@ -18,8 +17,9 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { BillingDialog } from "../../components/BillingDialog";
+import { FeatureMark } from "../../components/FeatureMark";
 import { api, errorMessage } from "../../lib/api";
 import { offers } from "../../lib/billingPlans";
 
@@ -37,6 +37,7 @@ interface BillingDetails {
     workspaces: number | null;
     boards: number | null;
     collaboration: boolean;
+    workspacePulse: boolean;
   };
   paypal: { configured: boolean; environment: "live" | "sandbox" };
 }
@@ -44,9 +45,15 @@ interface BillingDetails {
 export function BillingPage() {
   const supportEmail =
     import.meta.env.VITE_SUPPORT_EMAIL || "support@danto.app";
-  const [plansOpen, setPlansOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const requestedPlan = searchParams.get("plan");
+  const initialPlan =
+    requestedPlan === "pro" || requestedPlan === "business"
+      ? requestedPlan
+      : null;
+  const [plansOpen, setPlansOpen] = useState(Boolean(initialPlan));
   const [checkoutPlan, setCheckoutPlan] = useState<"pro" | "business" | null>(
-    null,
+    initialPlan,
   );
   const [cancelledNotice, setCancelledNotice] = useState(false);
   const client = useQueryClient();
@@ -229,8 +236,8 @@ export function BillingPage() {
               />
               <Typography variant="body2" color="text.secondary">
                 Shared across workspaces you own. The allowance resets on a
-                rolling 30-day billing period. Team has no monthly cap, with
-                fair-use rate limits that prevent automated abuse.
+                rolling 30-day billing period. Team usage is shared across the
+                owner account, with monthly, daily, and hourly abuse controls.
               </Typography>
             </Box>
           </Box>
@@ -243,8 +250,9 @@ export function BillingPage() {
               Pick the capacity that fits your team.
             </Typography>
             <Typography color="text.secondary" mb={3}>
-              Free includes three active boards. Pro unlocks unlimited private
-              boards. Team adds collaboration across every owned workspace.
+              Free includes three private boards. Pro adds unlimited boards and
+              collaboration for three people. Team expands the account to ten
+              people and adds Workspace Pulse.
             </Typography>
             <Box
               sx={{
@@ -303,9 +311,7 @@ export function BillingPage() {
                     <Stack spacing={1.25} mb={3}>
                       {offer.features.map((feature) => (
                         <Stack key={feature} direction="row" gap={1}>
-                          <CheckCircleRounded
-                            sx={{ color: "#86a82c", fontSize: 19 }}
-                          />
+                          <FeatureMark inverse={current} />
                           <Typography fontSize={14}>{feature}</Typography>
                         </Stack>
                       ))}
@@ -456,7 +462,7 @@ export function BillingPage() {
               borderRadius: 2,
             }}
           >
-            <CheckCircleRounded color="success" />
+            <FeatureMark />
             <Typography sx={{ flex: 1 }}>
               Review how data and subscriptions are handled in our{" "}
               <Link to="/privacy">Privacy Policy</Link> and{" "}

@@ -5,6 +5,7 @@ export interface User {
   name: string;
   email: string;
   avatarUrl?: string | null;
+  isAdmin?: boolean;
 }
 
 export interface Workspace {

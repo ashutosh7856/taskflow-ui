@@ -1,6 +1,5 @@
 import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
 import AutoAwesomeRounded from "@mui/icons-material/AutoAwesomeRounded";
-import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
 import GroupsRounded from "@mui/icons-material/GroupsRounded";
 import InsightsRounded from "@mui/icons-material/InsightsRounded";
 import ViewKanbanRounded from "@mui/icons-material/ViewKanbanRounded";
@@ -9,6 +8,7 @@ import { Link } from "react-router-dom";
 import { Brand } from "../../components/Brand";
 import { AnimatedContent } from "../../components/bits/AnimatedContent";
 import { SpotlightCard } from "../../components/bits/SpotlightCard";
+import { FeatureMark } from "../../components/FeatureMark";
 import { offers } from "../../lib/billingPlans";
 import { useAuthStore } from "../../store/auth";
 
@@ -138,7 +138,7 @@ export function LandingPage() {
             <AnimatedContent>
               <Box>
                 <Chip
-                  label="20 AI actions included on Free"
+                  label="10 AI actions included on Free"
                   sx={{ bgcolor: "#e9f7b9", fontWeight: 800, mb: 3 }}
                 />
                 <Typography
@@ -201,7 +201,7 @@ export function LandingPage() {
                   flexWrap="wrap"
                   mt={4}
                 >
-                  {["3 boards free", "20 AI actions", "No card required"].map(
+                  {["3 boards free", "10 AI actions", "No card required"].map(
                     (item) => (
                       <Stack
                         key={item}
@@ -209,9 +209,7 @@ export function LandingPage() {
                         gap={0.75}
                         alignItems="center"
                       >
-                        <CheckCircleRounded
-                          sx={{ color: "#638000", fontSize: 18 }}
-                        />
+                        <FeatureMark />
                         <Typography fontSize={13} fontWeight={700}>
                           {item}
                         </Typography>
@@ -352,7 +350,7 @@ export function LandingPage() {
             <SectionIntro
               eyebrow="Simple pricing"
               title="Start free. Add capacity when the work grows."
-              copy="Free and Pro are built for private solo work. Team unlocks collaboration across every workspace you own. PayPal handles checkout; Danto never stores your payment credentials."
+              copy="Free is built for private solo work. Pro adds collaboration for three people, and Team expands it to ten across every workspace you own. AI allowances are shared and predictable."
             />
           </AnimatedContent>
           <Box className="landing-pricing-grid">
@@ -389,9 +387,7 @@ export function LandingPage() {
                   <Stack spacing={1.25} my={3}>
                     {offer.features.map((feature) => (
                       <Stack key={feature} direction="row" gap={1}>
-                        <CheckCircleRounded
-                          sx={{ color: "#638000", fontSize: 19 }}
-                        />
+                        <FeatureMark />
                         <Typography fontSize={14}>{feature}</Typography>
                       </Stack>
                     ))}
@@ -457,23 +453,26 @@ export function LandingPage() {
             <Typography color="text.secondary" fontSize={13} sx={{ flex: 1 }}>
               © {new Date().getFullYear()} Danto. Turn input into action.
             </Typography>
-            <Stack direction="row" gap={2}>
-              <Typography
-                component={Link}
-                to="/privacy"
-                color="text.secondary"
-                fontSize={13}
-              >
-                Privacy
-              </Typography>
-              <Typography
-                component={Link}
-                to="/terms"
-                color="text.secondary"
-                fontSize={13}
-              >
-                Terms
-              </Typography>
+            <Stack direction="row" gap={2} flexWrap="wrap">
+              {[
+                ["Pricing", "/pricing"],
+                ["About", "/about"],
+                ["Contact", "/contact"],
+                ["Privacy", "/privacy"],
+                ["Terms", "/terms"],
+                ["Refunds", "/refund-policy"],
+                ["Cancellation", "/cancellation-policy"],
+              ].map(([label, path]) => (
+                <Typography
+                  key={path}
+                  component={Link}
+                  to={path}
+                  color="text.secondary"
+                  fontSize={13}
+                >
+                  {label}
+                </Typography>
+              ))}
             </Stack>
           </Stack>
         </Container>
@@ -606,11 +605,7 @@ function HeroBoard() {
                     <Typography className="mono-label" color="text.secondary">
                       {columnIndex === 2 ? "Complete" : "This week"}
                     </Typography>
-                    {columnIndex === 2 && (
-                      <CheckCircleRounded
-                        sx={{ fontSize: 16, color: "#638000" }}
-                      />
-                    )}
+                    {columnIndex === 2 && <FeatureMark />}
                   </Stack>
                 </Box>
               ))}

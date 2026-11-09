@@ -13,6 +13,7 @@ import {
   IconButton,
   Radio,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,6 +21,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../lib/api";
 import { offers } from "../lib/billingPlans";
 import { useAuthStore } from "../store/auth";
+import { FeatureMark } from "./FeatureMark";
 
 declare global {
   interface Window {
@@ -46,7 +48,10 @@ export function BillingDialog({
   const [checkout, setCheckout] = useState<{
     plan: PaidPlan;
     paypalPlanId: string;
+    discountCode?: string;
+    firstPaymentUsd?: number;
   } | null>(null);
+  const [discountCode, setDiscountCode] = useState("");
   const [providerError, setProviderError] = useState("");
   const [success, setSuccess] = useState(false);
   const user = useAuthStore((state) => state.user);
@@ -59,8 +64,13 @@ export function BillingDialog({
     queryFn: async () => (await api.get("/billing")).data,
   });
   const setup = useMutation({
-    mutationFn: async (plan: PaidPlan) =>
-      (await api.post("/billing/paypal/setup", { plan })).data,
+    mutationFn: async ({ plan, code }: { plan: PaidPlan; code?: string }) =>
+      (
+        await api.post("/billing/paypal/setup", {
+          plan,
+          ...(code ? { discountCode: code } : {}),
+        })
+      ).data,
     onSuccess: (data) => setCheckout(data),
   });
   const chosenOffer = offers.find((offer) => offer.plan === selectedPlan);
@@ -68,6 +78,7 @@ export function BillingDialog({
     setSelectedPlan(null);
     setCheckout(null);
     setProviderError("");
+    setDiscountCode("");
     setSuccess(false);
     onClose();
   };
@@ -303,7 +314,7 @@ export function BillingDialog({
               <Stack spacing={1.2} sx={{ display: { xs: "none", sm: "flex" } }}>
                 {chosenOffer?.features.map((feature) => (
                   <Stack key={feature} direction="row" gap={1}>
-                    <CheckRounded sx={{ color: "#d8ff63", fontSize: 18 }} />
+                    <FeatureMark inverse />
                     <Typography fontSize={14}>{feature}</Typography>
                   </Stack>
                 ))}
@@ -319,13 +330,29 @@ export function BillingDialog({
               </Typography>
               <PaymentMethod />
               {!checkout && (
+                <TextField
+                  fullWidth
+                  label="Discount code (optional)"
+                  value={discountCode}
+                  onChange={(event) =>
+                    setDiscountCode(event.target.value.toUpperCase())
+                  }
+                  inputProps={{ maxLength: 30 }}
+                  sx={{ mt: 2, bgcolor: "#fffef9" }}
+                  helperText="Valid codes discount the first payment; renewals return to the regular monthly price."
+                />
+              )}
+              {!checkout && (
                 <Button
                   variant="contained"
                   fullWidth
                   disabled={setup.isPending}
                   onClick={() => {
                     setProviderError("");
-                    setup.mutate(selectedPlan);
+                    setup.mutate({
+                      plan: selectedPlan,
+                      code: discountCode.trim() || undefined,
+                    });
                   }}
                   sx={{ mt: 2, minHeight: 48 }}
                 >
@@ -382,6 +409,13 @@ export function BillingDialog({
                       </Typography>
                     </Box>
                   </Stack>
+                  {checkout.discountCode && (
+                    <Alert severity="success" sx={{ mb: 2 }}>
+                      {checkout.discountCode} applied: your first payment is $
+                      {checkout.firstPaymentUsd?.toFixed(2)} USD. Later payments
+                      renew at ${chosenOffer?.price} USD per month.
+                    </Alert>
+                  )}
                   <div ref={paypalNode} />
                 </Box>
               )}
@@ -445,7 +479,7 @@ export function BillingDialog({
                   <Stack spacing={1.25} my={3}>
                     {offer.features.map((feature) => (
                       <Stack key={feature} direction="row" gap={1}>
-                        <CheckRounded sx={{ fontSize: 18, color: "#4f6c00" }} />
+                        <FeatureMark />
                         <Typography fontSize={14}>{feature}</Typography>
                       </Stack>
                     ))}
@@ -532,9 +566,10 @@ function SuccessState({ close }: { close: () => void }) {
           height: 72,
           display: "grid",
           placeItems: "center",
-          borderRadius: "50%",
-          bgcolor: "#d8ff63",
-          boxShadow: "5px 5px 0 #181817",
+          borderRadius: 2,
+          bgcolor: "#181817",
+          color: "#fff",
+          boxShadow: "5px 5px 0 #ff5c35",
           mb: 3,
         }}
       >

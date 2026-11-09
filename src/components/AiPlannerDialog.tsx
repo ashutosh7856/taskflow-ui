@@ -252,7 +252,7 @@ export function AiPlannerDialog({
             sx={{ mb: 2 }}
           >
             {usage.limit === null
-              ? `${usage.used} AI actions used this period · unlimited on the Team plan.`
+              ? `${usage.used} AI actions used this period.`
               : `${usage.used} of ${usage.limit} AI actions used this period on the ${usage.plan} plan.`}
           </Alert>
         )}

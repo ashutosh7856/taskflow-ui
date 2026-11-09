@@ -10,12 +10,12 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { Brand } from "../../components/Brand";
 
-const updated = "November 8, 2026";
+const updated = "November 9, 2026";
 
 const privacySections = [
   [
     "Information we collect",
-    "We collect account details such as name and email, workspace content you create, collaboration activity, basic device and log information, and billing status or subscription identifiers returned by PayPal. Danto does not receive or store your full card number, bank credentials, or PayPal password.",
+    "We collect account details such as name and email, workspace content you create, collaboration activity, basic device and log information, and billing status or subscription identifiers returned by our payment providers. Danto does not receive or store your full card number, bank credentials, or payment-provider password.",
   ],
   [
     "How we use information",
@@ -23,7 +23,7 @@ const privacySections = [
   ],
   [
     "Sharing and processors",
-    "We share only what is needed with infrastructure, email, AI, analytics, and payment providers acting on our behalf. PayPal processes payment information under its own privacy terms. We do not sell personal information.",
+    "We share only what is needed with infrastructure, email, AI, analytics, and payment providers acting on our behalf. The checkout provider processes payment information under its own privacy terms. We do not sell personal information.",
   ],
   [
     "Retention and deletion",
@@ -50,15 +50,15 @@ const termsSections = [
   ],
   [
     "Plans and payment",
-    "Free and paid plan limits are shown before purchase. Paid subscriptions are billed monthly in USD through PayPal and renew automatically until cancelled. Taxes or currency conversion may be applied by the payment provider. Danto does not store your payment credentials.",
+    "Free and paid plan limits are shown before purchase. Paid subscriptions are billed monthly through the payment provider shown at checkout and renew automatically until cancelled. Taxes or currency conversion may be applied by the provider. Danto does not store your payment credentials. Discounts apply only for the period stated at checkout, after which the regular price resumes.",
   ],
   [
     "Cancellation and refunds",
-    "You may cancel from Billing & Plan at any time. Cancellation stops future renewals and does not normally refund a completed billing period, except where required by law or where a duplicate or incorrect charge is confirmed. Access may continue until the paid period ends.",
+    "You may cancel from Billing & Plan at any time. Cancellation stops future renewals and does not normally refund a completed billing period, except where required by law or under our Refund Policy. Access may continue until the paid period ends.",
   ],
   [
     "AI features",
-    "AI output may be incomplete or inaccurate and must be reviewed before use. Do not submit secrets or regulated personal data to AI features. Usage limits apply per plan and may reset on the stated billing cycle. Plans described as unlimited have no monthly action cap for normal product use, but hourly and daily fair-use limits still apply to prevent automation, abuse, resale, and service disruption.",
+    "AI output may be incomplete or inaccurate and must be reviewed before use. Do not submit secrets or regulated personal data to AI features. AI allowances are shared across workspaces owned by the subscriber and reset on the stated billing cycle. Monthly, daily, hourly, input-size, and other fair-use limits prevent automation, abuse, resale, and service disruption.",
   ],
   [
     "Your content",

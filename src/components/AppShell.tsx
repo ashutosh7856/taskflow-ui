@@ -104,6 +104,17 @@ export function AppShell() {
           >
             Billing & plan
           </MenuItem>
+          {user?.isAdmin && (
+            <MenuItem
+              onClick={() => {
+                setAccountAnchor(null);
+                navigate("/admin");
+              }}
+              sx={{ mx: 1, borderRadius: 1.5, fontWeight: 700 }}
+            >
+              Admin dashboard
+            </MenuItem>
+          )}
           <MenuItem
             onClick={signOut}
             sx={{ mx: 1, my: 0.75, borderRadius: 1.5, fontWeight: 700 }}

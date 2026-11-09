@@ -13,6 +13,8 @@ import { CommandCenterPage } from "./features/workspaces/CommandCenterPage";
 import { BillingPage } from "./features/billing/BillingPage";
 import { LegalPage } from "./features/legal/LegalPage";
 import { LandingPage } from "./features/landing/LandingPage";
+import { PricingPage, PublicInfoPage } from "./features/public/PublicPages";
+import { AdminPage } from "./features/admin/AdminPage";
 import { useAuthStore } from "./store/auth";
 
 function ProtectedRoute() {
@@ -26,6 +28,15 @@ const router = createBrowserRouter([
   { path: "/invites/:token", element: <InvitePage /> },
   { path: "/privacy", element: <LegalPage /> },
   { path: "/terms", element: <LegalPage /> },
+  { path: "/pricing", element: <PricingPage /> },
+  { path: "/about", element: <PublicInfoPage /> },
+  { path: "/contact", element: <PublicInfoPage /> },
+  { path: "/security", element: <PublicInfoPage /> },
+  { path: "/acceptable-use", element: <PublicInfoPage /> },
+  { path: "/refund-policy", element: <PublicInfoPage /> },
+  { path: "/cancellation-policy", element: <PublicInfoPage /> },
+  { path: "/delivery-policy", element: <PublicInfoPage /> },
+  { path: "/cookies", element: <PublicInfoPage /> },
   {
     element: <ProtectedRoute />,
     children: [
@@ -39,6 +50,7 @@ const router = createBrowserRouter([
           },
           { path: "/boards/:boardId", element: <BoardPage /> },
           { path: "/billing", element: <BillingPage /> },
+          { path: "/admin", element: <AdminPage /> },
         ],
       },
     ],
