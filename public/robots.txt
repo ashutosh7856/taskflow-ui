@@ -1,0 +1,49 @@
+# Danto: https://danto.app
+# Public marketing pages and guides are open to search engines and AI assistants.
+# Signed-in app screens and private client portals are not.
+
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /boards/
+Disallow: /workspaces/
+Disallow: /billing
+Disallow: /admin
+Disallow: /invites/
+Disallow: /p/
+Disallow: /forgot-password
+
+# AI assistants and answer engines: welcome.
+User-agent: GPTBot
+Allow: /
+Disallow: /p/
+Disallow: /app
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /p/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /p/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /p/
+Disallow: /app
+
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /p/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /p/
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+Sitemap: https://danto.app/sitemap.xml

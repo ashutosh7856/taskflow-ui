@@ -21,7 +21,14 @@ import { Link, useSearchParams } from "react-router-dom";
 import { BillingDialog } from "../../components/BillingDialog";
 import { FeatureMark } from "../../components/FeatureMark";
 import { api, errorMessage } from "../../lib/api";
-import { offers } from "../../lib/billingPlans";
+import {
+  displayPrice,
+  offers,
+  type BillingInterval,
+} from "../../lib/billingPlans";
+import { IntervalToggle } from "../../components/IntervalToggle";
+import { formatMoney } from "../../lib/money";
+import { useAuthStore } from "../../store/auth";
 
 interface BillingDetails {
   plan: "free" | "pro" | "business";
@@ -38,7 +45,9 @@ interface BillingDetails {
     boards: number | null;
     collaboration: boolean;
     workspacePulse: boolean;
+    clientPortals?: number | null;
   };
+  billingInterval?: "month" | "year";
   paypal: { configured: boolean; environment: "live" | "sandbox" };
 }
 
@@ -46,6 +55,10 @@ export function BillingPage() {
   const supportEmail =
     import.meta.env.VITE_SUPPORT_EMAIL || "support@danto.app";
   const [searchParams] = useSearchParams();
+  const isAdmin = useAuthStore((state) => Boolean(state.user?.isAdmin));
+  const [interval, setBillingInterval] = useState<BillingInterval>(
+    searchParams.get("interval") === "month" ? "month" : "year",
+  );
   const requestedPlan = searchParams.get("plan");
   const initialPlan =
     requestedPlan === "pro" || requestedPlan === "business"
@@ -123,10 +136,10 @@ export function BillingPage() {
       )}
       {data && (
         <Stack spacing={3}>
-          {data.paypal.environment !== "live" && (
+          {isAdmin && data.paypal.environment !== "live" && (
             <Alert severity="warning">
-              Payments are currently in PayPal sandbox mode. Switch the backend
-              to live credentials before accepting real customer payments.
+              Admin note: PayPal is in sandbox mode. Set PAYPAL_ENV=live before
+              accepting real payments. Only admins see this.
             </Alert>
           )}
           <Box
@@ -175,14 +188,14 @@ export function BillingPage() {
               <Stack direction={{ xs: "column", sm: "row" }} gap={3} mt={4}>
                 <Box>
                   <Typography variant="h5">
-                    {data.entitlements.collaboration
-                      ? data.entitlements.seats
-                      : "Solo"}
+                    {data.entitlements.clientPortals == null
+                      ? "Unlimited"
+                      : data.entitlements.clientPortals}
                   </Typography>
                   <Typography color="#aaa8a1">
-                    {data.entitlements.collaboration
-                      ? "people account-wide"
-                      : "private workspaces"}
+                    {data.entitlements.clientPortals === 1
+                      ? "client portal"
+                      : "client portals"}
                   </Typography>
                 </Box>
                 <Box>
@@ -247,13 +260,16 @@ export function BillingPage() {
               Available plans
             </Typography>
             <Typography variant="h4" mt={1} mb={1}>
-              Pick the capacity that fits your team.
+              Choose the plan that fits your client list.
             </Typography>
             <Typography color="text.secondary" mb={3}>
-              Free includes three private boards. Pro adds unlimited boards and
-              collaboration for three people. Team expands the account to ten
-              people and adds Workspace Pulse.
+              Free covers one client. Pro gives every client a branded portal
+              and AI updates. Team adds white-label portals and room for ten
+              teammates. Pay yearly and get two months free.
             </Typography>
+            <Box sx={{ mb: 2.5 }}>
+              <IntervalToggle value={interval} onChange={setBillingInterval} />
+            </Box>
             <Box
               sx={{
                 display: "grid",
@@ -299,15 +315,29 @@ export function BillingPage() {
                     </Typography>
                     <Stack direction="row" alignItems="flex-end" my={2.5}>
                       <Typography className="display-type" fontSize={46}>
-                        ${offer.price}
+                        ${displayPrice(offer, interval).amount}
                       </Typography>
                       <Typography
                         color={current ? "#b9b7af" : "text.secondary"}
                         mb={0.75}
+                        ml={0.75}
                       >
-                        / month
+                        {displayPrice(offer, interval).suffix}
                       </Typography>
                     </Stack>
+                    {offer.price > 0 && (
+                      <Typography
+                        fontSize={13}
+                        fontWeight={800}
+                        sx={{
+                          mt: -1.5,
+                          mb: 2,
+                          color: current ? "#d8ff63" : "#4f6c00",
+                        }}
+                      >
+                        {displayPrice(offer, interval).note}
+                      </Typography>
+                    )}
                     <Stack spacing={1.25} mb={3}>
                       {offer.features.map((feature) => (
                         <Stack key={feature} direction="row" gap={1}>
@@ -451,6 +481,8 @@ export function BillingPage() {
             )}
           </Box>
 
+          <ReceiptsCard />
+
           <Box
             sx={{
               display: "flex",
@@ -478,6 +510,7 @@ export function BillingPage() {
       <BillingDialog
         open={plansOpen}
         initialPlan={checkoutPlan}
+        initialInterval={interval}
         onClose={() => {
           setPlansOpen(false);
           setCheckoutPlan(null);
@@ -492,6 +525,8 @@ function billingStatusLabel(data: BillingDetails) {
     return "Free plan";
   }
   if (data.billingStatus === "past_due") return "Payment issue";
+  if (data.billingStatus === "cancelled" && !data.paypalSubscriptionId)
+    return "Trial";
   if (data.billingStatus === "cancelled") return "Cancelled";
   if (data.billingStatus === "active") return "Active";
   return "No paid subscription";
@@ -502,7 +537,16 @@ function planBillingLine(data: BillingDetails) {
     return "$0 USD · No recurring payment";
   }
   if (!data.paypalSubscriptionId) {
-    return `Manual ${data.plan === "business" ? "Team" : data.plan} access · No recurring charge`;
+    const ends = data.currentPeriodEnd
+      ? ` · ends ${new Date(data.currentPeriodEnd).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+      : "";
+    return `Free ${data.plan === "business" ? "Team" : "Pro"} access${ends} · No card on file`;
+  }
+  if (data.billingInterval === "year") {
+    const yearly = offers.find(
+      (offer) => offer.plan === data.plan,
+    )?.yearlyPrice;
+    return `$${yearly} USD / year · Covers every workspace you own`;
   }
   return `$${data.entitlements.priceUsd} USD / month · Covers every workspace you own`;
 }
@@ -525,6 +569,99 @@ function TrustItem({
       <Typography variant="body2" color="text.secondary" mt={0.5}>
         {body}
       </Typography>
+    </Box>
+  );
+}
+
+interface ReceiptRow {
+  id: string;
+  number: string;
+  status: string;
+  amount: number;
+  currency: string;
+  plan: string | null;
+  issuedAt: string;
+}
+
+/** Every payment with a printable receipt. Also emailed after each charge. */
+function ReceiptsCard() {
+  const receipts = useQuery({
+    queryKey: ["receipts"],
+    queryFn: async () =>
+      (await api.get<ReceiptRow[]>("/billing/receipts")).data,
+  });
+  return (
+    <Box
+      sx={{
+        p: { xs: 2.5, sm: 3 },
+        border: "1px solid #aaa59a",
+        borderRadius: 2,
+        bgcolor: "#fffef9",
+      }}
+    >
+      <Stack direction="row" alignItems="center" gap={1.25} mb={1.5}>
+        <ReceiptLongRounded />
+        <Typography variant="h6" sx={{ flex: 1 }}>
+          Receipts
+        </Typography>
+      </Stack>
+      {receipts.isLoading && (
+        <Typography color="text.secondary">Loading receipts…</Typography>
+      )}
+      {receipts.error && (
+        <Alert severity="error">{errorMessage(receipts.error)}</Alert>
+      )}
+      {receipts.data && !receipts.data.length && (
+        <Typography color="text.secondary">
+          No payments yet. After each payment we email you a receipt, and it
+          also appears here.
+        </Typography>
+      )}
+      <Stack divider={<Box sx={{ borderTop: "1px solid #e3e0d7" }} />}>
+        {receipts.data?.map((row) => (
+          <Stack
+            key={row.id}
+            direction="row"
+            alignItems="center"
+            flexWrap="wrap"
+            gap={{ xs: 1, sm: 2 }}
+            py={1.5}
+          >
+            <Box sx={{ flex: "1 1 200px", minWidth: 0 }}>
+              <Typography fontWeight={800} fontSize={15}>
+                {new Date(row.issuedAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </Typography>
+              <Typography fontSize={13} color="text.secondary">
+                {row.number}
+                {row.plan
+                  ? ` · ${row.plan === "business" ? "Team" : "Pro"}`
+                  : ""}
+              </Typography>
+            </Box>
+            <Typography
+              fontWeight={800}
+              sx={{ fontVariantNumeric: "tabular-nums" }}
+            >
+              {row.status === "refunded" ? "−" : ""}
+              {formatMoney(row.amount, row.currency)}
+            </Typography>
+            {row.status === "refunded" && (
+              <Chip size="small" label="Refunded" variant="outlined" />
+            )}
+            <Button
+              component={Link}
+              to={`/billing/receipts/${row.id}`}
+              size="small"
+            >
+              View receipt
+            </Button>
+          </Stack>
+        ))}
+      </Stack>
     </Box>
   );
 }

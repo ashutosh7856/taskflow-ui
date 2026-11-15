@@ -19,7 +19,12 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../lib/api";
-import { offers } from "../lib/billingPlans";
+import {
+  displayPrice,
+  offers,
+  type BillingInterval,
+} from "../lib/billingPlans";
+import { IntervalToggle } from "./IntervalToggle";
 import { useAuthStore } from "../store/auth";
 import { FeatureMark } from "./FeatureMark";
 
@@ -39,10 +44,12 @@ export function BillingDialog({
   open,
   onClose,
   initialPlan,
+  initialInterval = "year",
 }: {
   open: boolean;
   onClose: () => void;
   initialPlan?: "pro" | "business" | null;
+  initialInterval?: BillingInterval;
 }) {
   const [selectedPlan, setSelectedPlan] = useState<PaidPlan | null>(null);
   const [checkout, setCheckout] = useState<{
@@ -52,6 +59,8 @@ export function BillingDialog({
     firstPaymentUsd?: number;
   } | null>(null);
   const [discountCode, setDiscountCode] = useState("");
+  const [interval, setBillingInterval] =
+    useState<BillingInterval>(initialInterval);
   const [providerError, setProviderError] = useState("");
   const [success, setSuccess] = useState(false);
   const user = useAuthStore((state) => state.user);
@@ -68,7 +77,8 @@ export function BillingDialog({
       (
         await api.post("/billing/paypal/setup", {
           plan,
-          ...(code ? { discountCode: code } : {}),
+          interval,
+          ...(code && interval === "month" ? { discountCode: code } : {}),
         })
       ).data,
     onSuccess: (data) => setCheckout(data),
@@ -85,7 +95,8 @@ export function BillingDialog({
 
   useEffect(() => {
     if (open && initialPlan) setSelectedPlan(initialPlan);
-  }, [initialPlan, open]);
+    if (open) setBillingInterval(initialInterval);
+  }, [initialPlan, initialInterval, open]);
 
   useEffect(() => {
     if (!checkout) return;
@@ -304,13 +315,33 @@ export function BillingDialog({
                   className="display-type"
                   sx={{ fontSize: 50, lineHeight: 1 }}
                 >
-                  ${chosenOffer?.price}
+                  $
+                  {chosenOffer
+                    ? displayPrice(chosenOffer, interval).amount
+                    : ""}
                 </Typography>
-                <Typography sx={{ color: "#aaa8a1" }}>
-                  {" "}
-                  / account / month
+                <Typography sx={{ color: "#aaa8a1", ml: 0.75 }}>
+                  / month
                 </Typography>
               </Stack>
+              <Box sx={{ mb: 2 }}>
+                <IntervalToggle
+                  dark
+                  value={interval}
+                  onChange={(value) => {
+                    setBillingInterval(value);
+                    setCheckout(null);
+                  }}
+                />
+                {chosenOffer && (
+                  <Typography
+                    fontSize={13}
+                    sx={{ color: "#d8ff63", mt: 1, fontWeight: 700 }}
+                  >
+                    {displayPrice(chosenOffer, interval).note}
+                  </Typography>
+                )}
+              </Box>
               <Stack spacing={1.2} sx={{ display: { xs: "none", sm: "flex" } }}>
                 {chosenOffer?.features.map((feature) => (
                   <Stack key={feature} direction="row" gap={1}>
@@ -320,7 +351,9 @@ export function BillingDialog({
                 ))}
               </Stack>
               <Typography fontSize={12} sx={{ color: "#8f8d86", mt: 3 }}>
-                Recurring monthly subscription. Cancel from account billing.
+                {interval === "year"
+                  ? "Billed once a year. Cancel renewal anytime from Billing."
+                  : "Billed monthly. Cancel anytime from Billing."}{" "}
                 Taxes may apply.
               </Typography>
             </Box>
@@ -329,7 +362,7 @@ export function BillingDialog({
                 Payment method
               </Typography>
               <PaymentMethod />
-              {!checkout && (
+              {!checkout && interval === "month" && (
                 <TextField
                   fullWidth
                   label="Discount code (optional)"
@@ -381,7 +414,7 @@ export function BillingDialog({
                       Preparing secure PayPal checkout
                     </Typography>
                     <Typography fontSize={13} color="text.secondary">
-                      The first sandbox setup can take a few seconds.
+                      This usually takes a few seconds.
                     </Typography>
                   </Box>
                 </Stack>
@@ -434,80 +467,97 @@ export function BillingDialog({
             </Box>
           </Stack>
         ) : (
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "repeat(3,1fr)" },
-              gap: 2,
-            }}
-          >
-            {offers.map((offer) => {
-              const current = billing.data?.plan === offer.plan;
-              return (
-                <Box
-                  key={offer.plan}
-                  className={`pricing-card ${offer.plan === "pro" ? "is-featured" : ""}`}
-                >
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography className="mono-label">{offer.name}</Typography>
-                    {current && (
+          <>
+            <Box sx={{ mb: 2 }}>
+              <IntervalToggle value={interval} onChange={setBillingInterval} />
+            </Box>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "repeat(3,1fr)" },
+                gap: 2,
+              }}
+            >
+              {offers.map((offer) => {
+                const current = billing.data?.plan === offer.plan;
+                return (
+                  <Box
+                    key={offer.plan}
+                    className={`pricing-card ${offer.plan === "pro" ? "is-featured" : ""}`}
+                  >
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography className="mono-label">
+                        {offer.name}
+                      </Typography>
+                      {current && (
+                        <Typography
+                          className="mono-label"
+                          sx={{ color: "#ff5c35" }}
+                        >
+                          Current plan
+                        </Typography>
+                      )}
+                    </Stack>
+                    <Stack direction="row" alignItems="flex-end" mt={2}>
                       <Typography
-                        className="mono-label"
-                        sx={{ color: "#ff5c35" }}
+                        className="display-type"
+                        sx={{ fontSize: 52, lineHeight: 1 }}
                       >
-                        Current plan
+                        ${displayPrice(offer, interval).amount}
                       </Typography>
-                    )}
-                  </Stack>
-                  <Stack direction="row" alignItems="flex-end" mt={2}>
-                    <Typography
-                      className="display-type"
-                      sx={{ fontSize: 52, lineHeight: 1 }}
-                    >
-                      ${offer.price}
-                    </Typography>
+                      {offer.price > 0 && (
+                        <Typography color="text.secondary" ml={0.75}>
+                          / month
+                        </Typography>
+                      )}
+                    </Stack>
                     {offer.price > 0 && (
-                      <Typography color="text.secondary">
-                        {" "}
-                        / account / mo
+                      <Typography
+                        fontSize={13}
+                        fontWeight={800}
+                        sx={{ color: "#4f6c00", mt: 0.5 }}
+                      >
+                        {displayPrice(offer, interval).note}
                       </Typography>
                     )}
-                  </Stack>
-                  <Typography color="text.secondary" mt={1}>
-                    {offer.line}
-                  </Typography>
-                  <Stack spacing={1.25} my={3}>
-                    {offer.features.map((feature) => (
-                      <Stack key={feature} direction="row" gap={1}>
-                        <FeatureMark />
-                        <Typography fontSize={14}>{feature}</Typography>
-                      </Stack>
-                    ))}
-                  </Stack>
-                  {offer.plan === "free" ? (
-                    <Button disabled fullWidth>
-                      {current ? "Your current plan" : "Included"}
-                    </Button>
-                  ) : (
-                    <Button
-                      variant={offer.plan === "pro" ? "contained" : "outlined"}
-                      startIcon={<RocketLaunchRounded />}
-                      disabled={current || !billing.data?.paypal?.configured}
-                      fullWidth
-                      onClick={() => setSelectedPlan(offer.plan)}
-                    >
-                      {current ? "Active" : `Choose ${offer.name}`}
-                    </Button>
-                  )}
-                </Box>
-              );
-            })}
-          </Box>
+                    <Typography color="text.secondary" mt={1}>
+                      {offer.line}
+                    </Typography>
+                    <Stack spacing={1.25} my={3}>
+                      {offer.features.map((feature) => (
+                        <Stack key={feature} direction="row" gap={1}>
+                          <FeatureMark />
+                          <Typography fontSize={14}>{feature}</Typography>
+                        </Stack>
+                      ))}
+                    </Stack>
+                    {offer.plan === "free" ? (
+                      <Button disabled fullWidth>
+                        {current ? "Your current plan" : "Included"}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant={
+                          offer.plan === "pro" ? "contained" : "outlined"
+                        }
+                        startIcon={<RocketLaunchRounded />}
+                        disabled={current || !billing.data?.paypal?.configured}
+                        fullWidth
+                        onClick={() => setSelectedPlan(offer.plan)}
+                      >
+                        {current ? "Active" : `Choose ${offer.name}`}
+                      </Button>
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+          </>
         )}
         {!billing.isLoading && !billing.data?.paypal?.configured && (
           <Alert severity="info" sx={{ mt: 2 }}>
-            PayPal is not configured on the server yet. Add the sandbox client
-            ID and secret to enable checkout.
+            Checkout is temporarily unavailable. Please try again shortly or
+            email support@danto.app.
           </Alert>
         )}
       </DialogContent>

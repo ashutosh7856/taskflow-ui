@@ -13,6 +13,11 @@ import { useState } from "react";
 import { errorMessage } from "../lib/api";
 
 const templates = [
+  {
+    id: "client",
+    name: "Client project",
+    detail: "Requests → review → done, portal-ready",
+  },
   { id: "blank", name: "Blank", detail: "Start from a clean board" },
   { id: "software", name: "Software", detail: "Backlog → review → done" },
   { id: "marketing", name: "Marketing", detail: "Ideas → published" },
@@ -37,7 +42,7 @@ export function CreateBoardDialog({
 }) {
   const [name, setName] = useState("");
   const [template, setTemplate] =
-    useState<(typeof templates)[number]["id"]>("software");
+    useState<(typeof templates)[number]["id"]>("client");
   const close = () => {
     setName("");
     setTemplate("software");

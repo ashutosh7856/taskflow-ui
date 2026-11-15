@@ -18,6 +18,9 @@ export interface Workspace {
   members?: Membership[];
   plan?: "free" | "pro" | "business";
   billingStatus?: "inactive" | "active" | "past_due" | "cancelled";
+  brandName?: string | null;
+  brandColor?: string | null;
+  brandLogoUrl?: string | null;
 }
 
 export interface Membership {
@@ -32,7 +35,9 @@ export interface Board {
   workspaceId: string;
   name: string;
   backgroundColor: string;
-  template: "blank" | "software" | "marketing" | "operations";
+  template: "blank" | "client" | "software" | "marketing" | "operations";
+  portalEnabled?: boolean;
+  portalClientName?: string | null;
   createdAt?: string;
   role?: Role;
   lists?: List[];
@@ -62,6 +67,9 @@ export interface Card {
   isCompleted: boolean;
   completedAt?: string | null;
   category: string;
+  clientVisible?: boolean;
+  approvalStatus?: ApprovalStatus;
+  approvalRequestedAt?: string | null;
   members?: Array<{ userId: string; user: User }>;
   labels?: Array<{ labelId: string; label: Label }>;
   checklists?: Checklist[];
@@ -107,4 +115,81 @@ export interface Activity {
   cardId?: string | null;
   createdAt: string;
   meta?: Record<string, unknown>;
+}
+
+export type ApprovalStatus =
+  "none" | "pending" | "approved" | "changes_requested";
+export type ClientFeedbackKind =
+  "comment" | "approved" | "changes_requested" | "request";
+
+export interface ClientFeedback {
+  id: string;
+  boardId?: string;
+  cardId?: string | null;
+  kind: ClientFeedbackKind;
+  authorName: string;
+  message: string;
+  readAt?: string | null;
+  createdAt: string;
+}
+
+export interface PortalSettings {
+  enabled: boolean;
+  paused?: boolean;
+  url: string | null;
+  clientName: string | null;
+  clientEmail: string | null;
+  welcome: string | null;
+  allowRequests: boolean;
+  plan: "free" | "pro" | "business";
+  entitlements: {
+    clientPortals: number | null;
+    portalBranding: boolean;
+    whiteLabel: boolean;
+  };
+  unread: number;
+  feedback: ClientFeedback[];
+}
+
+export interface PublicPortalCard {
+  id: string;
+  title: string;
+  description?: string | null;
+  category: string;
+  dueDate?: string | null;
+  isCompleted: boolean;
+  completedAt?: string | null;
+  approvalStatus: ApprovalStatus;
+  approvalRequestedAt?: string | null;
+  checklist: { done: number; total: number };
+  feedback: ClientFeedback[];
+}
+
+export interface PublicPortal {
+  board: {
+    name: string;
+    clientName: string | null;
+    welcome: string | null;
+    allowRequests: boolean;
+    updatedAt: string;
+  };
+  brand: {
+    name: string;
+    color: string | null;
+    logoUrl: string | null;
+    showBadge: boolean;
+  };
+  stats: {
+    total: number;
+    completed: number;
+    awaitingApproval: number;
+    overdue: number;
+  };
+  lists: Array<{ id: string; name: string; cards: PublicPortalCard[] }>;
+  requests: Array<{
+    id: string;
+    authorName: string;
+    message: string;
+    createdAt: string;
+  }>;
 }

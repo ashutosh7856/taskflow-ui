@@ -24,6 +24,7 @@ import { CreateDialog } from "../../components/CreateDialog";
 import { CreateBoardDialog } from "../../components/CreateBoardDialog";
 import { WorkspaceSettingsDialog } from "../../components/WorkspaceSettingsDialog";
 import { api, errorMessage } from "../../lib/api";
+import { OnboardingChecklist } from "../../components/OnboardingChecklist";
 import type { Board, Workspace } from "../../types";
 
 export function DashboardPage() {
@@ -182,12 +183,7 @@ export function DashboardPage() {
                   }}
                 >
                   Make the work{" "}
-                  <span
-                    className="dashboard-hero-word"
-                    style={{ color: "#181817" }}
-                  >
-                    move.
-                  </span>
+                  <span className="dashboard-hero-word">move.</span>
                 </Typography>
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
@@ -211,6 +207,9 @@ export function DashboardPage() {
                         bgcolor: "#d8ff63",
                         color: "#181817",
                         boxShadow: "3px 3px 0 #ff5c35",
+                        whiteSpace: "nowrap",
+                        flexShrink: 0,
+                        alignSelf: { xs: "flex-start", sm: "auto" },
                         "&:hover": { bgcolor: "#e5ff94" },
                       }}
                     >
@@ -220,10 +219,10 @@ export function DashboardPage() {
                 </Stack>
                 <Stack direction="row" gap={1} flexWrap="wrap" mt={3}>
                   {[
-                    `${workspaces.data?.length || 0} workspaces`,
-                    "Notes → boards",
-                    "Live completion",
-                    "AI status updates",
+                    `${workspaces.data?.length || 0} ${workspaces.data?.length === 1 ? "workspace" : "workspaces"}`,
+                    "Client portals",
+                    "One-click approvals",
+                    "AI client updates",
                   ].map((item) => (
                     <Chip
                       key={item}
@@ -259,6 +258,7 @@ export function DashboardPage() {
             </Stack>
           ) : (
             <Stack spacing={7}>
+              {!!workspaces.data?.length && <OnboardingChecklist />}
               {workspaces.data?.map((workspace, index) => (
                 <AnimatedContent
                   key={workspace.id}
@@ -330,7 +330,7 @@ function WorkspaceSection({
   const createBoard = useMutation({
     mutationFn: async (input: {
       name: string;
-      template: "blank" | "software" | "marketing" | "operations";
+      template: "blank" | "client" | "software" | "marketing" | "operations";
     }) =>
       (
         await api.post<Board>(`/workspaces/${workspace.id}/boards`, {
@@ -350,14 +350,27 @@ function WorkspaceSection({
       aria-labelledby={`workspace-${workspace.id}`}
       sx={{ borderTop: "1px solid #aaa59a", pt: 2.5 }}
     >
-      <Stack direction="row" alignItems="center" gap={2} mb={3}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        flexWrap="wrap"
+        columnGap={2}
+        rowGap={1}
+        mb={3}
+      >
         <Typography aria-hidden className="mono-label" color="text.secondary">
           {String(number).padStart(2, "0")}
         </Typography>
         <Typography
           id={`workspace-${workspace.id}`}
           variant="h5"
-          sx={{ flex: 1, fontSize: { xs: 22, md: 26 }, scrollMarginTop: 110 }}
+          sx={{
+            flex: "1 1 220px",
+            minWidth: 0,
+            fontSize: { xs: 22, md: 26 },
+            scrollMarginTop: 110,
+            overflowWrap: "anywhere",
+          }}
         >
           {workspace.name}
         </Typography>

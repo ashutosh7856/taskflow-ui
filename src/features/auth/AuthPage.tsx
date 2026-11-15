@@ -12,7 +12,8 @@ import {
 } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
-import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { signupSource } from "../../lib/attribution";
 
 import { api, errorMessage } from "../../lib/api";
 import { useAuthStore } from "../../store/auth";
@@ -33,7 +34,7 @@ export function AuthPage() {
     mutationFn: async () => {
       const payload =
         mode === "register"
-          ? form
+          ? { ...form, source: signupSource() }
           : { email: form.email, password: form.password };
       return (await api.post(`/auth/${mode}`, payload)).data;
     },
@@ -86,7 +87,7 @@ export function AuthPage() {
         <AnimatedContent>
           <Box sx={{ position: "relative", maxWidth: 620 }}>
             <Typography className="mono-label" sx={{ color: "#d8ff63", mb: 2 }}>
-              One place. Every moving part.
+              Client portals for freelancers
             </Typography>
             <Typography
               component="h1"
@@ -96,24 +97,24 @@ export function AuthPage() {
                 lineHeight: 0.94,
               }}
             >
-              Plans are easy.{" "}
+              Your clients,{" "}
               <Box component="span" sx={{ color: "#d8ff63" }}>
-                Momentum
+                always
               </Box>{" "}
-              is the work.
+              in the loop.
             </Typography>
             <Typography
               fontSize={18}
               sx={{ color: "#b9b7af", mt: 3, lineHeight: 1.7, maxWidth: 520 }}
             >
-              A focused workspace for boards, assignments, discussions, and
-              every detail your team needs to deliver.
+              Share live progress, collect approvals in one click and send
+              polished weekly updates, all from the board you already work in.
             </Typography>
             <Stack spacing={1.5} mt={4}>
               {[
-                "Flexible visual boards",
-                "Clear ownership and due dates",
-                "Updates that keep everyone aligned",
+                "A branded portal for every client",
+                "One-click approvals with a paper trail",
+                "AI-written weekly status updates",
               ].map((item) => (
                 <Stack
                   key={item}
@@ -129,7 +130,7 @@ export function AuthPage() {
           </Box>
         </AnimatedContent>
         <Typography className="mono-label" sx={{ color: "#8f8e88" }}>
-          Built to make progress visible.
+          danto.app
         </Typography>
       </Box>
 
@@ -156,15 +157,15 @@ export function AuthPage() {
             <Brand />
           </Box>
           <Typography className="mono-label" color="text.secondary" mb={1}>
-            Access your workspace
+            {mode === "login" ? "Sign in" : "Free forever plan"}
           </Typography>
           <Typography variant="h4" sx={{ fontSize: 34 }}>
             {mode === "login" ? "Welcome back" : "Create your account"}
           </Typography>
           <Typography color="text.secondary" mt={1} mb={3}>
             {mode === "login"
-              ? "Sign in to continue to your workspace."
-              : "Start organizing your team's work in minutes."}
+              ? "Pick up where you left off."
+              : "Set up your first client portal in about two minutes. No card needed."}
           </Typography>
           <Tabs
             value={mode}
@@ -220,6 +221,21 @@ export function AuthPage() {
                 setForm({ ...form, password: event.target.value })
               }
             />
+            {mode === "login" && (
+              <Typography
+                component={Link}
+                to={`/forgot-password${form.email ? `?email=${encodeURIComponent(form.email)}` : ""}`}
+                variant="body2"
+                sx={{
+                  alignSelf: "flex-end",
+                  mt: "-8px !important",
+                  color: "#56534d",
+                  fontWeight: 700,
+                }}
+              >
+                Forgot password?
+              </Typography>
+            )}
             {mutation.isError && (
               <Alert severity="error">{errorMessage(mutation.error)}</Alert>
             )}
@@ -246,7 +262,15 @@ export function AuthPage() {
             textAlign="center"
             mt={3}
           >
-            By continuing, you agree to use Danto responsibly.
+            By continuing you agree to our{" "}
+            <Link to="/terms" style={{ color: "inherit" }}>
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link to="/privacy" style={{ color: "inherit" }}>
+              Privacy Policy
+            </Link>
+            .
           </Typography>
         </Box>
       </Box>

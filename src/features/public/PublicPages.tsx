@@ -8,12 +8,18 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 
+import { SiteFooter } from "../../components/SiteFooter";
 import { Brand } from "../../components/Brand";
 import { FeatureMark } from "../../components/FeatureMark";
-import { offers } from "../../lib/billingPlans";
+import {
+  displayPrice,
+  offers,
+  type BillingInterval,
+} from "../../lib/billingPlans";
+import { IntervalToggle } from "../../components/IntervalToggle";
 import { useAuthStore } from "../../store/auth";
 
 type Section = { title: string; body: ReactNode };
@@ -31,22 +37,26 @@ const businessPhone = import.meta.env.VITE_BUSINESS_PHONE || "";
 
 const pages: Record<string, Page> = {
   "/about": {
-    eyebrow: "Company",
-    title: "Work should not need translating twice.",
+    eyebrow: "About Danto",
+    title: "Client work runs on trust. Trust runs on visibility.",
     intro:
-      "Danto turns the source material teams already have into structured work, then keeps reporting connected to what actually happened.",
+      "Danto is a client portal and project board for freelancers and small agencies. It gives every client a live view of their project, a one-click way to approve work, and a clear place to send requests, so nobody has to chase anybody.",
     sections: [
       {
-        title: "What we build",
-        body: "Danto is a subscription software service for project planning, task coordination, and evidence-based workspace updates. It is designed around structured actions—not an open-ended AI chat window.",
+        title: "Why we built it",
+        body: "Most freelancers don't lose clients over the quality of their work. They lose them over communication: slow updates, approvals lost in email threads, and requests that arrive through five different channels. Danto turns the board you already work from into a client experience that answers those questions before they're asked.",
       },
       {
-        title: "Who it is for",
-        body: "Solo builders can keep private work organized. Teams can coordinate shared workspaces, assignments, due dates, checklists, and board-level or workspace-level updates.",
+        title: "Who it's for",
+        body: "Designers, developers, marketers, video editors, consultants and small studios who manage several client projects at once and want to look organised without adopting a heavy agency platform.",
       },
       {
-        title: "How AI fits",
-        body: "AI is used only when a user requests an AI action. Relevant prompt and workspace context are sent to the configured model provider, and the result must be reviewed before it is applied.",
+        title: "How AI helps",
+        body: "AI drafts the boring parts, like turning a project brief into a board or writing your weekly client update from real progress. It only runs when you ask, it only uses the project data you choose, and you always review the result before anything is sent.",
+      },
+      {
+        title: "Where we're based",
+        body: "Danto is an independent, bootstrapped product. We answer every support email ourselves at support@danto.app.",
       },
     ],
   },
@@ -279,18 +289,19 @@ export function PublicInfoPage() {
 
 export function PricingPage() {
   const signedIn = useAuthStore((state) => Boolean(state.accessToken));
+  const [interval, setBillingInterval] = useState<BillingInterval>("year");
   return (
     <PublicShell>
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         <Typography className="mono-label" color="text.secondary">
-          Pricing / Per owner account
+          Pricing
         </Typography>
         <Typography
           className="display-type"
           component="h1"
           sx={{ fontSize: { xs: 48, md: 76 }, lineHeight: 0.95, mt: 2 }}
         >
-          Predictable capacity. No AI blank cheque.
+          Simple pricing that grows with your client list.
         </Typography>
         <Typography
           sx={{
@@ -301,15 +312,19 @@ export function PricingPage() {
             maxWidth: 760,
           }}
         >
-          Each paid plan belongs to an account owner and covers every workspace
-          they own. Team AI actions and seats are shared account-wide.
+          Start free with your first client. Upgrade when you're ready to bring
+          everyone in. Your clients never pay and never need an account.
         </Typography>
+        <Box sx={{ mt: 5 }}>
+          <IntervalToggle value={interval} onChange={setBillingInterval} />
+        </Box>
         <Box
           sx={{
             display: "grid",
             gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
             gap: 2,
-            my: 6,
+            mt: 3,
+            mb: 6,
           }}
         >
           {offers.map((offer) => (
@@ -329,7 +344,17 @@ export function PricingPage() {
             >
               <Stack direction="row" justifyContent="space-between">
                 <Typography className="mono-label">{offer.name}</Typography>
-                {offer.plan === "pro" && <Chip size="small" label="Popular" />}
+                {offer.plan === "pro" && (
+                  <Chip
+                    size="small"
+                    label="Most popular"
+                    sx={{
+                      bgcolor: "#d8ff63",
+                      color: "#181817",
+                      fontWeight: 800,
+                    }}
+                  />
+                )}
               </Stack>
               <Stack direction="row" alignItems="flex-end" my={2.5}>
                 <Typography
@@ -337,14 +362,28 @@ export function PricingPage() {
                   fontSize={56}
                   lineHeight={1}
                 >
-                  ${offer.price}
+                  ${displayPrice(offer, interval).amount}
                 </Typography>
                 <Typography
                   color={offer.plan === "pro" ? "#aaa8a1" : "text.secondary"}
+                  sx={{ ml: 0.75, mb: 0.5 }}
                 >
-                  {offer.price ? " / month" : " forever"}
+                  {displayPrice(offer, interval).suffix}
                 </Typography>
               </Stack>
+              {offer.price > 0 && (
+                <Typography
+                  fontSize={13}
+                  fontWeight={700}
+                  sx={{
+                    mt: -1.5,
+                    mb: 1.5,
+                    color: offer.plan === "pro" ? "#d8ff63" : "#4f6c00",
+                  }}
+                >
+                  {displayPrice(offer, interval).note}
+                </Typography>
+              )}
               <Typography
                 color={offer.plan === "pro" ? "#b9b7af" : "text.secondary"}
               >
@@ -407,64 +446,56 @@ export function PricingPage() {
   );
 }
 
-function PublicShell({ children }: { children: ReactNode }) {
+export function PublicShell({ children }: { children: ReactNode }) {
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f2f0e9" }}>
+    <Box
+      sx={{
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        bgcolor: "#f2f0e9",
+      }}
+    >
       <Box component="header" sx={{ borderBottom: "1px solid #d4d0c5" }}>
         <Container maxWidth="xl">
           <Stack direction="row" alignItems="center" minHeight={74} gap={2}>
             <Brand linked />
             <Box sx={{ flex: 1 }} />
-            <Button component={Link} to="/pricing" color="inherit">
+            <Button
+              component={Link}
+              to="/guides"
+              color="inherit"
+              sx={{ display: { xs: "none", sm: "inline-flex" } }}
+            >
+              Guides
+            </Button>
+            <Button
+              component={Link}
+              to="/pricing"
+              color="inherit"
+              sx={{ minWidth: 0, px: { xs: 1, sm: 2 } }}
+            >
               Pricing
             </Button>
             <Button
               component={Link}
               to="/login?mode=register"
               variant="contained"
+              sx={{
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                px: { xs: 2, sm: 2.5 },
+              }}
             >
               Start free
             </Button>
           </Stack>
         </Container>
       </Box>
-      <Box component="main">{children}</Box>
-      <Box component="footer" sx={{ borderTop: "1px solid #d4d0c5", py: 4 }}>
-        <Container maxWidth="xl">
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            gap={2}
-            alignItems={{ md: "center" }}
-          >
-            <Brand />
-            <Typography fontSize={13} color="text.secondary" sx={{ flex: 1 }}>
-              © {new Date().getFullYear()} Danto
-            </Typography>
-            <Stack direction="row" gap={2} flexWrap="wrap">
-              {[
-                ["About", "/about"],
-                ["Contact", "/contact"],
-                ["Security", "/security"],
-                ["Privacy", "/privacy"],
-                ["Terms", "/terms"],
-                ["Refunds", "/refund-policy"],
-                ["Cancellation", "/cancellation-policy"],
-                ["Delivery", "/delivery-policy"],
-              ].map(([label, path]) => (
-                <Typography
-                  key={path}
-                  component={Link}
-                  to={path}
-                  fontSize={13}
-                  color="text.secondary"
-                >
-                  {label}
-                </Typography>
-              ))}
-            </Stack>
-          </Stack>
-        </Container>
+      <Box component="main" sx={{ flex: 1 }}>
+        {children}
       </Box>
+      <SiteFooter />
     </Box>
   );
 }

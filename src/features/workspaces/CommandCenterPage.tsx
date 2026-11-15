@@ -156,7 +156,12 @@ export function CommandCenterPage() {
           severity="error"
           sx={{ mt: 3 }}
           action={
-            <Button component={Link} to="/billing" color="inherit">
+            <Button
+              component={Link}
+              to="/billing"
+              color="inherit"
+              sx={{ whiteSpace: "nowrap" }}
+            >
               View plans
             </Button>
           }

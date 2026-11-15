@@ -11,6 +11,7 @@ import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
 import RadioButtonUncheckedRounded from "@mui/icons-material/RadioButtonUncheckedRounded";
 import EventRounded from "@mui/icons-material/EventRounded";
 import PersonRemoveRounded from "@mui/icons-material/PersonRemoveRounded";
+import PublicRounded from "@mui/icons-material/PublicRounded";
 import {
   DndContext,
   type DragEndEvent,
@@ -31,6 +32,7 @@ import {
   Card,
   CardActionArea,
   CardContent,
+  Badge,
   Chip,
   CircularProgress,
   Dialog,
@@ -59,6 +61,10 @@ import { useUiStore } from "../../store/ui";
 import type { Activity, Board, Card as CardType, List } from "../../types";
 import { CardDrawer } from "../cards/CardDrawer";
 import { AiPlannerDialog } from "../../components/AiPlannerDialog";
+import {
+  ClientPortalDialog,
+  usePortalSettings,
+} from "../../components/ClientPortalDialog";
 
 export function BoardPage() {
   const { boardId = "" } = useParams();
@@ -68,6 +74,8 @@ export function BoardPage() {
   const client = useQueryClient();
   const [newListOpen, setNewListOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
   const [activityOpen, setActivityOpen] = useState(() =>
     typeof window === "undefined"
       ? false
@@ -80,6 +88,8 @@ export function BoardPage() {
   const [priority, setPriority] = useState<"all" | "high" | "urgent">("all");
   const [status, setStatus] = useState<"all" | "active" | "completed">("all");
   const [insightsOpen, setInsightsOpen] = useState(false);
+  const [portalOpen, setPortalOpen] = useState(false);
+  const portalSettings = usePortalSettings(boardId);
   const normalizedInviteEmail = inviteEmail.trim().toLowerCase();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -91,6 +101,18 @@ export function BoardPage() {
     const cardId = searchParams.get("card");
     if (cardId) selectCard(cardId);
   }, [searchParams, selectCard]);
+  const deleteBoard = useMutation({
+    mutationFn: () => api.delete(`/boards/${boardId}`),
+    onSuccess: () => {
+      const workspaceId = board.data?.workspaceId;
+      client.removeQueries({ queryKey: ["board", boardId] });
+      client.invalidateQueries({ queryKey: ["workspaces"] });
+      if (workspaceId)
+        client.invalidateQueries({ queryKey: ["workspace", workspaceId] });
+      client.invalidateQueries({ queryKey: ["onboarding"] });
+      navigate("/app", { replace: true });
+    },
+  });
   const board = useQuery({
     queryKey: ["board", boardId],
     queryFn: async () => (await api.get<Board>(`/boards/${boardId}`)).data,
@@ -186,6 +208,7 @@ export function BoardPage() {
       </Alert>
     );
   if (!board.data) return <Typography p={4}>Board not found.</Typography>;
+  const isClientBoard = board.data.template === "client";
   const memberAlreadyExists = board.data.members?.some(
     (member) =>
       member.user?.email?.trim().toLowerCase() === normalizedInviteEmail,
@@ -320,6 +343,70 @@ export function BoardPage() {
             <GroupAddRounded />
           </IconButton>
         </Tooltip>
+        {board.data.role === "owner" && (
+          <Tooltip title="Delete board">
+            <IconButton
+              aria-label="Delete board"
+              onClick={() => {
+                setDeleteConfirm("");
+                setDeleteOpen(true);
+              }}
+              sx={{ color: "#475569", "&:hover": { color: "#c62828" } }}
+            >
+              <DeleteOutlineRounded />
+            </IconButton>
+          </Tooltip>
+        )}
+        <Tooltip
+          title={
+            isClientBoard
+              ? "Share a live, no-login portal with your client"
+              : "Share a view-only link with stakeholders outside your team"
+          }
+        >
+          <Badge
+            color="secondary"
+            badgeContent={portalSettings.data?.unread || 0}
+            overlap="circular"
+          >
+            <Button
+              variant={isClientBoard ? "contained" : "outlined"}
+              startIcon={<PublicRounded />}
+              onClick={() => setPortalOpen(true)}
+              sx={{
+                whiteSpace: "nowrap",
+                ...(isClientBoard
+                  ? {
+                      boxShadow: portalSettings.data?.enabled
+                        ? "none"
+                        : undefined,
+                    }
+                  : { borderColor: "#aaa59a", color: "#343430" }),
+              }}
+            >
+              {isClientBoard ? (
+                <>
+                  <Box
+                    component="span"
+                    sx={{ display: { xs: "none", sm: "inline" } }}
+                  >
+                    {portalSettings.data?.enabled
+                      ? "Client portal"
+                      : "Share with client"}
+                  </Box>
+                  <Box
+                    component="span"
+                    sx={{ display: { xs: "inline", sm: "none" } }}
+                  >
+                    Client
+                  </Box>
+                </>
+              ) : (
+                "Share"
+              )}
+            </Button>
+          </Badge>
+        </Tooltip>
         <Tooltip title="Paste meeting notes, PRs, commit logs, emails, briefs, or content plans">
           <Button
             variant="contained"
@@ -358,10 +445,11 @@ export function BoardPage() {
       <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Stack
-            direction={{ xs: "column", sm: "row" }}
+            direction="row"
+            flexWrap="wrap"
             gap={1.25}
             mb={2.5}
-            alignItems={{ sm: "center" }}
+            alignItems="center"
           >
             <TextField
               size="small"
@@ -375,9 +463,9 @@ export function BoardPage() {
                   ),
                 },
               }}
-              sx={{ width: { xs: "100%", sm: 360 } }}
+              sx={{ width: { xs: "100%", sm: 300 }, flexShrink: 0 }}
             />
-            <Stack direction="row" gap={0.75}>
+            <Stack direction="row" gap={0.75} flexWrap="wrap">
               {(["all", "high", "urgent"] as const).map((value) => (
                 <Chip
                   key={value}
@@ -391,11 +479,7 @@ export function BoardPage() {
                 />
               ))}
             </Stack>
-            <Stack
-              direction="row"
-              gap={0.75}
-              sx={{ maxWidth: "100%", overflowX: "auto", pb: 0.25 }}
-            >
+            <Stack direction="row" gap={0.75} flexWrap="wrap">
               {(["all", "active", "completed"] as const).map((value) => (
                 <Chip
                   key={value}
@@ -538,6 +622,54 @@ export function BoardPage() {
           </Box>
         )}
       </Box>
+      <Dialog
+        open={deleteOpen}
+        onClose={() => !deleteBoard.isPending && setDeleteOpen(false)}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>Delete this board?</DialogTitle>
+        <DialogContent>
+          <Typography color="text.secondary">
+            This permanently deletes <strong>{board.data.name}</strong> with all
+            its lists, cards, comments and client feedback.
+            {portalSettings.data?.enabled &&
+              " Its client portal link will stop working."}{" "}
+            This can't be undone.
+          </Typography>
+          <TextField
+            fullWidth
+            autoFocus
+            margin="normal"
+            label="Type the board name to confirm"
+            value={deleteConfirm}
+            onChange={(event) => setDeleteConfirm(event.target.value)}
+          />
+          {deleteBoard.error && (
+            <Alert severity="error">{errorMessage(deleteBoard.error)}</Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            color="inherit"
+            onClick={() => setDeleteOpen(false)}
+            disabled={deleteBoard.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            disabled={
+              deleteConfirm.trim() !== board.data.name.trim() ||
+              deleteBoard.isPending
+            }
+            onClick={() => deleteBoard.mutate()}
+          >
+            {deleteBoard.isPending ? "Deleting…" : "Delete board"}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <CreateDialog
         open={newListOpen}
         title="Add list"
@@ -718,6 +850,11 @@ export function BoardPage() {
         </DialogActions>
       </Dialog>
       <CardDrawer board={board.data} />
+      <ClientPortalDialog
+        board={board.data}
+        open={portalOpen}
+        onClose={() => setPortalOpen(false)}
+      />
       <AiPlannerDialog
         open={aiOpen}
         boardId={boardId}
@@ -1007,7 +1144,9 @@ function TaskCard({
             </Box>
             <Typography
               fontWeight={700}
+              className="wrap-anywhere"
               sx={{
+                minWidth: 0,
                 letterSpacing: "-.015em",
                 textDecoration: card.isCompleted ? "line-through" : "none",
                 flex: 1,
@@ -1035,6 +1174,40 @@ function TaskCard({
               {card.priority} priority
             </Typography>
           )}
+          {(card.approvalStatus && card.approvalStatus !== "none") ||
+          card.clientVisible === false ? (
+            <Stack direction="row" gap={0.5} mt={1} flexWrap="wrap">
+              {card.approvalStatus === "pending" && (
+                <Chip
+                  size="small"
+                  label="Awaiting client"
+                  sx={{ bgcolor: "#fff1c2", fontWeight: 800, height: 22 }}
+                />
+              )}
+              {card.approvalStatus === "approved" && (
+                <Chip
+                  size="small"
+                  label="Client approved"
+                  sx={{ bgcolor: "#e3f6c8", fontWeight: 800, height: 22 }}
+                />
+              )}
+              {card.approvalStatus === "changes_requested" && (
+                <Chip
+                  size="small"
+                  label="Changes requested"
+                  sx={{ bgcolor: "#ffe1d8", fontWeight: 800, height: 22 }}
+                />
+              )}
+              {card.clientVisible === false && (
+                <Chip
+                  size="small"
+                  label="Internal"
+                  variant="outlined"
+                  sx={{ height: 22 }}
+                />
+              )}
+            </Stack>
+          ) : null}
           {card.dueDate && (
             <Typography
               variant="caption"

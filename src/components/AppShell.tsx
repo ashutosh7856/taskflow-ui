@@ -12,6 +12,7 @@ import { type MouseEvent, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth";
 import { Brand } from "./Brand";
+import { TrialBanner } from "./TrialBanner";
 
 export function AppShell() {
   const user = useAuthStore((state) => state.user);
@@ -27,7 +28,14 @@ export function AppShell() {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f2f0e9" }}>
+    <Box
+      sx={{
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        bgcolor: "#f2f0e9",
+      }}
+    >
       <Box
         component="header"
         sx={{
@@ -123,7 +131,8 @@ export function AppShell() {
           </MenuItem>
         </Menu>
       </Box>
-      <Box component="main">
+      <TrialBanner />
+      <Box component="main" sx={{ flex: 1, minWidth: 0 }}>
         <Outlet />
       </Box>
       <Box

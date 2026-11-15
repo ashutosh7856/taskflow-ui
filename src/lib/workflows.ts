@@ -21,6 +21,17 @@ export const workflowConfig: Record<
       { value: "idea", label: "Idea" },
     ],
   },
+  client: {
+    name: "Client project",
+    cardNoun: "deliverable",
+    helper: "Describe what the client will receive and when.",
+    categories: [
+      { value: "deliverable", label: "Deliverable" },
+      { value: "revision", label: "Revision" },
+      { value: "request", label: "Client request" },
+      { value: "task", label: "Task" },
+    ],
+  },
   software: {
     name: "Software",
     cardNoun: "work item",

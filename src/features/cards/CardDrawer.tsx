@@ -3,6 +3,7 @@ import CheckCircleOutlineRounded from "@mui/icons-material/CheckCircleOutlineRou
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import {
+  Alert,
   Avatar,
   Box,
   Button,
@@ -19,15 +20,24 @@ import {
   LinearProgress,
   MenuItem,
   Stack,
+  Switch,
   TextField,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { api } from "../../lib/api";
+import { api, errorMessage } from "../../lib/api";
 import { boardWorkflow } from "../../lib/workflows";
 import { useUiStore } from "../../store/ui";
-import type { Board, Card, Checklist, Label } from "../../types";
+import type {
+  Board,
+  Card,
+  Checklist,
+  ClientFeedback,
+  Label,
+} from "../../types";
+import { usePortalSettings } from "../../components/ClientPortalDialog";
 
 const labelColors = [
   "#dc2626",
@@ -42,6 +52,7 @@ const labelColors = [
 
 export function CardDrawer({ board }: { board: Board }) {
   const cardId = useUiStore((state) => state.selectedCardId);
+  const fullScreen = useMediaQuery("(max-width:600px)");
   const close = useUiStore((state) => state.setSelectedCardId);
   const client = useQueryClient();
   const [description, setDescription] = useState("");
@@ -122,6 +133,19 @@ export function CardDrawer({ board }: { board: Board }) {
       refresh();
     },
   });
+  const portal = usePortalSettings(board.id, !!cardId);
+  const approval = useMutation({
+    mutationFn: async (action: "request" | "cancel") =>
+      (
+        await api.post<{ emailed: boolean }>(`/cards/${cardId}/approval`, {
+          action,
+        })
+      ).data,
+    onSuccess: () => {
+      refresh();
+      client.invalidateQueries({ queryKey: ["portal-settings", board.id] });
+    },
+  });
   const remove = useMutation({
     mutationFn: () => api.delete(`/cards/${cardId}`),
     onSuccess: () => {
@@ -135,7 +159,7 @@ export function CardDrawer({ board }: { board: Board }) {
       open={!!cardId}
       onClose={() => close(null)}
       fullWidth
-      fullScreen={false}
+      fullScreen={fullScreen}
       maxWidth="md"
       PaperProps={{
         sx: {
@@ -170,7 +194,11 @@ export function CardDrawer({ board }: { board: Board }) {
             mr: 1.5,
           }}
         />
-        <Typography variant="h5" sx={{ flex: 1 }}>
+        <Typography
+          variant="h5"
+          className="wrap-anywhere"
+          sx={{ flex: 1, minWidth: 0, fontSize: { xs: 19, sm: 24 } }}
+        >
           {card.data?.title || "Card"}
         </Typography>
         <IconButton
@@ -220,6 +248,20 @@ export function CardDrawer({ board }: { board: Board }) {
                   }
                 />
               </Box>
+              <ClientPanel
+                card={card.data}
+                portalEnabled={!!portal.data?.enabled}
+                clientEmail={portal.data?.clientEmail || null}
+                feedback={
+                  portal.data?.feedback.filter(
+                    (entry) => entry.cardId === card.data?.id,
+                  ) || []
+                }
+                onVisibility={(clientVisible) =>
+                  update.mutate({ clientVisible })
+                }
+                approval={approval}
+              />
               <TextField
                 label="Card title"
                 fullWidth
@@ -638,6 +680,143 @@ function ChecklistView({
           Add
         </Button>
       </Stack>
+    </Box>
+  );
+}
+
+function ClientPanel({
+  card,
+  portalEnabled,
+  clientEmail,
+  feedback,
+  onVisibility,
+  approval,
+}: {
+  card: Card;
+  portalEnabled: boolean;
+  clientEmail: string | null;
+  feedback: ClientFeedback[];
+  onVisibility: (visible: boolean) => void;
+  approval: {
+    mutate: (action: "request" | "cancel") => void;
+    isPending: boolean;
+    data?: { emailed: boolean };
+    error: unknown;
+    isSuccess: boolean;
+    variables?: "request" | "cancel";
+  };
+}) {
+  const status = card.approvalStatus || "none";
+  const statusText = {
+    none: "Not sent for approval",
+    pending: "Waiting for client approval",
+    approved: "Approved by client",
+    changes_requested: "Client requested changes",
+  }[status];
+  const statusBg = {
+    none: "#eeebe2",
+    pending: "#fff1c2",
+    approved: "#e3f6c8",
+    changes_requested: "#ffe1d8",
+  }[status];
+  return (
+    <Box
+      sx={{
+        p: 2,
+        borderRadius: 2,
+        bgcolor: statusBg,
+        border: "1px solid #d4d0c5",
+      }}
+    >
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        gap={1.5}
+        alignItems={{ sm: "center" }}
+      >
+        <Box sx={{ flex: 1 }}>
+          <Typography className="eyebrow">Client</Typography>
+          <Typography fontWeight={800}>{statusText}</Typography>
+          {!portalEnabled && (
+            <Typography variant="body2" color="text.secondary">
+              Publish this board’s client portal to collect approvals.
+            </Typography>
+          )}
+        </Box>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={card.clientVisible !== false}
+              onChange={(event) => onVisibility(event.target.checked)}
+            />
+          }
+          label="Visible to client"
+        />
+        {status === "pending" ? (
+          <Button
+            variant="outlined"
+            disabled={approval.isPending}
+            onClick={() => approval.mutate("cancel")}
+          >
+            Withdraw request
+          </Button>
+        ) : (
+          <Button
+            variant="contained"
+            disabled={approval.isPending || !portalEnabled}
+            onClick={() => approval.mutate("request")}
+          >
+            {status === "none" ? "Request approval" : "Ask again"}
+          </Button>
+        )}
+      </Stack>
+      {approval.isSuccess && approval.variables === "request" && (
+        <Typography variant="body2" mt={1}>
+          {approval.data?.emailed
+            ? `Emailed ${clientEmail} a one-click approval link.`
+            : "Marked as awaiting approval in the portal. Add a client email in the portal settings to notify them automatically."}
+        </Typography>
+      )}
+      {approval.error ? (
+        <Alert severity="error" sx={{ mt: 1 }}>
+          {errorMessage(approval.error)}
+        </Alert>
+      ) : null}
+      {feedback.length > 0 && (
+        <Stack gap={1} mt={1.5}>
+          {feedback.map((entry) => (
+            <Box
+              key={entry.id}
+              sx={{
+                p: 1.25,
+                borderRadius: 1.5,
+                bgcolor: "rgba(255,255,255,.7)",
+              }}
+            >
+              <Typography variant="body2" fontWeight={800}>
+                {entry.authorName} ·{" "}
+                {entry.kind === "approved"
+                  ? "approved"
+                  : entry.kind === "changes_requested"
+                    ? "requested changes"
+                    : entry.kind === "request"
+                      ? "requested this"
+                      : "commented"}{" "}
+                <Box
+                  component="span"
+                  sx={{ fontWeight: 500, color: "#77736b" }}
+                >
+                  {new Date(entry.createdAt).toLocaleString()}
+                </Box>
+              </Typography>
+              {entry.kind !== "approved" && (
+                <Typography variant="body2" sx={{ whiteSpace: "pre-line" }}>
+                  {entry.message}
+                </Typography>
+              )}
+            </Box>
+          ))}
+        </Stack>
+      )}
     </Box>
   );
 }

@@ -1,0 +1,35 @@
+# Danto
+
+> Danto is a client portal and project board for freelancers and small agencies. Each client gets a live, branded web page showing project progress; clients approve deliverables in one click, submit new requests, and receive AI-written weekly status updates. Clients never need an account.
+
+Website: https://danto.app
+Support: support@danto.app
+
+## What Danto does
+- Live client portal: a private, no-login link per project showing progress, stages, due dates and what's waiting on the client.
+- One-click approvals: freelancers press "Request approval" on a deliverable; the client approves or requests changes from an email or the portal. Every approval is recorded with name and time.
+- Request intake: clients submit new requests from the portal; they become cards on the freelancer's board.
+- AI client updates: drafts a weekly status email (done, next, waiting on you) from the live board; only client-visible cards are used.
+- Internal cards: anything marked internal never appears in the portal or AI updates.
+- Branding: logo, business name and accent colour on portals and client emails (Pro); white-label without Danto branding (Team).
+- AI project planner: paste a brief, meeting notes or a proposal and get a structured board.
+
+## Pricing (USD, billed monthly, cancel anytime)
+- Free: $0. 1 live client portal, approvals and client requests, 3 boards, 10 AI actions per month.
+- Pro: $19/month. Unlimited client portals, custom branding, AI client updates sent from Danto, approval emails, 3 teammates, 300 AI actions per month.
+- Team: $49/month. Everything in Pro plus white-label portals, 10 teammates, Workspace Pulse overview, 1,500 AI actions per month, priority support.
+
+## Who it's for
+Freelance designers, web developers, marketers, video editors, consultants and small studios who manage several client projects and want clients informed without status meetings or long email threads.
+
+## Guides
+- [How to share a Trello board with clients without exposing your internal work](https://danto.app/guides/share-trello-board-with-clients)
+- [Weekly client status update email: 5 templates for freelancers](https://danto.app/guides/client-status-update-email-template)
+- [How to get client approvals faster](https://danto.app/guides/client-approval-process)
+- [What is a client portal, and does a freelancer need one?](https://danto.app/guides/client-portal-for-freelancers)
+- [How to stop clients asking "any update?"](https://danto.app/guides/stop-clients-asking-for-updates)
+
+## Key pages
+- [Pricing](https://danto.app/pricing)
+- [About](https://danto.app/about)
+- [Security](https://danto.app/security)

@@ -1,0 +1,15 @@
+# Cloudflare Pages. Public pages are prerendered to /<path>/index.html and are
+# served as static files. App screens and client portals use the SPA shell.
+/signup           /login?mode=register       302
+/login            /spa.html                  200
+/forgot-password  /spa.html                  200
+/app              /spa.html                  200
+/app/*            /spa.html                  200
+/boards/*         /spa.html                  200
+/workspaces/*     /spa.html                  200
+/billing          /spa.html                  200
+/admin            /spa.html                  200
+/admin/*          /spa.html                  200
+/billing/*        /spa.html                  200
+/invites/*        /spa.html                  200
+/p/*              /spa.html                  200

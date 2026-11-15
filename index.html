@@ -3,17 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Danto is an AI-first autonomous task workspace that turns raw notes into structured boards and live work into useful updates."
-    />
     <meta name="theme-color" content="#f2f0e9" />
     <link rel="icon" type="image/png" href="/danto-favicon.png" />
     <link rel="apple-touch-icon" href="/assets/danto-mark.png" />
-    <title>Danto — Turn messy input into organized action.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="alternate" type="text/plain" title="LLM summary" href="/llms.txt" />
+    <!--seo-start-->
+    <title>Danto: Client portal & approvals for freelancers and agencies</title>
+    <meta
+      name="description"
+      content="Give every client a live, branded portal. Clients see progress, approve work in one click and send requests, and AI writes your weekly status update. Free for your first client."
+    />
+    <meta property="og:title" content="Danto: Client portal & approvals for freelancers and agencies" />
+    <meta property="og:description" content="A live, branded client portal with one-click approvals and AI status updates. Free for your first client." />
+    <meta property="og:image" content="https://danto.app/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!--seo-end-->
+    <!--ssr-styles-->
+    <noscript>
+      <style>
+        .animated-content { opacity: 1 !important; transform: none !important; filter: none !important; }
+      </style>
+    </noscript>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--ssr-html--></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
