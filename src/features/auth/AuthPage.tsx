@@ -228,7 +228,6 @@ export function AuthPage() {
                 variant="body2"
                 sx={{
                   alignSelf: "flex-end",
-                  mt: "-8px !important",
                   color: "#56534d",
                   fontWeight: 700,
                 }}

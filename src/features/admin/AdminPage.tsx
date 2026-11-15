@@ -1166,15 +1166,32 @@ function DiscountsTab() {
     queryKey: ["admin-discounts"],
     queryFn: async () => (await api.get<Discount[]>("/admin/discounts")).data,
   });
+  // Same rules as the server (trello-backend/src/validators/discounts.ts).
+  const percent = Number(form.percentOff);
+  const maxUses = form.maxRedemptions === "" ? null : Number(form.maxRedemptions);
+  const problems = {
+    code:
+      form.code.length > 0 && form.code.length < 3
+        ? "At least 3 characters"
+        : "",
+    percentOff:
+      !Number.isInteger(percent) || percent < 5 || percent > 90
+        ? "Whole number, 5–90"
+        : "",
+    maxRedemptions:
+      maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 0)
+        ? "Whole number"
+        : "",
+  };
+  const invalid =
+    form.code.length < 3 || Boolean(problems.percentOff || problems.maxRedemptions);
   const create = useMutation({
     mutationFn: () =>
       api.post("/admin/discounts", {
         code: form.code.trim(),
         percentOff: Number(form.percentOff),
         plan: form.plan === "any" ? null : form.plan,
-        maxRedemptions: form.maxRedemptions
-          ? Number(form.maxRedemptions)
-          : null,
+        maxRedemptions: maxUses || null,
         expiresAt: form.expiresAt
           ? new Date(`${form.expiresAt}T23:59:59`).toISOString()
           : null,
@@ -1204,12 +1221,14 @@ function DiscountsTab() {
         title="Create a discount code"
         detail="Applies to the first monthly payment; renewals return to the normal price."
       >
-        <Stack direction={{ xs: "column", md: "row" }} gap={1.5}>
+        <Stack direction={{ xs: "column", md: "row" }} gap={1.5} alignItems={{ md: "flex-start" }}>
           <TextField
             size="small"
             label="Code"
             placeholder="FOUNDER50"
             value={form.code}
+            error={Boolean(problems.code)}
+            helperText={problems.code || undefined}
             onChange={(event) =>
               setForm({
                 ...form,
@@ -1227,7 +1246,9 @@ function DiscountsTab() {
             onChange={(event) =>
               setForm({ ...form, percentOff: event.target.value })
             }
-            inputProps={{ min: 5, max: 90 }}
+            error={Boolean(problems.percentOff)}
+            helperText={problems.percentOff || undefined}
+            inputProps={{ min: 5, max: 90, step: 1 }}
             sx={{ width: { md: 100 } }}
           />
           <TextField
@@ -1251,6 +1272,9 @@ function DiscountsTab() {
             onChange={(event) =>
               setForm({ ...form, maxRedemptions: event.target.value })
             }
+            error={Boolean(problems.maxRedemptions)}
+            helperText={problems.maxRedemptions || undefined}
+            inputProps={{ min: 0, step: 1 }}
             sx={{ width: { md: 130 } }}
           />
           <TextField
@@ -1265,7 +1289,7 @@ function DiscountsTab() {
           />
           <Button
             variant="contained"
-            disabled={form.code.length < 3 || create.isPending}
+            disabled={invalid || create.isPending}
             onClick={() => create.mutate()}
           >
             Create
