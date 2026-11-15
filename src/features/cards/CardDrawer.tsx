@@ -38,6 +38,7 @@ import type {
   Label,
 } from "../../types";
 import { usePortalSettings } from "../../components/ClientPortalDialog";
+import { CardFiles } from "./CardFiles";
 
 const labelColors = [
   "#dc2626",
@@ -452,6 +453,7 @@ export function CardDrawer({ board }: { board: Board }) {
                   }}
                 />
               </Box>
+              <CardFiles cardId={card.data.id} />
               <Box>
                 <Stack direction="row" alignItems="center" mb={1}>
                   <CheckCircleOutlineRounded sx={{ mr: 1 }} />

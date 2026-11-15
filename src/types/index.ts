@@ -141,8 +141,11 @@ export interface PortalSettings {
   clientEmail: string | null;
   welcome: string | null;
   allowRequests: boolean;
+  weeklyUpdates?: boolean;
+  lastAutoUpdateAt?: string | null;
   plan: "free" | "pro" | "business";
   entitlements: {
+    weeklyUpdates?: boolean;
     clientPortals: number | null;
     portalBranding: boolean;
     whiteLabel: boolean;
@@ -152,6 +155,15 @@ export interface PortalSettings {
 }
 
 export interface PublicPortalCard {
+  files?: Array<{
+    id: string;
+    cardId: string;
+    name: string;
+    contentType: string;
+    size: number;
+    createdAt: string;
+    url: string;
+  }>;
   id: string;
   title: string;
   description?: string | null;

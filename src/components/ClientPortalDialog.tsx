@@ -171,6 +171,10 @@ function ShareTab({
   const [clientEmail, setClientEmail] = useState(settings.clientEmail || "");
   const [welcome, setWelcome] = useState(settings.welcome || "");
   const [allowRequests, setAllowRequests] = useState(settings.allowRequests);
+  const [weeklyUpdates, setWeeklyUpdates] = useState(
+    Boolean(settings.weeklyUpdates),
+  );
+  const canAutoUpdate = Boolean(settings.entitlements.weeklyUpdates);
   const [copied, setCopied] = useState(false);
   const refresh = () => {
     client.invalidateQueries({ queryKey: ["portal-settings", board.id] });
@@ -184,6 +188,7 @@ function ShareTab({
         clientEmail: clientEmail.trim(),
         welcome: welcome.trim() || null,
         allowRequests,
+        weeklyUpdates: canAutoUpdate ? weeklyUpdates : false,
       }),
     onSuccess: refresh,
   });
@@ -323,6 +328,27 @@ function ShareTab({
         }
         label="Let the client submit new requests (they land in your first list)"
       />
+      <Box>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={canAutoUpdate && weeklyUpdates}
+              disabled={!canAutoUpdate}
+              onChange={(event) => setWeeklyUpdates(event.target.checked)}
+            />
+          }
+          label="Email the client an AI-written update every Friday"
+        />
+        <Typography variant="caption" color="text.secondary" display="block" ml={6}>
+          {!canAutoUpdate
+            ? "Available on Pro and Team."
+            : !clientEmail.trim()
+              ? "Add the client's email above to turn this on."
+              : settings.lastAutoUpdateAt
+                ? `Last sent ${new Date(settings.lastAutoUpdateAt).toLocaleDateString()}. Weeks with no activity are skipped, and you get a copy of each email.`
+                : "Weeks with no activity are skipped, and you get a copy of each email."}
+        </Typography>
+      </Box>
       <Stack direction="row" gap={1}>
         <Button
           variant="outlined"

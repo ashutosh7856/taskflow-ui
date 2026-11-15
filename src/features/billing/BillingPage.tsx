@@ -21,6 +21,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { BillingDialog } from "../../components/BillingDialog";
 import { FeatureMark } from "../../components/FeatureMark";
 import { api, errorMessage } from "../../lib/api";
+import { formatBytes } from "../cards/CardFiles";
 import {
   displayPrice,
   offers,
@@ -37,6 +38,7 @@ interface BillingDetails {
   paypalSubscriptionId?: string | null;
   aiRequestsThisMonth: number;
   aiPeriodStart: string;
+  storage?: { enabled?: boolean; usedBytes: number; limitBytes: number };
   entitlements: {
     priceUsd: number;
     seats: number;
@@ -252,6 +254,26 @@ export function BillingPage() {
                 rolling 30-day billing period. Team usage is shared across the
                 owner account, with monthly, daily, and hourly abuse controls.
               </Typography>
+              {data.storage?.enabled && (
+                <Box mt={3}>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography fontWeight={800}>File storage</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {formatBytes(data.storage.usedBytes)} of{" "}
+                      {formatBytes(data.storage.limitBytes)}
+                    </Typography>
+                  </Stack>
+                  <LinearProgress
+                    variant="determinate"
+                    value={Math.min(
+                      100,
+                      (data.storage.usedBytes / data.storage.limitBytes) * 100,
+                    )}
+                    sx={{ height: 10, borderRadius: 5, mt: 1 }}
+                    aria-label="File storage used"
+                  />
+                </Box>
+              )}
             </Box>
           </Box>
 

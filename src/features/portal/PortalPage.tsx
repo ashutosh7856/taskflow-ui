@@ -30,6 +30,8 @@ import BlurText from "../../components/bits/BlurText";
 import CountUp from "../../components/bits/CountUp";
 import { errorMessage } from "../../lib/api";
 import type { PublicPortal, PublicPortalCard } from "../../types";
+import { FileGrid } from "../cards/CardFiles";
+import AttachFileRounded from "@mui/icons-material/AttachFileRounded";
 
 const publicApi = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
@@ -421,6 +423,14 @@ function PortalCardRow({
                 label={`${card.checklist.done}/${card.checklist.total} steps`}
               />
             )}
+            {!!card.files?.length && (
+              <Chip
+                size="small"
+                variant="outlined"
+                icon={<AttachFileRounded />}
+                label={`${card.files.length} file${card.files.length === 1 ? "" : "s"}`}
+              />
+            )}
             {card.feedback.length > 0 && (
               <Chip
                 size="small"
@@ -474,6 +484,14 @@ function CardDialog({
             <Typography sx={{ whiteSpace: "pre-line" }} color="#3e3b36">
               {card.description}
             </Typography>
+          )}
+          {!!card.files?.length && (
+            <Box>
+              <Typography fontWeight={800} mb={1}>
+                Files to review
+              </Typography>
+              <FileGrid files={card.files} />
+            </Box>
           )}
           {card.checklist.total > 0 && (
             <Box>
