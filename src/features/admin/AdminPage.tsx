@@ -1175,8 +1175,8 @@ function DiscountsTab() {
         ? "At least 3 characters"
         : "",
     percentOff:
-      !Number.isInteger(percent) || percent < 5 || percent > 90
-        ? "Whole number, 5–90"
+      !Number.isInteger(percent) || percent < 5 || percent > 95
+        ? "Whole number, 5–95"
         : "",
     maxRedemptions:
       maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 0)
@@ -1248,7 +1248,7 @@ function DiscountsTab() {
             }
             error={Boolean(problems.percentOff)}
             helperText={problems.percentOff || undefined}
-            inputProps={{ min: 5, max: 90, step: 1 }}
+            inputProps={{ min: 5, max: 95, step: 1 }}
             sx={{ width: { md: 100 } }}
           />
           <TextField
