@@ -23,6 +23,7 @@ import { SpotlightCard } from "../../components/bits/SpotlightCard";
 import { CreateDialog } from "../../components/CreateDialog";
 import { CreateBoardDialog } from "../../components/CreateBoardDialog";
 import { WorkspaceSettingsDialog } from "../../components/WorkspaceSettingsDialog";
+import { useTemplates } from "../../lib/workflows";
 import { api, errorMessage } from "../../lib/api";
 import { OnboardingChecklist } from "../../components/OnboardingChecklist";
 import type { Board, Workspace } from "../../types";
@@ -318,6 +319,11 @@ function WorkspaceSection({
   number: number;
   openBoard: (id: string) => void;
 }) {
+  const catalog = useTemplates();
+  const templateName = (id: string) =>
+    id === "blank"
+      ? "Custom"
+      : catalog.data?.find((item) => item.id === id)?.name || id;
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const navigate = useNavigate();
@@ -328,10 +334,7 @@ function WorkspaceSection({
       (await api.get<Workspace>(`/workspaces/${workspace.id}`)).data,
   });
   const createBoard = useMutation({
-    mutationFn: async (input: {
-      name: string;
-      template: "blank" | "client" | "software" | "marketing" | "operations";
-    }) =>
+    mutationFn: async (input: { name: string; template: string }) =>
       (
         await api.post<Board>(`/workspaces/${workspace.id}/boards`, {
           ...input,
@@ -449,13 +452,12 @@ function WorkspaceSection({
             <span>
               <strong>{board.name}</strong>
               <span className="board-card-template">
-                {board.template === "blank" ? "Custom" : board.template}{" "}
-                workflow
+                {templateName(board.template)}
               </span>
             </span>
             <span className="board-card-foot">
               <span>
-                {board.template === "blank" ? "Custom" : board.template} ·{" "}
+                {templateName(board.template)} ·{" "}
                 {board.createdAt
                   ? new Date(board.createdAt).toLocaleDateString(undefined, {
                       month: "short",

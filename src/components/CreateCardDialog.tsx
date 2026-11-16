@@ -19,7 +19,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { useEffect, useState } from "react";
 import { errorMessage } from "../lib/api";
-import { boardWorkflow } from "../lib/workflows";
+import { useWorkflow } from "../lib/workflows";
 import type { Board } from "../types";
 
 export interface NewCardInput {
@@ -52,7 +52,7 @@ export function CreateCardDialog({
 }) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const workflow = boardWorkflow(board.template);
+  const workflow = useWorkflow(board.template, board.lists);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<NewCardInput["priority"]>("medium");
@@ -185,7 +185,7 @@ export function CreateCardDialog({
             </TextField>
             <TextField
               type="date"
-              label="Due date"
+              label={workflow.wording.due}
               value={dueDate}
               onChange={(event) => setDueDate(event.target.value)}
               InputLabelProps={{ shrink: true }}
@@ -232,15 +232,19 @@ export function CreateCardDialog({
               </Stack>
             </Box>
           )}
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={completed}
-                onChange={(event) => setCompleted(event.target.checked)}
-              />
-            }
-            label="Create as completed"
-          />
+          {/* Boards with a finish list (Published, Delivered…) track
+              completion by list, so add finished cards there instead. */}
+          {!workflow.doneList && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={completed}
+                  onChange={(event) => setCompleted(event.target.checked)}
+                />
+              }
+              label={`Create as ${workflow.completedLabel.toLowerCase()}`}
+            />
+          )}
           {error != null && (
             <Alert severity="error">{errorMessage(error)}</Alert>
           )}

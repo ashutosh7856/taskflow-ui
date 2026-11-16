@@ -29,7 +29,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import BlurText from "../../components/bits/BlurText";
 import CountUp from "../../components/bits/CountUp";
 import { errorMessage } from "../../lib/api";
-import type { PublicPortal, PublicPortalCard } from "../../types";
+import type { PortalField, PublicPortal, PublicPortalCard } from "../../types";
 import { FileGrid } from "../cards/CardFiles";
 import AttachFileRounded from "@mui/icons-material/AttachFileRounded";
 
@@ -219,7 +219,9 @@ export function PortalPage() {
             />
           </Box>
           <Box className="portal-stat">
-            <Typography className="portal-stat-label">Delivered</Typography>
+            <Typography className="portal-stat-label">
+              {data.board.workflow?.completed || "Delivered"}
+            </Typography>
             <Typography className="portal-stat-value">
               <CountUp to={data.stats.completed} duration={1.2} />
               <Box
@@ -273,6 +275,28 @@ export function PortalPage() {
                     >
                       {card.description}
                     </Typography>
+                  )}
+                  {card.fields?.some(
+                    (field) =>
+                      field.type === "select" || field.type === "multiselect",
+                  ) && (
+                    <Stack direction="row" gap={0.5} mt={1} flexWrap="wrap">
+                      {card.fields
+                        .filter(
+                          (field) =>
+                            field.type === "select" ||
+                            field.type === "multiselect",
+                        )
+                        .map((field) => (
+                          <Chip
+                            key={field.key}
+                            size="small"
+                            variant="outlined"
+                            title={field.label}
+                            label={fieldText(field)}
+                          />
+                        ))}
+                    </Stack>
                   )}
                   <Button
                     variant="contained"
@@ -350,6 +374,7 @@ export function PortalPage() {
         <CardDialog
           token={token}
           card={openCard}
+          approveLabel={data.board.workflow?.approve || "Approve"}
           onClose={() => setOpenCardId(null)}
         />
       )}
@@ -416,6 +441,20 @@ function PortalCardRow({
                 variant="outlined"
               />
             )}
+            {card.fields
+              ?.filter(
+                (field) =>
+                  field.type === "multiselect" || field.type === "select",
+              )
+              .map((field) => (
+                <Chip
+                  key={field.key}
+                  size="small"
+                  variant="outlined"
+                  title={field.label}
+                  label={fieldText(field)}
+                />
+              ))}
             {card.checklist.total > 0 && (
               <Chip
                 size="small"
@@ -446,12 +485,70 @@ function PortalCardRow({
   );
 }
 
+function fieldText(field: PortalField) {
+  if (Array.isArray(field.value)) return field.value.join(", ");
+  if (field.type === "date" && typeof field.value === "string")
+    return format(new Date(`${field.value}T00:00:00`), "MMM d, yyyy");
+  return String(field.value);
+}
+
+/** The details the client needs to judge this item: caption, links, sizes. */
+function PortalFields({ fields }: { fields: PortalField[] }) {
+  return (
+    <Box
+      component="dl"
+      sx={{
+        m: 0,
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", sm: "max-content 1fr" },
+        columnGap: 2,
+        rowGap: { xs: 0.25, sm: 1 },
+        p: 2,
+        borderRadius: 2,
+        bgcolor: "#f6f4ee",
+      }}
+    >
+      {fields.map((field) => (
+        <Box key={field.key} sx={{ display: "contents" }}>
+          <Typography
+            component="dt"
+            fontSize={13}
+            fontWeight={800}
+            color="text.secondary"
+            sx={{ mt: { xs: 1, sm: 0 } }}
+          >
+            {field.label}
+          </Typography>
+          <Typography
+            component="dd"
+            m={0}
+            className="wrap-anywhere"
+            sx={{
+              whiteSpace: field.type === "longtext" ? "pre-line" : "normal",
+            }}
+          >
+            {field.type === "url" && typeof field.value === "string" ? (
+              <a href={field.value} target="_blank" rel="noopener noreferrer">
+                {field.value.replace(/^https?:\/\//, "").slice(0, 60)}
+              </a>
+            ) : (
+              fieldText(field)
+            )}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
 function CardDialog({
   token,
   card,
+  approveLabel,
   onClose,
 }: {
   token: string;
+  approveLabel: string;
   card: PublicPortalCard;
   onClose: () => void;
 }) {
@@ -480,6 +577,7 @@ function CardDialog({
       </DialogTitle>
       <DialogContent>
         <Stack gap={2.5}>
+          {!!card.fields?.length && <PortalFields fields={card.fields} />}
           {card.description && (
             <Typography sx={{ whiteSpace: "pre-line" }} color="#3e3b36">
               {card.description}
@@ -587,7 +685,7 @@ function CardDialog({
             onClick={() => respond.mutate("approved")}
             sx={{ bgcolor: "#2f6b00", boxShadow: "none" }}
           >
-            Approve
+            {approveLabel}
           </Button>
         )}
         {canAct && (

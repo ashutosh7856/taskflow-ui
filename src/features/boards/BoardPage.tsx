@@ -56,7 +56,12 @@ import {
   type NewCardInput,
 } from "../../components/CreateCardDialog";
 import { api, errorMessage } from "../../lib/api";
-import { categoryLabel } from "../../lib/workflows";
+import {
+  categoryLabel,
+  formatFieldValue,
+  useWorkflow,
+  type Workflow,
+} from "../../lib/workflows";
 import { useUiStore } from "../../store/ui";
 import type { Activity, Board, Card as CardType, List } from "../../types";
 import { CardDrawer } from "../cards/CardDrawer";
@@ -117,6 +122,7 @@ export function BoardPage() {
     queryKey: ["board", boardId],
     queryFn: async () => (await api.get<Board>(`/boards/${boardId}`)).data,
   });
+  const workflow = useWorkflow(board.data?.template, board.data?.lists);
   const activity = useQuery({
     queryKey: ["board-activity", boardId],
     enabled: activityOpen,
@@ -208,7 +214,7 @@ export function BoardPage() {
       </Alert>
     );
   if (!board.data) return <Typography p={4}>Board not found.</Typography>;
-  const isClientBoard = board.data.template === "client";
+  const isClientBoard = workflow.group === "client";
   const memberAlreadyExists = board.data.members?.some(
     (member) =>
       member.user?.email?.trim().toLowerCase() === normalizedInviteEmail,
@@ -913,6 +919,7 @@ function BoardList({
   status: "all" | "active" | "completed";
   board: Board;
 }) {
+  const workflow = useWorkflow(board.template, board.lists);
   const [newCard, setNewCard] = useState(false);
   const client = useQueryClient();
   const { setNodeRef, isOver } = useDroppable({
@@ -1007,7 +1014,7 @@ function BoardList({
             card={card}
             listId={list.id}
             boardId={boardId}
-            template={board.template}
+            workflow={workflow}
           />
         ))}
       </Stack>
@@ -1036,12 +1043,12 @@ function TaskCard({
   card,
   listId,
   boardId,
-  template,
+  workflow,
 }: {
   card: CardType;
   listId: string;
   boardId: string;
-  template?: string;
+  workflow: Workflow;
 }) {
   const select = useUiStore((state) => state.setSelectedCardId);
   const client = useQueryClient();
@@ -1115,7 +1122,9 @@ function TaskCard({
               tabIndex={0}
               aria-checked={card.isCompleted}
               aria-label={
-                card.isCompleted ? "Mark card active" : "Mark card complete"
+                card.isCompleted
+                  ? `Undo ${workflow.completedLabel.toLowerCase()}`
+                  : workflow.completeLabel
               }
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
@@ -1160,8 +1169,9 @@ function TaskCard({
             color="text.secondary"
             sx={{ mt: 1, textTransform: "uppercase" }}
           >
-            {categoryLabel(template, card.category || "task")}
+            {categoryLabel(workflow, card.category || "task")}
           </Typography>
+          <CardTileFields workflow={workflow} card={card} />
           {card.priority && card.priority !== "medium" && (
             <Typography
               className="mono-label"
@@ -1215,12 +1225,41 @@ function TaskCard({
               sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.75 }}
             >
               <EventRounded sx={{ fontSize: 14 }} />
-              Due {new Date(card.dueDate).toLocaleDateString()}
+              {workflow.wording.due.replace(/ date$/i, "")}{" "}
+              {new Date(card.dueDate).toLocaleDateString()}
             </Typography>
           )}
         </CardContent>
       </CardActionArea>
     </Card>
+  );
+}
+
+/** Key template fields on the tile: platforms, revision round, keyword… */
+function CardTileFields({
+  workflow,
+  card,
+}: {
+  workflow: Workflow;
+  card: CardType;
+}) {
+  const shown = workflow.fields.filter(
+    (field) => field.onCard && card.fields?.[field.key] !== undefined,
+  );
+  if (!shown.length) return null;
+  return (
+    <Stack direction="row" gap={0.5} mt={1} flexWrap="wrap">
+      {shown.map((field) => (
+        <Chip
+          key={field.key}
+          size="small"
+          variant="outlined"
+          title={field.label}
+          label={formatFieldValue(field, card.fields![field.key])}
+          sx={{ height: 22, maxWidth: "100%", fontSize: 12 }}
+        />
+      ))}
+    </Stack>
   );
 }
 

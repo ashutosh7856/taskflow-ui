@@ -35,7 +35,8 @@ export interface Board {
   workspaceId: string;
   name: string;
   backgroundColor: string;
-  template: "blank" | "client" | "software" | "marketing" | "operations";
+  /** Template id from GET /templates (client, social, website…). */
+  template: string;
   portalEnabled?: boolean;
   portalClientName?: string | null;
   createdAt?: string;
@@ -50,6 +51,8 @@ export interface List {
   id: string;
   boardId: string;
   name: string;
+  /** Set by templates: the finish list is "done", approval is "review". */
+  role?: "intake" | "active" | "review" | "done" | null;
   position: number;
   cards: Card[];
 }
@@ -67,6 +70,8 @@ export interface Card {
   isCompleted: boolean;
   completedAt?: string | null;
   category: string;
+  /** Template-specific values (platforms, caption, proof link…). */
+  fields?: Record<string, string | number | string[]> | null;
   clientVisible?: boolean;
   approvalStatus?: ApprovalStatus;
   approvalRequestedAt?: string | null;
@@ -174,7 +179,17 @@ export interface PublicPortalCard {
   approvalStatus: ApprovalStatus;
   approvalRequestedAt?: string | null;
   checklist: { done: number; total: number };
+  /** Client-visible template fields, already labelled by the API. */
+  fields?: PortalField[];
   feedback: ClientFeedback[];
+}
+
+export interface PortalField {
+  key: string;
+  label: string;
+  type:
+    "text" | "longtext" | "url" | "date" | "number" | "select" | "multiselect";
+  value: string | number | string[];
 }
 
 export interface PublicPortal {
@@ -184,6 +199,13 @@ export interface PublicPortal {
     welcome: string | null;
     allowRequests: boolean;
     updatedAt: string;
+    /** Template wording, e.g. completed "Published", approve "Approve post". */
+    workflow?: {
+      cardNoun: string;
+      completed: string;
+      due: string;
+      approve: string;
+    };
   };
   brand: {
     name: string;

@@ -28,7 +28,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { api, errorMessage } from "../../lib/api";
-import { boardWorkflow } from "../../lib/workflows";
+import { useWorkflow, type Workflow } from "../../lib/workflows";
 import { useUiStore } from "../../store/ui";
 import type {
   Board,
@@ -39,6 +39,7 @@ import type {
 } from "../../types";
 import { usePortalSettings } from "../../components/ClientPortalDialog";
 import { CardFiles } from "./CardFiles";
+import { CardFields } from "./CardFields";
 
 const labelColors = [
   "#dc2626",
@@ -51,11 +52,18 @@ const labelColors = [
   "#db2777",
 ];
 
+function localDateInput(iso: string) {
+  const date = new Date(iso);
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 export function CardDrawer({ board }: { board: Board }) {
   const cardId = useUiStore((state) => state.selectedCardId);
   const fullScreen = useMediaQuery("(max-width:600px)");
   const close = useUiStore((state) => state.setSelectedCardId);
   const client = useQueryClient();
+  const workflow = useWorkflow(board.template, board.lists);
   const [description, setDescription] = useState("");
   const [comment, setComment] = useState("");
   const [labelDialogOpen, setLabelDialogOpen] = useState(false);
@@ -238,12 +246,16 @@ export function CardDrawer({ board }: { board: Board }) {
                   label={
                     <Box>
                       <Typography fontWeight={800}>
-                        {card.data.isCompleted ? "Completed" : "Mark complete"}
+                        {card.data.isCompleted
+                          ? workflow.completedLabel
+                          : workflow.completeLabel}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         {card.data.completedAt
-                          ? `Finished ${new Date(card.data.completedAt).toLocaleString()}`
-                          : "Completion is tracked separately from the list stage."}
+                          ? `${workflow.completedLabel} ${new Date(card.data.completedAt).toLocaleString()}`
+                          : workflow.doneList
+                            ? `Moves this ${workflow.cardNoun} to “${workflow.doneList.name}”. Dragging it there does the same.`
+                            : "Tick when this is finished."}
                       </Typography>
                     </Box>
                   }
@@ -262,6 +274,7 @@ export function CardDrawer({ board }: { board: Board }) {
                   update.mutate({ clientVisible })
                 }
                 approval={approval}
+                workflow={workflow}
               />
               <TextField
                 label="Card title"
@@ -369,14 +382,14 @@ export function CardDrawer({ board }: { board: Board }) {
                     update.mutate({ category: event.target.value })
                   }
                 >
-                  {!boardWorkflow(board.template).categories.some(
+                  {!workflow.categories.some(
                     (item) => item.value === (card.data?.category || "task"),
                   ) && (
                     <MenuItem value={card.data.category || "task"}>
                       Task
                     </MenuItem>
                   )}
-                  {boardWorkflow(board.template).categories.map((item) => (
+                  {workflow.categories.map((item) => (
                     <MenuItem key={item.value} value={item.value}>
                       {item.label}
                     </MenuItem>
@@ -384,15 +397,19 @@ export function CardDrawer({ board }: { board: Board }) {
                 </TextField>
                 <TextField
                   type="date"
-                  label="Due date"
+                  label={workflow.wording.due}
                   size="small"
                   sx={{ minWidth: 0, flex: "1 1 170px" }}
                   InputLabelProps={{ shrink: true }}
-                  value={card.data.dueDate?.slice(0, 10) || ""}
+                  // Show and save the date in the viewer's own time zone
+                  // (noon avoids it slipping a day either side).
+                  value={
+                    card.data.dueDate ? localDateInput(card.data.dueDate) : ""
+                  }
                   onChange={(e) =>
                     update.mutate({
                       dueDate: e.target.value
-                        ? new Date(e.target.value).toISOString()
+                        ? new Date(`${e.target.value}T12:00:00`).toISOString()
                         : null,
                     })
                   }
@@ -436,6 +453,11 @@ export function CardDrawer({ board }: { board: Board }) {
                   }
                 />
               </Stack>
+              <CardFields
+                workflow={workflow}
+                values={card.data.fields}
+                onSave={(fields) => update.mutate({ fields })}
+              />
               <Box>
                 <Typography fontWeight={700} mb={1}>
                   Description
@@ -693,7 +715,9 @@ function ClientPanel({
   feedback,
   onVisibility,
   approval,
+  workflow,
 }: {
+  workflow: Workflow;
   card: Card;
   portalEnabled: boolean;
   clientEmail: string | null;
@@ -767,7 +791,7 @@ function ClientPanel({
             disabled={approval.isPending || !portalEnabled}
             onClick={() => approval.mutate("request")}
           >
-            {status === "none" ? "Request approval" : "Ask again"}
+            {status === "none" ? workflow.wording.requestApproval : "Ask again"}
           </Button>
         )}
       </Stack>
