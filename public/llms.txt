@@ -23,6 +23,14 @@ Support: support@danto.app
 Freelance designers, web developers, marketers, video editors, consultants and small studios who manage several client projects and want clients informed without status meetings or long email threads.
 
 ## Guides
+- [Getting started with Danto](https://danto.app/guides/getting-started)
+- [Social media content calendar and post approval](https://danto.app/guides/social-media-content-calendar)
+- [Website projects page by page](https://danto.app/guides/website-project-management)
+- [Design and branding proofs and revision rounds](https://danto.app/guides/design-approval-workflow)
+- [Video production from script to delivery](https://danto.app/guides/video-production-workflow)
+- [Content writing from brief to published](https://danto.app/guides/content-writing-workflow)
+- [Photography from inquiry to gallery delivery](https://danto.app/guides/photography-client-workflow)
+- [General client projects and retainers](https://danto.app/guides/client-project-management)
 - [How to share a Trello board with clients without exposing your internal work](https://danto.app/guides/share-trello-board-with-clients)
 - [Weekly client status update email: 5 templates for freelancers](https://danto.app/guides/client-status-update-email-template)
 - [How to get client approvals faster](https://danto.app/guides/client-approval-process)

@@ -1,3 +1,5 @@
+import { howToGuides } from "./howToGuides";
+
 export interface GuideSection {
   heading: string;
   paragraphs?: string[];
@@ -5,10 +7,22 @@ export interface GuideSection {
   ordered?: boolean;
   /** A copy-ready block such as an email template. */
   template?: { label: string; text: string };
+  /** Screenshots from public/guides/…, shown after the text. */
+  images?: GuideImage[];
+}
+
+export interface GuideImage {
+  src: string;
+  alt: string;
+  caption?: string;
+  width: number;
+  height: number;
 }
 
 export interface Guide {
   slug: string;
+  /** "howto" guides explain how to use Danto; others are articles. */
+  kind?: "howto";
   title: string;
   /** Meta description, ~150 characters. */
   description: string;
@@ -20,7 +34,7 @@ export interface Guide {
   faqs: Array<{ q: string; a: string }>;
 }
 
-export const guides: Guide[] = [
+const articles: Guide[] = [
   {
     slug: "share-trello-board-with-clients",
     title:
@@ -335,6 +349,8 @@ export const guides: Guide[] = [
     ],
   },
 ];
+
+export const guides: Guide[] = [...howToGuides, ...articles];
 
 export function findGuide(slug: string) {
   return guides.find((guide) => guide.slug === slug);

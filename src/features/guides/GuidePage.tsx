@@ -34,38 +34,66 @@ export function GuidesIndexPage() {
             lineHeight: 1.7,
           }}
         >
-          Practical guides and copy-ready templates for freelancers and small
-          agencies who want happier clients and fewer status emails.
+          Step-by-step guides for every kind of client work, plus practical
+          advice and copy-ready templates for fewer status emails.
         </Typography>
-        <Box className="guide-grid">
-          {guides.map((guide) => (
-            <Box
-              key={guide.slug}
-              component={Link}
-              to={`/guides/${guide.slug}`}
-              className="guide-card"
-            >
-              <Typography className="mono-label" color="text.secondary">
-                {guide.readMinutes} min read
-              </Typography>
-              <Typography component="h2" variant="h5" mt={1.5}>
-                {guide.title}
-              </Typography>
-              <Typography color="text.secondary" mt={1} lineHeight={1.65}>
-                {guide.description}
-              </Typography>
-              <Typography
-                fontWeight={800}
-                mt={2}
-                sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-              >
-                Read guide <ArrowForwardRounded fontSize="small" />
-              </Typography>
-            </Box>
-          ))}
-        </Box>
+        <GuideGroup
+          title="How to use Danto"
+          items={guides.filter((guide) => guide.kind === "howto")}
+          cta="Open guide"
+        />
+        <GuideGroup
+          title="Client communication"
+          items={guides.filter((guide) => guide.kind !== "howto")}
+          cta="Read guide"
+        />
       </Container>
     </PublicShell>
+  );
+}
+
+function GuideGroup({
+  title,
+  items,
+  cta,
+}: {
+  title: string;
+  items: Guide[];
+  cta: string;
+}) {
+  return (
+    <Box component="section" mt={7}>
+      <Typography component="h2" variant="h4">
+        {title}
+      </Typography>
+      <Box className="guide-grid">
+        {items.map((guide) => (
+          <Box
+            key={guide.slug}
+            component={Link}
+            to={`/guides/${guide.slug}`}
+            className="guide-card"
+          >
+            <Typography className="mono-label" color="text.secondary">
+              {guide.readMinutes} min read
+            </Typography>
+            <Typography component="h3" variant="h5" mt={1.5}>
+              {guide.title}
+            </Typography>
+            <Typography color="text.secondary" mt={1} lineHeight={1.65}>
+              {guide.description}
+            </Typography>
+            <Typography
+              fontWeight={800}
+              mt={2}
+              sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+            >
+              {cta} <ArrowForwardRounded fontSize="small" />
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    </Box>
   );
 }
 
@@ -73,7 +101,12 @@ export function GuidePage() {
   const { slug = "" } = useParams();
   const guide = findGuide(slug);
   if (!guide) return <Navigate to="/guides" replace />;
-  const related = guides.filter((item) => item.slug !== guide.slug).slice(0, 3);
+  const related = guides
+    .filter((item) => item.slug !== guide.slug)
+    .sort(
+      (a, b) => Number(b.kind === guide.kind) - Number(a.kind === guide.kind),
+    )
+    .slice(0, 3);
   return (
     <PublicShell>
       <Container
@@ -211,6 +244,21 @@ function GuideSectionBlock({
           ))}
         </Box>
       )}
+      {section.images?.map((image) => (
+        <Box component="figure" key={image.src} className="guide-figure">
+          <img
+            src={image.src}
+            alt={image.alt}
+            width={image.width}
+            height={image.height}
+            loading="lazy"
+            decoding="async"
+          />
+          {image.caption && (
+            <Typography component="figcaption">{image.caption}</Typography>
+          )}
+        </Box>
+      ))}
       {section.template && (
         <TemplateBlock
           label={section.template.label}

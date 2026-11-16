@@ -1997,3 +1997,22 @@ html {
   text-align: center;
   cursor: pointer;
 }
+
+.guide-figure {
+  margin: 24px 0 0;
+}
+.guide-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  border: 1px solid #d4d0c5;
+  box-shadow: 5px 5px 0 #181817;
+  background: #f2f0e9;
+}
+.guide-figure figcaption {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #6b675f;
+}
