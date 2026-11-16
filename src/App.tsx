@@ -40,6 +40,10 @@ const InvitePage = named(
   () => import("./features/invites/InvitePage"),
   "InvitePage",
 );
+const MyTasksPage = named(
+  () => import("./features/tasks/MyTasksPage"),
+  "MyTasksPage",
+);
 const DashboardPage = named(
   () => import("./features/workspaces/DashboardPage"),
   "DashboardPage",
@@ -126,6 +130,7 @@ export const routes = [
         element: page(<AppShell />),
         children: [
           { path: "/app", element: page(<DashboardPage />) },
+          { path: "/tasks", element: page(<MyTasksPage />) },
           {
             path: "/workspaces/:workspaceId/command-center",
             element: page(<CommandCenterPage />),

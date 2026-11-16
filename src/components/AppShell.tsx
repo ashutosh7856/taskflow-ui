@@ -1,6 +1,9 @@
+import TaskAltRounded from "@mui/icons-material/TaskAltRounded";
 import {
   Avatar,
+  Badge,
   Box,
+  Button,
   ButtonBase,
   Divider,
   Menu,
@@ -9,7 +12,8 @@ import {
   Typography,
 } from "@mui/material";
 import { type MouseEvent, useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useMyTasks } from "../lib/tasks";
 import { useAuthStore } from "../store/auth";
 import { Brand } from "./Brand";
 import { TrialBanner } from "./TrialBanner";
@@ -19,6 +23,14 @@ export function AppShell() {
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   const [accountAnchor, setAccountAnchor] = useState<HTMLElement | null>(null);
+  const tasks = useMyTasks();
+  const dueSoon =
+    tasks.data?.filter(
+      (task) =>
+        !task.isCompleted &&
+        task.dueDate &&
+        new Date(task.dueDate).getTime() < Date.now() + 864e5,
+    ).length || 0;
   const openAccount = (event: MouseEvent<HTMLElement>) =>
     setAccountAnchor(event.currentTarget);
   const signOut = () => {
@@ -54,6 +66,27 @@ export function AppShell() {
       >
         <Brand linked to="/app" />
         <Box sx={{ flex: 1 }} />
+        <Button
+          component={NavLink}
+          to="/tasks"
+          startIcon={
+            <Badge
+              badgeContent={dueSoon}
+              color="error"
+              max={99}
+              title={dueSoon ? `${dueSoon} due within a day` : undefined}
+            >
+              <TaskAltRounded />
+            </Badge>
+          }
+          sx={{
+            color: "#181817",
+            fontWeight: 800,
+            "&.active": { bgcolor: "#e2dfd5" },
+          }}
+        >
+          My tasks
+        </Button>
         <ButtonBase
           aria-label="Open account menu"
           aria-controls={accountAnchor ? "account-menu" : undefined}

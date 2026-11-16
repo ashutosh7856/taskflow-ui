@@ -2,6 +2,7 @@ import AddRounded from "@mui/icons-material/AddRounded";
 import ArrowOutwardRounded from "@mui/icons-material/ArrowOutwardRounded";
 import AutoAwesomeRounded from "@mui/icons-material/AutoAwesomeRounded";
 import SettingsRounded from "@mui/icons-material/SettingsRounded";
+import TaskAltRounded from "@mui/icons-material/TaskAltRounded";
 import GridViewRounded from "@mui/icons-material/GridViewRounded";
 import InsightsRounded from "@mui/icons-material/InsightsRounded";
 import SpaceDashboardRounded from "@mui/icons-material/SpaceDashboardRounded";
@@ -36,6 +37,14 @@ export function DashboardPage() {
   useEffect(() => {
     if (searchParams.get("create") === "workspace") setDialog(true);
   }, [searchParams]);
+  // Back from "Add to Slack" (?slack=connected|cancelled|expired|error).
+  const [slackResult] = useState(() => searchParams.get("slack"));
+  useEffect(() => {
+    if (searchParams.has("slack")) {
+      searchParams.delete("slack");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
   const workspaces = useQuery({
     queryKey: ["workspaces"],
     queryFn: async () => (await api.get<Workspace[]>("/workspaces")).data,
@@ -83,6 +92,13 @@ export function DashboardPage() {
             >
               All boards
             </Button>
+            <Button
+              startIcon={<TaskAltRounded />}
+              onClick={() => navigate("/tasks")}
+              sx={{ justifyContent: "flex-start", color: "#3e3b36" }}
+            >
+              My tasks
+            </Button>
             <Typography
               className="mono-label"
               color="text.secondary"
@@ -123,6 +139,24 @@ export function DashboardPage() {
           </Stack>
         </Box>
         <Box>
+          {slackResult && (
+            <Alert
+              severity={
+                slackResult === "connected"
+                  ? "success"
+                  : slackResult === "cancelled"
+                    ? "info"
+                    : "error"
+              }
+              sx={{ mb: 3 }}
+            >
+              {slackResult === "connected"
+                ? "Slack is connected. Updates will post to the channel you picked."
+                : slackResult === "cancelled"
+                  ? "Slack wasn't connected."
+                  : "Slack couldn't be connected. Try again from workspace settings."}
+            </Alert>
+          )}
           <AnimatedContent>
             <Box
               sx={{

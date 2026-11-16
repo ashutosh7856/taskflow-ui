@@ -84,6 +84,7 @@ export function CardDrawer({ board }: { board: Board }) {
   const refresh = () => {
     client.invalidateQueries({ queryKey: ["card", cardId] });
     client.invalidateQueries({ queryKey: ["board", board.id] });
+    client.invalidateQueries({ queryKey: ["my-tasks"] });
   };
   const update = useMutation({
     mutationFn: (data: Record<string, unknown>) =>

@@ -18,6 +18,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { api, errorMessage } from "../lib/api";
 import type { Workspace } from "../types";
+import { SlackSettings } from "./SlackSettings";
 
 export function WorkspaceSettingsDialog({
   open,
@@ -153,6 +154,12 @@ export function WorkspaceSettingsDialog({
             </Stack>
           ))}
         </Stack>
+        {(workspace.role === "owner" || workspace.role === "admin") && (
+          <>
+            <Divider sx={{ my: 4 }} />
+            <SlackSettings workspaceId={workspace.id} />
+          </>
+        )}
         {workspace.role === "owner" && (
           <>
             <Divider sx={{ my: 4 }} />
