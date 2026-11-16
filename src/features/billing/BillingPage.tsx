@@ -301,6 +301,12 @@ export function BillingPage() {
             >
               {offers.map((offer) => {
                 const current = data.plan === offer.plan;
+                // Trial / comped access: the plan is active but nothing is
+                // paying for it yet, so let the user add payment to keep it.
+                const keepable =
+                  current &&
+                  offer.plan !== "free" &&
+                  !data.paypalSubscriptionId;
                 return (
                   <Box
                     key={offer.plan}
@@ -370,8 +376,8 @@ export function BillingPage() {
                     </Stack>
                     <Button
                       fullWidth
-                      variant={current ? "outlined" : "contained"}
-                      disabled={current || offer.plan === "free"}
+                      variant={current && !keepable ? "outlined" : "contained"}
+                      disabled={(current && !keepable) || offer.plan === "free"}
                       onClick={() => {
                         if (offer.plan === "pro" || offer.plan === "business") {
                           setCheckoutPlan(offer.plan);
@@ -379,16 +385,24 @@ export function BillingPage() {
                         }
                       }}
                       sx={
-                        current
-                          ? { color: "#fff", borderColor: "#77736b" }
-                          : undefined
+                        keepable
+                          ? {
+                              bgcolor: "#d8ff63",
+                              color: "#181817",
+                              "&:hover": { bgcolor: "#e5ff94" },
+                            }
+                          : current
+                            ? { color: "#fff", borderColor: "#77736b" }
+                            : undefined
                       }
                     >
-                      {current
-                        ? "Your current plan"
-                        : offer.plan === "free"
-                          ? "Included"
-                          : `Choose ${offer.name}`}
+                      {keepable
+                        ? `Keep ${offer.name} · add payment`
+                        : current
+                          ? "Your current plan"
+                          : offer.plan === "free"
+                            ? "Included"
+                            : `Choose ${offer.name}`}
                     </Button>
                   </Box>
                 );

@@ -58,7 +58,7 @@ export function TrialBanner() {
         </Typography>
         <Button
           component={Link}
-          to="/billing?interval=year"
+          to={`/billing?interval=year&plan=${data.plan}`}
           size="small"
           sx={{
             bgcolor: "#d8ff63",

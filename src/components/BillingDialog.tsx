@@ -479,7 +479,12 @@ export function BillingDialog({
               }}
             >
               {offers.map((offer) => {
-                const current = billing.data?.plan === offer.plan;
+                // A trial (no subscription yet) isn't "active": keep it buyable.
+                const current =
+                  billing.data?.plan === offer.plan &&
+                  (offer.plan === "free" ||
+                    Boolean(billing.data?.paypalSubscriptionId));
+                const onTrial = billing.data?.plan === offer.plan && !current;
                 return (
                   <Box
                     key={offer.plan}
@@ -489,12 +494,12 @@ export function BillingDialog({
                       <Typography className="mono-label">
                         {offer.name}
                       </Typography>
-                      {current && (
+                      {(current || onTrial) && (
                         <Typography
                           className="mono-label"
                           sx={{ color: "#ff5c35" }}
                         >
-                          Current plan
+                          {onTrial ? "Trial" : "Current plan"}
                         </Typography>
                       )}
                     </Stack>
@@ -545,7 +550,11 @@ export function BillingDialog({
                         fullWidth
                         onClick={() => setSelectedPlan(offer.plan)}
                       >
-                        {current ? "Active" : `Choose ${offer.name}`}
+                        {current
+                          ? "Active"
+                          : onTrial
+                            ? `Keep ${offer.name}`
+                            : `Choose ${offer.name}`}
                       </Button>
                     )}
                   </Box>
