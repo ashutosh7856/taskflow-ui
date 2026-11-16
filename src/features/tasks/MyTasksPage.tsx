@@ -1,8 +1,10 @@
+import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
 import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
 import RadioButtonUncheckedRounded from "@mui/icons-material/RadioButtonUncheckedRounded";
 import {
   Alert,
   Box,
+  Button,
   ButtonBase,
   Chip,
   CircularProgress,
@@ -13,7 +15,7 @@ import {
 } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, errorMessage } from "../../lib/api";
 import { myTasksKey, useMyTasks, type MyTask } from "../../lib/tasks";
 
@@ -80,6 +82,7 @@ function dueText(task: MyTask) {
 export function MyTasksPage() {
   const tasks = useMyTasks();
   const client = useQueryClient();
+  const navigate = useNavigate();
   const [workspace, setWorkspace] = useState<string>("all");
   const toggle = useMutation({
     mutationFn: (task: MyTask) =>
@@ -125,6 +128,28 @@ export function MyTasksPage() {
       maxWidth="md"
       sx={{ py: { xs: 4, md: 7 }, px: { xs: 2, sm: 3 } }}
     >
+      <Stack direction="row" alignItems="center" gap={1.5} mb={3}>
+        <IconButton
+          aria-label="Back to boards"
+          onClick={() => navigate("/app")}
+          sx={{
+            color: "#181817",
+            bgcolor: "#d8ff63",
+            border: "1px solid #181817",
+            "&:hover": { bgcolor: "#e5ff94" },
+          }}
+        >
+          <ArrowBackRounded />
+        </IconButton>
+        <Typography
+          component={Link}
+          to="/app"
+          fontWeight={800}
+          sx={{ color: "#181817", textDecoration: "none" }}
+        >
+          All boards
+        </Typography>
+      </Stack>
       <Typography className="mono-label" color="text.secondary">
         Assigned to you
       </Typography>
@@ -197,6 +222,13 @@ export function MyTasksPage() {
             When someone adds you to a card, or you add yourself, it shows up
             here.
           </Typography>
+          <Button
+            variant="contained"
+            sx={{ mt: 2.5 }}
+            onClick={() => navigate("/app")}
+          >
+            Go to your boards
+          </Button>
         </Box>
       )}
 
