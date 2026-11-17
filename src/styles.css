@@ -118,9 +118,19 @@ input,
 textarea {
   font: inherit;
 }
+/* Keyboard focus ring for buttons and links. Text fields show focus with
+   their own darker border instead, so they get no ring. */
 :focus-visible {
-  outline: 3px solid var(--orange) !important;
-  outline-offset: 3px !important;
+  outline: 2px solid var(--line-strong) !important;
+  outline-offset: 2px !important;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[contenteditable]:focus-visible,
+.MuiInputBase-root :focus-visible,
+.MuiSelect-select:focus-visible {
+  outline: none !important;
 }
 ::selection {
   background: var(--acid);
