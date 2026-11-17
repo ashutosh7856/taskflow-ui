@@ -1,4 +1,5 @@
 import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
+import { SupportLink } from "./SupportLink";
 import CheckRounded from "@mui/icons-material/CheckRounded";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import RocketLaunchRounded from "@mui/icons-material/RocketLaunchRounded";
@@ -265,22 +266,17 @@ export function BillingDialog({
                 Payment method
               </Typography>
               <PaymentMethod />
-              {deferredDays > 0 && !hasSubscription && (
-                <Alert
-                  severity="success"
-                  icon={<VerifiedUserRounded />}
-                  sx={{ mt: 2 }}
-                >
-                  <strong>Nothing charged today.</strong> Your first payment is
-                  on{" "}
-                  {firstCharge.toLocaleDateString(undefined, {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                  , when your trial ends. Cancel before then and you won’t be
-                  charged.
-                </Alert>
+              {chosenOffer && !hasSubscription && (
+                <PaymentSchedule
+                  amount={
+                    interval === "year"
+                      ? chosenOffer.yearlyPrice
+                      : chosenOffer.price
+                  }
+                  interval={interval}
+                  firstCharge={deferredDays > 0 ? firstCharge : null}
+                  discounted={interval === "month" && !!discountCode.trim()}
+                />
               )}
               {interval === "month" && !hasSubscription && (
                 <TextField
@@ -438,7 +434,7 @@ export function BillingDialog({
         {!billing.isLoading && !billing.data?.checkout?.configured && (
           <Alert severity="info" sx={{ mt: 2 }}>
             Checkout is temporarily unavailable. Please try again shortly or
-            email support@danto.app.
+            email <SupportLink subject="Checkout problem" />.
           </Alert>
         )}
       </DialogContent>
@@ -476,6 +472,78 @@ function PaymentMethod() {
           Secure checkout
         </Typography>
       </Box>
+    </Box>
+  );
+}
+
+function PaymentSchedule({
+  amount,
+  interval,
+  firstCharge,
+  discounted,
+}: {
+  amount: number;
+  interval: BillingInterval;
+  firstCharge: Date | null;
+  discounted: boolean;
+}) {
+  const money = (value: number) => `$${value.toFixed(2)} USD`;
+  const date = (value: Date) =>
+    value.toLocaleDateString(undefined, {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  const every = interval === "year" ? "every year" : "every month";
+  const rows: Array<[string, string]> = firstCharge
+    ? [
+        ["Due today", "$0.00 · nothing charged"],
+        [`On ${date(firstCharge)} (trial ends)`, money(amount)],
+        ["After that", `${money(amount)} ${every} until you cancel`],
+      ]
+    : [
+        ["Due today", money(amount)],
+        ["After that", `${money(amount)} ${every} until you cancel`],
+      ];
+  return (
+    <Box
+      sx={{
+        mt: 2,
+        p: 2,
+        borderRadius: 2,
+        border: "1px solid #b9cf6a",
+        bgcolor: "#f6ffd9",
+      }}
+    >
+      <Typography fontWeight={850} mb={1}>
+        {firstCharge ? "Nothing charged today" : "Payment schedule"}
+      </Typography>
+      <Stack spacing={0.75}>
+        {rows.map(([label, value]) => (
+          <Stack
+            key={label}
+            direction="row"
+            justifyContent="space-between"
+            gap={2}
+          >
+            <Typography fontSize={14} color="text.secondary">
+              {label}
+            </Typography>
+            <Typography fontSize={14} fontWeight={800} textAlign="right">
+              {value}
+            </Typography>
+          </Stack>
+        ))}
+      </Stack>
+      <Typography fontSize={12} color="text.secondary" mt={1.25}>
+        {firstCharge
+          ? "Cancel from Billing before your trial ends and you won’t be charged at all. "
+          : "Cancel anytime from Billing; you keep access until the end of the paid period. "}
+        {discounted
+          ? "A valid discount code lowers the first payment; checkout shows the exact amount. "
+          : ""}
+        Sales tax or VAT may be added at checkout depending on your country.
+      </Typography>
     </Box>
   );
 }

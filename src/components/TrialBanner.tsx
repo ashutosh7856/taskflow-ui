@@ -54,7 +54,9 @@ export function TrialBanner() {
           {days === 0
             ? "ends today"
             : `${days} day${days === 1 ? "" : "s"} left`}
-          . After that, extra portals pause and branding switches off.
+          . After that you move to Free (never charged automatically). Keep
+          Pro for $19/month: add a card now, pay $0 today, first charge when
+          the trial ends.
         </Typography>
         <Button
           component={Link}

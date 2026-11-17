@@ -1,4 +1,5 @@
 import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
+import { SupportLink } from "../../components/SupportLink";
 import {
   Box,
   Button,
@@ -80,8 +81,6 @@ const termsSections = [
 
 export function LegalPage() {
   const privacy = useLocation().pathname === "/privacy";
-  const supportEmail =
-    import.meta.env.VITE_SUPPORT_EMAIL || "support@danto.app";
   const sections = privacy ? privacySections : termsSections;
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f2f0e9" }}>
@@ -142,7 +141,7 @@ export function LegalPage() {
           <Typography fontWeight={850}>Contact</Typography>
           <Typography color="text.secondary" mt={0.5}>
             Privacy, legal, and billing questions:{" "}
-            <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+            <SupportLink subject="Privacy or legal question" />
           </Typography>
         </Box>
       </Container>

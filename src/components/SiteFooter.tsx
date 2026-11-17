@@ -1,4 +1,5 @@
 import { Box, Container, Typography } from "@mui/material";
+import { SupportLink } from "./SupportLink";
 import { Link } from "react-router-dom";
 import { Brand } from "./Brand";
 
@@ -70,13 +71,11 @@ export function SiteFooter() {
               freelancers and small agencies.
             </Typography>
             <Typography
-              component="a"
-              href="mailto:support@danto.app"
               fontSize={14}
               fontWeight={700}
-              sx={{ display: "inline-block", mt: 2, color: "var(--ink)" }}
+              sx={{ mt: 2, "& a": { color: "var(--ink)" } }}
             >
-              support@danto.app
+              <SupportLink />
             </Typography>
           </Box>
           {columns.map((column) => (

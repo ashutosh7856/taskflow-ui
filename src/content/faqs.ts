@@ -21,6 +21,10 @@ export const faqs = [
     a: "Your account moves to Free automatically and you are never charged. Nothing is deleted: your oldest client portal stays live, and any others pause until you upgrade.",
   },
   {
+    q: "If I add a card during the trial, when am I charged?",
+    a: "Not until the trial ends. Adding a card during the trial charges $0 that day. On your trial end date you pay the plan price (Pro $19/month or $190/year, Team $49/month or $490/year, plus any sales tax or VAT for your country), and it renews on that date each month or year until you cancel. Cancel from Billing before the trial ends and you pay nothing.",
+  },
+  {
     q: "Can I use Danto for internal projects without clients?",
     a: "Yes. Danto is a full kanban board with lists, cards, checklists, due dates, comments and teammates. Client portals are there when you need them.",
   },

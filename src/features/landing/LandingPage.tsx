@@ -1,4 +1,5 @@
 import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
+import { SupportLink } from "../../components/SupportLink";
 import AutoAwesomeRounded from "@mui/icons-material/AutoAwesomeRounded";
 import BrushRounded from "@mui/icons-material/BrushRounded";
 import CheckRounded from "@mui/icons-material/CheckRounded";
@@ -488,7 +489,7 @@ export function LandingPage() {
               <SectionIntro
                 flush
                 title="Simple pricing that grows with your client list."
-                copy="Every new account gets 14 days of Pro, no card needed. Your clients never pay or sign up."
+                copy="Every new account gets 14 days of Pro, no card needed, and you're never charged automatically when it ends. Keep Pro for $19/month: add a card during the trial and the first charge happens on your trial end date. Your clients never pay or sign up."
               />
               <IntervalToggle value={interval} onChange={setBillingInterval} />
             </Stack>
@@ -612,9 +613,7 @@ export function LandingPage() {
           ))}
           <Typography color="text.secondary" mt={4}>
             Still have a question? Email{" "}
-            <a href="mailto:support@danto.app" className="lp-inline-link">
-              support@danto.app
-            </a>{" "}
+            <SupportLink className="lp-inline-link" />{" "}
             and a person will reply.
           </Typography>
         </Container>

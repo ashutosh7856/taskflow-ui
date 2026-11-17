@@ -1,4 +1,5 @@
 import AutoAwesomeRounded from "@mui/icons-material/AutoAwesomeRounded";
+import { SupportLink } from "../../components/SupportLink";
 import CreditCardRounded from "@mui/icons-material/CreditCardRounded";
 import LockRounded from "@mui/icons-material/LockRounded";
 import ReceiptLongRounded from "@mui/icons-material/ReceiptLongRounded";
@@ -55,8 +56,6 @@ interface BillingDetails {
 }
 
 export function BillingPage() {
-  const supportEmail =
-    import.meta.env.VITE_SUPPORT_EMAIL || "support@danto.app";
   const [searchParams] = useSearchParams();
   const isAdmin = useAuthStore((state) => Boolean(state.user?.isAdmin));
   const [interval, setBillingInterval] = useState<BillingInterval>(
@@ -617,7 +616,7 @@ export function BillingPage() {
           </Box>
           <Typography variant="body2" color="text.secondary" textAlign="center">
             Billing question or an incorrect charge? Email{" "}
-            <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+            <SupportLink subject="Billing question" />.
           </Typography>
         </Stack>
       )}

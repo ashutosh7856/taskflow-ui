@@ -1,4 +1,5 @@
 import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
+import { SupportLink } from "../../components/SupportLink";
 import {
   Box,
   Button,
@@ -29,8 +30,6 @@ type Page = {
   intro: string;
   sections: Section[];
 };
-
-const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || "support@danto.app";
 const legalName = import.meta.env.VITE_LEGAL_BUSINESS_NAME || "Danto";
 const businessAddress =
   import.meta.env.VITE_BUSINESS_ADDRESS ||
@@ -58,7 +57,12 @@ const pages: Record<string, Page> = {
       },
       {
         title: "Where we're based",
-        body: "Danto is an independent, bootstrapped product. We answer every support email ourselves at support@danto.app.",
+        body: (
+          <>
+            Danto is an independent, bootstrapped product. We answer every
+            support email ourselves at <SupportLink />.
+          </>
+        ),
       },
     ],
   },
@@ -72,7 +76,7 @@ const pages: Record<string, Page> = {
         title: "Customer support",
         body: (
           <>
-            Email <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. Include
+            Email <SupportLink />. Include
             your account email and, for a payment issue, the provider reference
             shown on your receipt. Never email passwords or full payment-card
             details.
@@ -127,9 +131,7 @@ const pages: Record<string, Page> = {
         body: (
           <>
             Send a clear description and reproduction steps to{` `}
-            <a href={`mailto:${supportEmail}?subject=Security report`}>
-              {supportEmail}
-            </a>
+            <SupportLink subject="Security report" />
             . Do not access other users’ data or disrupt the service while
             testing.
           </>
