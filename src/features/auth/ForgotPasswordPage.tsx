@@ -57,6 +57,17 @@ export function ForgotPasswordPage() {
       setResendIn(45);
     },
   });
+  // Admin reset emails link here with send=1: send a fresh code right away
+  // (an emailed code would often have expired by the time it's opened).
+  const autoSent = useRef(false);
+  useEffect(() => {
+    if (autoSent.current || searchParams.get("send") !== "1" || !email) return;
+    autoSent.current = true;
+    request.mutate();
+    navigate(`/forgot-password?email=${encodeURIComponent(email)}`, {
+      replace: true,
+    });
+  }, [email, navigate, request, searchParams]);
   const verify = useMutation({
     mutationFn: () =>
       api.post("/auth/password/verify", { email: email.trim(), code }),

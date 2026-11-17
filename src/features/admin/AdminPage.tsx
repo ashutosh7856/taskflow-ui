@@ -919,7 +919,7 @@ function UserDrawer({
                 onClick={() =>
                   action.mutate({
                     path: "password-reset",
-                    done: "Password reset code emailed.",
+                    done: "Reset link emailed. A fresh code is sent when they open it.",
                   })
                 }
               >
