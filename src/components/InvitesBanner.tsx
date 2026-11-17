@@ -1,7 +1,10 @@
-import { Box, Button, Stack, Typography } from "@mui/material";
+import GroupAddRounded from "@mui/icons-material/GroupAddRounded";
+import { Button } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, errorMessage } from "../lib/api";
+import { NoticeBar } from "./NoticeBar";
 
 type MyInvite = {
   token: string;
@@ -15,6 +18,7 @@ type MyInvite = {
 export function InvitesBanner() {
   const client = useQueryClient();
   const navigate = useNavigate();
+  const [snoozed, setSnoozed] = useState<string[]>([]);
   const invites = useQuery({
     queryKey: ["invites", "mine"],
     queryFn: async () => (await api.get<MyInvite[]>("/invites/mine")).data,
@@ -37,49 +41,57 @@ export function InvitesBanner() {
       client.invalidateQueries({ queryKey: ["invites", "mine"] }),
   });
 
-  if (!invites.data?.length) return null;
+  const visible = (invites.data || []).filter(
+    (invite) => !snoozed.includes(invite.token),
+  );
+  if (!visible.length) return null;
   const busy = accept.isPending || decline.isPending;
+  const failed = accept.error || decline.error;
   return (
-    <Box sx={{ bgcolor: "#d8ff63", color: "#181817", px: { xs: 2, sm: 3 }, py: 1 }}>
-      {invites.data.map((invite) => (
-        <Stack
+    <>
+      {visible.map((invite) => (
+        <NoticeBar
           key={invite.token}
-          direction="row"
-          alignItems="center"
-          justifyContent="center"
-          flexWrap="wrap"
-          columnGap={1.5}
-          rowGap={0.5}
-          sx={{ maxWidth: 1280, mx: "auto", py: 0.25 }}
+          tone="accent"
+          icon={<GroupAddRounded />}
+          title={
+            <>
+              {invite.invitedBy || "A teammate"} invited you to{" "}
+              {invite.targetName}
+            </>
+          }
+          onClose={() => setSnoozed((list) => [...list, invite.token])}
+          actions={
+            <>
+              <Button
+                size="small"
+                disabled={busy}
+                onClick={() => decline.mutate(invite.token)}
+                sx={{
+                  color: "#4a4842",
+                  minHeight: 34,
+                  "&:hover": { bgcolor: "rgba(24,24,23,.08)", color: "#181817" },
+                }}
+              >
+                Decline
+              </Button>
+              <Button
+                size="small"
+                variant="contained"
+                disabled={busy}
+                onClick={() => accept.mutate(invite.token)}
+                sx={{ minHeight: 34, px: 2 }}
+              >
+                Accept
+              </Button>
+            </>
+          }
         >
-          <Typography fontSize={14} textAlign="center">
-            <strong>{invite.invitedBy || "A teammate"}</strong> invited you to
-            the {invite.scope} <strong>{invite.targetName}</strong>.
-          </Typography>
-          <Button
-            size="small"
-            variant="contained"
-            disabled={busy}
-            onClick={() => accept.mutate(invite.token)}
-            sx={{ minHeight: 30 }}
-          >
-            Accept
-          </Button>
-          <Button
-            size="small"
-            disabled={busy}
-            onClick={() => decline.mutate(invite.token)}
-            sx={{ color: "#181817", minHeight: 30 }}
-          >
-            Decline
-          </Button>
-        </Stack>
+          {failed
+            ? errorMessage(failed)
+            : `Join the ${invite.scope} as ${invite.role === "admin" ? "an admin" : "a member"}. You'll only see what you've been given access to.`}
+        </NoticeBar>
       ))}
-      {(accept.error || decline.error) && (
-        <Typography fontSize={13} textAlign="center" color="error">
-          {errorMessage(accept.error || decline.error)}
-        </Typography>
-      )}
-    </Box>
+    </>
   );
 }

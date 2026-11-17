@@ -582,6 +582,11 @@ export function BoardPage() {
                 lg: "5px 5px 0 #ff5c35",
               },
               overflowY: "auto",
+              // Still scrolls (wheel, touch, keyboard), just without the
+              // scrollbar drawn over the dark panel.
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              "&::-webkit-scrollbar": { display: "none" },
             }}
           >
             <Stack direction="row" alignItems="center" mb={2}>
