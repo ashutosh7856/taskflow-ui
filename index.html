@@ -27,6 +27,21 @@
       </style>
     </noscript>
     <script>
+      // One canonical address. Logins live in per-site storage, and payment
+      // and email links return to danto.app, so www / pages.dev would look
+      // logged out after checkout. Preview deploys (x.taskflow-ui-b5u…) stay.
+      if (
+        location.hostname === "www.danto.app" ||
+        location.hostname === "taskflow-ui-b5u.pages.dev"
+      )
+        location.replace(
+          "https://danto.app" +
+            location.pathname +
+            location.search +
+            location.hash,
+        );
+    </script>
+    <script>
       // Apply the saved/system colour scheme before React loads (no flash).
       // Public pages are light-only (see ForceLight).
       try {
