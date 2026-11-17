@@ -1,4 +1,5 @@
 import { Box, CircularProgress } from "@mui/material";
+import { ForceLight } from "./components/ForceLight";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import {
   Navigate,
@@ -103,26 +104,78 @@ function ProtectedRoute() {
 }
 
 export const routes = [
-  { path: "/", element: <LandingPage /> },
-  { path: "/login", element: page(<AuthPage />) },
+  {
+    path: "/",
+    element: (
+      <ForceLight>
+        <LandingPage />
+      </ForceLight>
+    ),
+  },
+  { path: "/login", element: <ForceLight>{page(<AuthPage />)}</ForceLight> },
   { path: "/signup", element: <Navigate to="/login?mode=register" replace /> },
-  { path: "/forgot-password", element: page(<ForgotPasswordPage />) },
-  { path: "/admin/login", element: page(<AdminLoginPage />) },
-  { path: "/invites/:token", element: page(<InvitePage />) },
-  { path: "/p/:token", element: page(<PortalPage />) },
-  { path: "/privacy", element: page(<LegalPage />) },
-  { path: "/terms", element: page(<LegalPage />) },
-  { path: "/pricing", element: page(<PricingPage />) },
-  { path: "/guides", element: page(<GuidesIndexPage />) },
-  { path: "/guides/:slug", element: page(<GuidePage />) },
-  { path: "/about", element: page(<PublicInfoPage />) },
-  { path: "/contact", element: page(<PublicInfoPage />) },
-  { path: "/security", element: page(<PublicInfoPage />) },
-  { path: "/acceptable-use", element: page(<PublicInfoPage />) },
-  { path: "/refund-policy", element: page(<PublicInfoPage />) },
-  { path: "/cancellation-policy", element: page(<PublicInfoPage />) },
-  { path: "/delivery-policy", element: page(<PublicInfoPage />) },
-  { path: "/cookies", element: page(<PublicInfoPage />) },
+  {
+    path: "/forgot-password",
+    element: <ForceLight>{page(<ForgotPasswordPage />)}</ForceLight>,
+  },
+  {
+    path: "/admin/login",
+    element: <ForceLight>{page(<AdminLoginPage />)}</ForceLight>,
+  },
+  {
+    path: "/invites/:token",
+    element: <ForceLight>{page(<InvitePage />)}</ForceLight>,
+  },
+  {
+    path: "/p/:token",
+    element: <ForceLight>{page(<PortalPage />)}</ForceLight>,
+  },
+  { path: "/privacy", element: <ForceLight>{page(<LegalPage />)}</ForceLight> },
+  { path: "/terms", element: <ForceLight>{page(<LegalPage />)}</ForceLight> },
+  {
+    path: "/pricing",
+    element: <ForceLight>{page(<PricingPage />)}</ForceLight>,
+  },
+  {
+    path: "/guides",
+    element: <ForceLight>{page(<GuidesIndexPage />)}</ForceLight>,
+  },
+  {
+    path: "/guides/:slug",
+    element: <ForceLight>{page(<GuidePage />)}</ForceLight>,
+  },
+  {
+    path: "/about",
+    element: <ForceLight>{page(<PublicInfoPage />)}</ForceLight>,
+  },
+  {
+    path: "/contact",
+    element: <ForceLight>{page(<PublicInfoPage />)}</ForceLight>,
+  },
+  {
+    path: "/security",
+    element: <ForceLight>{page(<PublicInfoPage />)}</ForceLight>,
+  },
+  {
+    path: "/acceptable-use",
+    element: <ForceLight>{page(<PublicInfoPage />)}</ForceLight>,
+  },
+  {
+    path: "/refund-policy",
+    element: <ForceLight>{page(<PublicInfoPage />)}</ForceLight>,
+  },
+  {
+    path: "/cancellation-policy",
+    element: <ForceLight>{page(<PublicInfoPage />)}</ForceLight>,
+  },
+  {
+    path: "/delivery-policy",
+    element: <ForceLight>{page(<PublicInfoPage />)}</ForceLight>,
+  },
+  {
+    path: "/cookies",
+    element: <ForceLight>{page(<PublicInfoPage />)}</ForceLight>,
+  },
   {
     element: <ProtectedRoute />,
     children: [
@@ -141,7 +194,10 @@ export const routes = [
         ],
       },
       // Printable receipt: outside the app shell so it prints cleanly.
-      { path: "/billing/receipts/:id", element: page(<ReceiptPage />) },
+      {
+        path: "/billing/receipts/:id",
+        element: <ForceLight>{page(<ReceiptPage />)}</ForceLight>,
+      },
     ],
   },
   { path: "*", element: <Navigate to="/" replace /> },

@@ -38,15 +38,22 @@ export function NoticeBar({
           py: 1.5,
           pr: { xs: 5, sm: 1.5 },
           borderRadius: 3,
-          bgcolor: dark ? "#181817" : "#f4ffd6",
-          color: dark ? "#fff" : "#181817",
-          border: dark ? "1px solid #181817" : "1px solid #c5e06a",
+          bgcolor: dark ? "var(--panel)" : "var(--tint-lime)",
+          color: dark ? "#fff" : "var(--ink)",
+          border: dark
+            ? "1px solid var(--panel-line)"
+            : "1px solid var(--tint-lime-line)",
           boxShadow: dark
             ? "0 10px 30px rgba(24,24,23,.18)"
             : "0 6px 20px rgba(79,108,0,.10)",
         }}
       >
-        <Stack direction="row" alignItems="center" gap={1.5} sx={{ flex: 1, minWidth: 0 }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          gap={1.5}
+          sx={{ flex: 1, minWidth: 0 }}
+        >
           <Box
             sx={{
               width: 36,
@@ -55,8 +62,8 @@ export function NoticeBar({
               display: "grid",
               placeItems: "center",
               borderRadius: 2,
-              bgcolor: dark ? "#d8ff63" : "#181817",
-              color: dark ? "#181817" : "#d8ff63",
+              bgcolor: dark ? "var(--acid)" : "var(--panel)",
+              color: dark ? "var(--on-accent)" : "#d8ff63",
               "& svg": { fontSize: 20 },
             }}
           >
@@ -70,7 +77,7 @@ export function NoticeBar({
               <Typography
                 fontSize={13}
                 lineHeight={1.45}
-                sx={{ color: dark ? "#c9c7bf" : "#4a4842", mt: 0.25 }}
+                sx={{ color: dark ? "#c9c7bf" : "var(--muted)", mt: 0.25 }}
               >
                 {children}
               </Typography>
@@ -96,10 +103,10 @@ export function NoticeBar({
               position: { xs: "absolute", sm: "static" },
               top: 8,
               right: 8,
-              color: dark ? "#c9c7bf" : "#4a4842",
+              color: dark ? "#c9c7bf" : "var(--muted)",
               "&:hover": {
-                bgcolor: dark ? "rgba(255,255,255,.12)" : "rgba(24,24,23,.08)",
-                color: dark ? "#fff" : "#181817",
+                bgcolor: dark ? "rgba(255,255,255,.12)" : "var(--hover)",
+                color: dark ? "#fff" : "var(--ink)",
               },
             }}
           >

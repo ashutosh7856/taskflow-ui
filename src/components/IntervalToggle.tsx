@@ -26,14 +26,19 @@ export function IntervalToggle({
           fontSize: 14,
           gap: 0.75,
           whiteSpace: "nowrap",
-          bgcolor: active ? (dark ? "#fff" : "#181817") : "transparent",
+          // `dark` = sits on a dark panel (same in both themes).
+          bgcolor: active
+            ? dark
+              ? "#fff"
+              : "var(--selected-bg)"
+            : "transparent",
           color: active
             ? dark
               ? "#181817"
-              : "#fff"
+              : "var(--selected-fg)"
             : dark
               ? "#d4d2cb"
-              : "#4b4842",
+              : "var(--muted)",
           transition: "background-color .15s, color .15s",
         }}
       >
@@ -50,8 +55,8 @@ export function IntervalToggle({
         p: 0.5,
         gap: 0.25,
         borderRadius: 99,
-        border: `1px solid ${dark ? "#4b4a45" : "#c9c4b9"}`,
-        bgcolor: dark ? "#232321" : "#fffef9",
+        border: `1px solid ${dark ? "#4b4a45" : "var(--line-strong)"}`,
+        bgcolor: dark ? "#232321" : "var(--surface)",
         maxWidth: "100%",
       }}
     >
@@ -68,8 +73,8 @@ export function IntervalToggle({
               px: 0.9,
               py: 0.25,
               borderRadius: 99,
-              bgcolor: "#d8ff63",
-              color: "#181817",
+              bgcolor: "var(--acid)",
+              color: "var(--on-accent)",
             }}
           >
             2 months free

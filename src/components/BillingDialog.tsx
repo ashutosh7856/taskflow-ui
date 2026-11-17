@@ -102,7 +102,7 @@ export function BillingDialog({
       scroll="paper"
       PaperProps={{
         sx: {
-          bgcolor: "#f2f0e9",
+          bgcolor: "var(--bg)",
           borderRadius: { xs: 0, sm: 3 },
           minHeight: { sm: 680 },
           height: { xs: "100dvh", sm: "auto" },
@@ -114,7 +114,7 @@ export function BillingDialog({
     >
       <Box
         sx={{
-          bgcolor: "#181817",
+          bgcolor: "var(--panel)",
           color: "#fff",
           p: { xs: 3, md: 5 },
           position: "relative",
@@ -191,7 +191,7 @@ export function BillingDialog({
             <Box
               sx={{
                 width: { xs: "100%", md: 330 },
-                bgcolor: "#181817",
+                bgcolor: "var(--panel)",
                 color: "#fff",
                 borderRadius: 3,
                 p: 3,
@@ -287,7 +287,7 @@ export function BillingDialog({
                     setDiscountCode(event.target.value.toUpperCase())
                   }
                   inputProps={{ maxLength: 30 }}
-                  sx={{ mt: 2, bgcolor: "#fffef9" }}
+                  sx={{ mt: 2, bgcolor: "var(--surface)" }}
                   helperText="Valid codes discount the first payment; renewals return to the regular monthly price."
                 />
               )}
@@ -388,7 +388,7 @@ export function BillingDialog({
                       <Typography
                         fontSize={13}
                         fontWeight={800}
-                        sx={{ color: "#4f6c00", mt: 0.5 }}
+                        sx={{ color: "var(--success-ink)", mt: 0.5 }}
                       >
                         {displayPrice(offer, interval).note}
                       </Typography>
@@ -414,7 +414,9 @@ export function BillingDialog({
                           offer.plan === "pro" ? "contained" : "outlined"
                         }
                         startIcon={<RocketLaunchRounded />}
-                        disabled={current || !billing.data?.checkout?.configured}
+                        disabled={
+                          current || !billing.data?.checkout?.configured
+                        }
                         fullWidth
                         onClick={() => setSelectedPlan(offer.plan)}
                       >
@@ -452,13 +454,13 @@ function PaymentMethod() {
         gap: 1.25,
         p: { xs: 1.25, sm: 1.5 },
         mt: 1.5,
-        border: "1px solid #b9b5aa",
+        border: "1px solid var(--line-strong)",
         borderRadius: 2,
-        bgcolor: "#fffef9",
-        color: "#181817",
+        bgcolor: "var(--surface)",
+        color: "var(--ink)",
       }}
     >
-      <VerifiedUserRounded sx={{ color: "#4f6c00" }} />
+      <VerifiedUserRounded sx={{ color: "var(--success-ink)" }} />
       <Box>
         <Typography fontWeight={800} fontSize={14}>
           Card, UPI, wallets & local methods
@@ -511,8 +513,8 @@ function PaymentSchedule({
         mt: 2,
         p: 2,
         borderRadius: 2,
-        border: "1px solid #b9cf6a",
-        bgcolor: "#f6ffd9",
+        border: "1px solid var(--tint-lime-line)",
+        bgcolor: "var(--tint-lime)",
       }}
     >
       <Typography fontWeight={850} mb={1}>
@@ -558,7 +560,7 @@ function SuccessState({ close }: { close: () => void }) {
           display: "grid",
           placeItems: "center",
           borderRadius: 2,
-          bgcolor: "#181817",
+          bgcolor: "var(--panel)",
           color: "#fff",
           boxShadow: "5px 5px 0 #ff5c35",
           mb: 3,

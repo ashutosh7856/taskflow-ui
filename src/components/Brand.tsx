@@ -18,7 +18,7 @@ export function Brand({
       alignItems="center"
       spacing={0.9}
       sx={{
-        color: light ? "#f7f6f1" : "#181817",
+        color: light ? "#f7f6f1" : "var(--ink)",
         textDecoration: "none",
         width: "fit-content",
       }}
@@ -33,6 +33,10 @@ export function Brand({
           width: 32,
           height: 32,
           objectFit: "contain",
+          // The mark is dark ink; give it a light chip on dark backgrounds.
+          bgcolor: "var(--logo-bg)",
+          borderRadius: 1.5,
+          p: "var(--logo-pad)",
         }}
       />
       <Typography fontSize={20} fontWeight={850} letterSpacing="-.055em">

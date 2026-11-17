@@ -159,7 +159,7 @@ export function SlackSettings({ workspaceId }: { workspaceId: string }) {
         </Box>
       )}
       {data?.available && (
-        <Box sx={{ border: "1px solid #dedad0", borderRadius: 2, p: 2 }}>
+        <Box sx={{ border: "1px solid var(--line)", borderRadius: 2, p: 2 }}>
           {data.connected ? (
             <Stack
               direction={{ xs: "column", sm: "row" }}
@@ -222,10 +222,10 @@ export function SlackSettings({ workspaceId }: { workspaceId: string }) {
                     disabled={connect.isPending}
                     onClick={() => connect.mutate()}
                     sx={{
-                      bgcolor: "#fff",
-                      color: "#181817",
-                      border: "1px solid #c9c5ba",
-                      "&:hover": { bgcolor: "#f7f5ee" },
+                      bgcolor: "var(--surface)",
+                      color: "var(--ink)",
+                      border: "1px solid var(--line-strong)",
+                      "&:hover": { bgcolor: "var(--surface-2)" },
                     }}
                   >
                     Add to Slack

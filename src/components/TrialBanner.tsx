@@ -76,22 +76,22 @@ export function TrialBanner() {
           to={`/billing?interval=month&plan=${data.plan}`}
           size="small"
           sx={{
-            bgcolor: "#d8ff63",
-            color: "#181817",
+            bgcolor: "var(--acid)",
+            color: "var(--on-accent)",
             fontWeight: 800,
             minHeight: 34,
             px: 2,
             whiteSpace: "nowrap",
-            "&:hover": { bgcolor: "#ecffad" },
+            "&:hover": { bgcolor: "var(--acid-hover)" },
           }}
         >
           Keep {planName} · $0 today
         </Button>
       }
     >
-      Then you move to Free automatically, never charged. To keep {planName}{" "}
-      (${price}/month), add a card now: the first charge happens when the
-      trial ends.
+      Then you move to Free automatically, never charged. To keep {planName} ($
+      {price}/month), add a card now: the first charge happens when the trial
+      ends.
     </NoticeBar>
   );
 }

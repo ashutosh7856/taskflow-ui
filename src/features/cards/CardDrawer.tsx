@@ -176,7 +176,7 @@ export function CardDrawer({ board }: { board: Board }) {
           minHeight: { sm: "72vh" },
           maxHeight: { xs: "100%", sm: "88vh" },
           borderRadius: { xs: 0, sm: 3 },
-          bgcolor: "#fffef9",
+          bgcolor: "var(--surface)",
           boxShadow: "8px 8px 0 #181817",
         },
       }}
@@ -187,10 +187,10 @@ export function CardDrawer({ board }: { board: Board }) {
         sx={{
           px: { xs: 2, sm: 4 },
           py: 2.5,
-          borderBottom: "1px solid #d4d0c5",
+          borderBottom: "1px solid var(--line)",
           position: "sticky",
           top: 0,
-          bgcolor: "#181817",
+          bgcolor: "var(--panel)",
           color: "#fff",
           zIndex: 2,
         }}
@@ -200,7 +200,7 @@ export function CardDrawer({ board }: { board: Board }) {
             width: 9,
             height: 9,
             borderRadius: "50%",
-            bgcolor: "#d8ff63",
+            bgcolor: "var(--acid)",
             mr: 1.5,
           }}
         />
@@ -231,8 +231,10 @@ export function CardDrawer({ board }: { board: Board }) {
                 sx={{
                   p: 2,
                   borderRadius: 2,
-                  bgcolor: card.data.isCompleted ? "#e9f7b9" : "#eeebe2",
-                  border: "1px solid #d4d0c5",
+                  bgcolor: card.data.isCompleted
+                    ? "var(--tint-lime)"
+                    : "var(--surface-2)",
+                  border: "1px solid var(--line)",
                 }}
               >
                 <FormControlLabel
@@ -588,7 +590,7 @@ export function CardDrawer({ board }: { board: Board }) {
                   borderRadius: 2,
                   border:
                     labelColor === color
-                      ? "3px solid #111827"
+                      ? "3px solid var(--ink)"
                       : "3px solid transparent",
                   bgcolor: color,
                   cursor: "pointer",
@@ -598,7 +600,9 @@ export function CardDrawer({ board }: { board: Board }) {
               />
             ))}
           </Stack>
-          <Box sx={{ mt: 3, p: 2, borderRadius: 2, bgcolor: "#f8fafc" }}>
+          <Box
+            sx={{ mt: 3, p: 2, borderRadius: 2, bgcolor: "var(--surface-2)" }}
+          >
             <Typography variant="caption" color="text.secondary">
               Preview
             </Typography>
@@ -657,8 +661,8 @@ function ChecklistView({
     <Box
       sx={{
         mb: 2,
-        bgcolor: "#eeebe2",
-        border: "1px solid #d4d0c5",
+        bgcolor: "var(--surface-2)",
+        border: "1px solid var(--line)",
         borderRadius: 2,
         p: 2,
       }}
@@ -741,10 +745,10 @@ function ClientPanel({
     changes_requested: "Client requested changes",
   }[status];
   const statusBg = {
-    none: "#eeebe2",
-    pending: "#fff1c2",
-    approved: "#e3f6c8",
-    changes_requested: "#ffe1d8",
+    none: "var(--surface-2)",
+    pending: "var(--tint-warn)",
+    approved: "var(--tint-green)",
+    changes_requested: "var(--tint-orange)",
   }[status];
   return (
     <Box
@@ -752,7 +756,7 @@ function ClientPanel({
         p: 2,
         borderRadius: 2,
         bgcolor: statusBg,
-        border: "1px solid #d4d0c5",
+        border: "1px solid var(--line)",
       }}
     >
       <Stack
@@ -816,7 +820,7 @@ function ClientPanel({
               sx={{
                 p: 1.25,
                 borderRadius: 1.5,
-                bgcolor: "rgba(255,255,255,.7)",
+                bgcolor: "color-mix(in srgb, var(--surface) 70%, transparent)",
               }}
             >
               <Typography variant="body2" fontWeight={800}>
@@ -830,7 +834,7 @@ function ClientPanel({
                       : "commented"}{" "}
                 <Box
                   component="span"
-                  sx={{ fontWeight: 500, color: "#77736b" }}
+                  sx={{ fontWeight: 500, color: "var(--muted-2)" }}
                 >
                   {new Date(entry.createdAt).toLocaleString()}
                 </Box>

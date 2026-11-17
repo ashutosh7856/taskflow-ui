@@ -2,16 +2,39 @@ import { createTheme } from "@mui/material/styles";
 
 const ink = "#181817";
 
+/**
+ * Light + dark schemes. MUI writes data-theme="light|dark" on <html>; our own
+ * colour tokens in styles.css key off the same attribute, so MUI components
+ * and hand-styled ones switch together. Overrides below use var(--…) tokens
+ * rather than hex values for the same reason.
+ */
 export const theme = createTheme({
-  palette: {
-    mode: "light",
-    primary: { main: ink, contrastText: "#ffffff" },
-    secondary: { main: "#d8ff63", contrastText: ink },
-    background: { default: "#f2f0e9", paper: "#fffef9" },
-    divider: "#d4d0c5",
-    text: { primary: ink, secondary: "#67635b" },
-    error: { main: "#b42318" },
-    success: { main: "#087443" },
+  cssVariables: { colorSchemeSelector: "data-theme" },
+  colorSchemes: {
+    light: {
+      palette: {
+        primary: { main: ink, contrastText: "#ffffff" },
+        secondary: { main: "#d8ff63", contrastText: ink },
+        background: { default: "#f2f0e9", paper: "#fffef9" },
+        divider: "#d4d0c5",
+        text: { primary: ink, secondary: "#67635b" },
+        error: { main: "#b42318" },
+        success: { main: "#087443" },
+      },
+    },
+    dark: {
+      palette: {
+        primary: { main: "#f2f0e9", contrastText: ink },
+        secondary: { main: "#d8ff63", contrastText: ink },
+        background: { default: "#121211", paper: "#1c1b19" },
+        divider: "#36352f",
+        text: { primary: "#f2f0e9", secondary: "#b5b2a8" },
+        error: { main: "#ff8a7a" },
+        success: { main: "#6fdc9a" },
+        warning: { main: "#ffc46b" },
+        info: { main: "#8ab4ff" },
+      },
+    },
   },
   shape: { borderRadius: 12 },
   typography: {
@@ -37,7 +60,7 @@ export const theme = createTheme({
         containedPrimary: {
           boxShadow: "3px 3px 0 #ff5c35",
           "&:hover": {
-            backgroundColor: "#2c2c2a",
+            backgroundColor: "var(--primary-hover)",
             transform: "translate(-1px,-1px)",
             boxShadow: "5px 5px 0 #ff5c35",
           },
@@ -51,18 +74,22 @@ export const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          border: "1px solid #d4d0c5",
+          border: "1px solid var(--line)",
           boxShadow: "none",
           backgroundImage: "none",
         },
       },
     },
+    MuiPaper: {
+      // Dark mode would otherwise add a white overlay to elevated paper.
+      styleOverrides: { root: { backgroundImage: "none" } },
+    },
     MuiDialog: {
       styleOverrides: {
         paper: {
           backgroundImage: "none",
-          border: "1px solid #d4d0c5",
-          boxShadow: "0 24px 70px rgba(24,24,23,.2)",
+          border: "1px solid var(--line)",
+          boxShadow: "0 24px 70px rgba(0,0,0,.25)",
           "@media (max-width:600px)": {
             width: "100%",
             maxWidth: "100%",
@@ -75,17 +102,20 @@ export const theme = createTheme({
       },
     },
     MuiDrawer: {
-      styleOverrides: { paper: { borderLeft: "1px solid #d7d7d0" } },
+      styleOverrides: { paper: { borderLeft: "1px solid var(--line)" } },
     },
     MuiTextField: { defaultProps: { variant: "outlined" } },
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
           borderRadius: 10,
-          background: "#fffef9",
-          "& fieldset": { borderColor: "#969187" },
-          "&:hover fieldset": { borderColor: ink },
-          "&.Mui-focused fieldset": { borderWidth: 2, borderColor: ink },
+          background: "var(--surface)",
+          "& fieldset": { borderColor: "var(--field-line)" },
+          "&:hover fieldset": { borderColor: "var(--ink)" },
+          "&.Mui-focused fieldset": {
+            borderWidth: 2,
+            borderColor: "var(--ink)",
+          },
         },
       },
     },
@@ -93,7 +123,14 @@ export const theme = createTheme({
       styleOverrides: { root: { borderRadius: 999, fontWeight: 700 } },
     },
     MuiTooltip: {
-      styleOverrides: { tooltip: { background: ink, fontSize: 12 } },
+      styleOverrides: {
+        tooltip: {
+          background: "var(--panel)",
+          border: "1px solid var(--panel-line)",
+          color: "#fff",
+          fontSize: 12,
+        },
+      },
     },
   },
 });

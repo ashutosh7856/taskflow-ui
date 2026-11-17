@@ -1,12 +1,5 @@
 import MailOutlineRounded from "@mui/icons-material/MailOutlineRounded";
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Button, Chip, Stack, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, errorMessage } from "../lib/api";
@@ -44,7 +37,11 @@ export function PendingInvites({
       (await api.post<{ emailSent: boolean }>(`/invites/${inviteId}/resend`))
         .data,
     onSuccess: (data) => {
-      setNotice(data.emailSent ? "Invitation sent again." : "Invite renewed for 7 more days.");
+      setNotice(
+        data.emailSent
+          ? "Invitation sent again."
+          : "Invite renewed for 7 more days.",
+      );
       client.invalidateQueries({ queryKey: key });
     },
   });
@@ -70,7 +67,11 @@ export function PendingInvites({
             alignItems="center"
             gap={1.25}
             flexWrap="wrap"
-            sx={{ p: 1.25, border: "1px dashed #b9b5aa", borderRadius: 2 }}
+            sx={{
+              p: 1.25,
+              border: "1px dashed var(--line-strong)",
+              borderRadius: 2,
+            }}
           >
             <MailOutlineRounded sx={{ color: "text.secondary" }} />
             <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -110,7 +111,11 @@ export function PendingInvites({
         ))}
       </Stack>
       {notice && (
-        <Alert severity="success" sx={{ mt: 1.5 }} onClose={() => setNotice("")}>
+        <Alert
+          severity="success"
+          sx={{ mt: 1.5 }}
+          onClose={() => setNotice("")}
+        >
           {notice}
         </Alert>
       )}

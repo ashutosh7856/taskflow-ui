@@ -184,7 +184,11 @@ export function BillingPage() {
         </Alert>
       )}
       {checkoutResult === "confirming" && (
-        <Alert severity="info" icon={<CircularProgress size={18} />} sx={{ mb: 3 }}>
+        <Alert
+          severity="info"
+          icon={<CircularProgress size={18} />}
+          sx={{ mb: 3 }}
+        >
           Confirming your subscription…
         </Alert>
       )}
@@ -219,7 +223,7 @@ export function BillingPage() {
           >
             <Box
               sx={{
-                bgcolor: "#181817",
+                bgcolor: "var(--panel)",
                 color: "#fff",
                 borderRadius: 3,
                 p: { xs: 3, md: 4 },
@@ -238,8 +242,13 @@ export function BillingPage() {
                   label={billingStatusLabel(data)}
                   sx={{
                     bgcolor:
-                      data.billingStatus === "active" ? "#d8ff63" : "#343430",
-                    color: data.billingStatus === "active" ? "#181817" : "#fff",
+                      data.billingStatus === "active"
+                        ? "#d8ff63"
+                        : "var(--ink-soft)",
+                    color:
+                      data.billingStatus === "active"
+                        ? "var(--on-accent)"
+                        : "#fff",
                     textTransform: "capitalize",
                   }}
                 />
@@ -288,8 +297,8 @@ export function BillingPage() {
             </Box>
             <Box
               sx={{
-                bgcolor: "#fffef9",
-                border: "1px solid #d4d0c5",
+                bgcolor: "var(--surface)",
+                border: "1px solid var(--line)",
                 borderRadius: 3,
                 p: 3,
               }}
@@ -377,11 +386,11 @@ export function BillingPage() {
                   <Box
                     key={offer.plan}
                     sx={{
-                      bgcolor: current ? "#181817" : "#fffef9",
-                      color: current ? "#fff" : "#181817",
+                      bgcolor: current ? "var(--panel)" : "var(--surface)",
+                      color: current ? "#fff" : "var(--ink)",
                       border: current
-                        ? "2px solid #181817"
-                        : "1px solid #d4d0c5",
+                        ? "2px solid var(--ink)"
+                        : "1px solid var(--line)",
                       borderRadius: 3,
                       p: 3,
                       boxShadow: current ? "5px 5px 0 #d8ff63" : "none",
@@ -397,7 +406,7 @@ export function BillingPage() {
                         <Chip
                           size="small"
                           label="Current plan"
-                          sx={{ bgcolor: "#d8ff63", fontWeight: 800 }}
+                          sx={{ bgcolor: "var(--acid)", fontWeight: 800 }}
                         />
                       )}
                     </Stack>
@@ -426,7 +435,7 @@ export function BillingPage() {
                         sx={{
                           mt: -1.5,
                           mb: 2,
-                          color: current ? "#d8ff63" : "#4f6c00",
+                          color: current ? "#d8ff63" : "var(--success-ink)",
                         }}
                       >
                         {displayPrice(offer, interval).note}
@@ -453,9 +462,9 @@ export function BillingPage() {
                       sx={
                         keepable
                           ? {
-                              bgcolor: "#d8ff63",
-                              color: "#181817",
-                              "&:hover": { bgcolor: "#e5ff94" },
+                              bgcolor: "var(--acid)",
+                              color: "var(--on-accent)",
+                              "&:hover": { bgcolor: "var(--acid-hover)" },
                             }
                           : current
                             ? { color: "#fff", borderColor: "#77736b" }
@@ -478,8 +487,8 @@ export function BillingPage() {
 
           <Box
             sx={{
-              bgcolor: "#fffef9",
-              border: "1px solid #d4d0c5",
+              bgcolor: "var(--surface)",
+              border: "1px solid var(--line)",
               borderRadius: 3,
               p: { xs: 3, md: 4 },
             }}
@@ -520,8 +529,8 @@ export function BillingPage() {
 
           <Box
             sx={{
-              bgcolor: "#fffef9",
-              border: "1px solid #d4d0c5",
+              bgcolor: "var(--surface)",
+              border: "1px solid var(--line)",
               borderRadius: 3,
               p: { xs: 3, md: 4 },
             }}
@@ -563,7 +572,9 @@ export function BillingPage() {
                     disabled={portal.isPending}
                     onClick={() => portal.mutate()}
                   >
-                    {portal.isPending ? "Opening…" : "Payment method & invoices"}
+                    {portal.isPending
+                      ? "Opening…"
+                      : "Payment method & invoices"}
                   </Button>
                 )}
                 {data.billingStatus === "active" && (
@@ -603,7 +614,7 @@ export function BillingPage() {
               alignItems: "center",
               gap: 2,
               p: 2.5,
-              border: "1px solid #aaa59a",
+              border: "1px solid var(--line-strong)",
               borderRadius: 2,
             }}
           >
@@ -707,9 +718,9 @@ function ReceiptsCard() {
     <Box
       sx={{
         p: { xs: 2.5, sm: 3 },
-        border: "1px solid #aaa59a",
+        border: "1px solid var(--line-strong)",
         borderRadius: 2,
-        bgcolor: "#fffef9",
+        bgcolor: "var(--surface)",
       }}
     >
       <Stack direction="row" alignItems="center" gap={1.25} mb={1.5}>
@@ -730,7 +741,7 @@ function ReceiptsCard() {
           also appears here.
         </Typography>
       )}
-      <Stack divider={<Box sx={{ borderTop: "1px solid #e3e0d7" }} />}>
+      <Stack divider={<Box sx={{ borderTop: "1px solid var(--line)" }} />}>
         {receipts.data?.map((row) => (
           <Stack
             key={row.id}

@@ -135,7 +135,7 @@ export function AdminPage() {
         value={tab}
         onChange={(_, value) => setTab(value)}
         variant="scrollable"
-        sx={{ mt: 2, mb: 3, borderBottom: "1px solid #d4d0c5" }}
+        sx={{ mt: 2, mb: 3, borderBottom: "1px solid var(--line)" }}
       >
         <Tab value="overview" label="Overview" />
         <Tab value="users" label="Users" />
@@ -183,7 +183,7 @@ function OverviewTab() {
         sx={{
           p: { xs: 2.5, md: 3.5 },
           borderRadius: 4,
-          bgcolor: "#181817",
+          bgcolor: "var(--panel)",
           color: "#fff",
           boxShadow: "6px 6px 0 #d8ff63",
         }}
@@ -235,7 +235,7 @@ function OverviewTab() {
                 borderRadius: 99,
                 bgcolor: "rgba(255,255,255,.14)",
                 "& .MuiLinearProgress-bar": {
-                  bgcolor: "#d8ff63",
+                  bgcolor: "var(--acid)",
                   borderRadius: 99,
                 },
               }}
@@ -386,7 +386,7 @@ function DailyBars({
           alignItems: "flex-end",
           gap: "2px",
           height: 150,
-          borderBottom: "1px solid #d4d0c5",
+          borderBottom: "1px solid var(--line)",
         }}
       >
         {series.map((point) => (
@@ -409,7 +409,7 @@ function DailyBars({
                 sx={{
                   width: "100%",
                   height: `${point.value ? Math.max(3, (point.value / max) * 100) : 0}%`,
-                  bgcolor: "#181817",
+                  bgcolor: "var(--panel)",
                   borderRadius: "4px 4px 0 0",
                   transition: "background-color .12s",
                 }}
@@ -466,13 +466,19 @@ function Funnel({
                   {conversion !== null && ` · ${conversion}% of previous`}
                 </Typography>
               </Stack>
-              <Box sx={{ height: 10, bgcolor: "#eeebe2", borderRadius: 99 }}>
+              <Box
+                sx={{
+                  height: 10,
+                  bgcolor: "var(--surface-2)",
+                  borderRadius: 99,
+                }}
+              >
                 <Box
                   sx={{
                     width: `${(step.total / top) * 100}%`,
                     minWidth: step.total ? 6 : 0,
                     height: "100%",
-                    bgcolor: "#181817",
+                    bgcolor: "var(--panel)",
                     borderRadius: 99,
                   }}
                 />
@@ -525,7 +531,7 @@ function UsersTab() {
           slotProps={{
             input: {
               startAdornment: (
-                <SearchRounded sx={{ mr: 1, color: "#77736b" }} />
+                <SearchRounded sx={{ mr: 1, color: "var(--muted-2)" }} />
               ),
             },
           }}
@@ -646,7 +652,11 @@ function PlanChip({
   status?: string | null;
 }) {
   const bg =
-    plan === "business" ? "#181817" : plan === "pro" ? "#d8ff63" : "#eeebe2";
+    plan === "business"
+      ? "var(--selected-bg)"
+      : plan === "pro"
+        ? "var(--acid)"
+        : "var(--surface-2)";
   return (
     <Stack direction="row" gap={0.5} alignItems="center">
       <Chip
@@ -654,7 +664,12 @@ function PlanChip({
         label={planLabel[plan]}
         sx={{
           bgcolor: bg,
-          color: plan === "business" ? "#fff" : "#181817",
+          color:
+            plan === "business"
+              ? "var(--selected-fg)"
+              : plan === "pro"
+                ? "var(--on-accent)"
+                : "var(--ink)",
           fontWeight: 800,
         }}
       />
@@ -756,13 +771,13 @@ function UserDrawer({
       open={!!userId}
       onClose={onClose}
       PaperProps={{
-        sx: { width: { xs: "100%", sm: 560 }, bgcolor: "#fffef9" },
+        sx: { width: { xs: "100%", sm: 560 }, bgcolor: "var(--surface)" },
       }}
     >
       <Stack
         direction="row"
         alignItems="center"
-        sx={{ p: 2.5, borderBottom: "1px solid #e1ddd3" }}
+        sx={{ p: 2.5, borderBottom: "1px solid var(--line)" }}
       >
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="h5" noWrap>
@@ -988,7 +1003,7 @@ function UserDrawer({
                         <Chip
                           size="small"
                           label="Portal live"
-                          sx={{ bgcolor: "#e3f6c8", height: 20 }}
+                          sx={{ bgcolor: "var(--tint-green)", height: 20 }}
                         />
                       )}
                       <Typography variant="caption" color="text.secondary">
@@ -1011,7 +1026,7 @@ function UserDrawer({
                 <Typography key={index} variant="body2" sx={{ py: 0.4 }}>
                   <strong>{row.action.replace(/[._]/g, " ")}</strong> ·{" "}
                   {row.boardName}{" "}
-                  <Box component="span" sx={{ color: "#8a867d" }}>
+                  <Box component="span" sx={{ color: "var(--muted-2)" }}>
                     · {ago(row.createdAt)}
                   </Box>
                 </Typography>
@@ -1168,7 +1183,8 @@ function DiscountsTab() {
   });
   // Same rules as the server (trello-backend/src/validators/discounts.ts).
   const percent = Number(form.percentOff);
-  const maxUses = form.maxRedemptions === "" ? null : Number(form.maxRedemptions);
+  const maxUses =
+    form.maxRedemptions === "" ? null : Number(form.maxRedemptions);
   const problems = {
     code:
       form.code.length > 0 && form.code.length < 3
@@ -1184,7 +1200,8 @@ function DiscountsTab() {
         : "",
   };
   const invalid =
-    form.code.length < 3 || Boolean(problems.percentOff || problems.maxRedemptions);
+    form.code.length < 3 ||
+    Boolean(problems.percentOff || problems.maxRedemptions);
   const create = useMutation({
     mutationFn: () =>
       api.post("/admin/discounts", {
@@ -1221,7 +1238,11 @@ function DiscountsTab() {
         title="Create a discount code"
         detail="Applies to the first monthly payment; renewals return to the normal price."
       >
-        <Stack direction={{ xs: "column", md: "row" }} gap={1.5} alignItems={{ md: "flex-start" }}>
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          gap={1.5}
+          alignItems={{ md: "flex-start" }}
+        >
           <TextField
             size="small"
             label="Code"
@@ -1531,8 +1552,8 @@ function Stat({
       sx={{
         p: 2.25,
         borderRadius: 3,
-        bgcolor: "#fffef9",
-        border: "1px solid #d4d0c5",
+        bgcolor: "var(--surface)",
+        border: "1px solid var(--line)",
       }}
     >
       <Typography className="mono-label" color="text.secondary">
@@ -1570,8 +1591,8 @@ function Panel({
       sx={{
         p: { xs: 2, md: 2.75 },
         borderRadius: 3,
-        bgcolor: "#fffef9",
-        border: "1px solid #d4d0c5",
+        bgcolor: "var(--surface)",
+        border: "1px solid var(--line)",
         minWidth: 0,
       }}
     >

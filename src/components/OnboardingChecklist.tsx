@@ -73,8 +73,8 @@ export function OnboardingChecklist() {
         p: { xs: 2.25, sm: 3 },
         mb: 4,
         borderRadius: 4,
-        bgcolor: "#fffef9",
-        border: "1px solid #d4d0c5",
+        bgcolor: "var(--surface)",
+        border: "1px solid var(--line)",
         boxShadow: "5px 5px 0 #d8ff63",
       }}
     >
@@ -109,8 +109,11 @@ export function OnboardingChecklist() {
           my: 2,
           height: 8,
           borderRadius: 99,
-          bgcolor: "#eeebe2",
-          "& .MuiLinearProgress-bar": { bgcolor: "#181817", borderRadius: 99 },
+          bgcolor: "var(--surface-2)",
+          "& .MuiLinearProgress-bar": {
+            bgcolor: "var(--ink)",
+            borderRadius: 99,
+          },
         }}
       />
       <Box
@@ -132,10 +135,12 @@ export function OnboardingChecklist() {
             alignItems="flex-start"
           >
             {step.done ? (
-              <CheckCircleRounded sx={{ color: "#3f8a00", mt: "2px" }} />
+              <CheckCircleRounded
+                sx={{ color: "var(--success-ink)", mt: "2px" }}
+              />
             ) : (
               <RadioButtonUncheckedRounded
-                sx={{ color: "#aaa59a", mt: "2px" }}
+                sx={{ color: "var(--muted-2)", mt: "2px" }}
               />
             )}
             <Box sx={{ minWidth: 0 }}>
@@ -143,7 +148,7 @@ export function OnboardingChecklist() {
                 fontWeight={800}
                 sx={{
                   textDecoration: step.done ? "line-through" : "none",
-                  color: step.done ? "#77736b" : "#181817",
+                  color: step.done ? "#77736b" : "var(--ink)",
                 }}
               >
                 {step.title}

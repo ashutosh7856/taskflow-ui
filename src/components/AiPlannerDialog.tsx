@@ -165,7 +165,7 @@ export function AiPlannerDialog({
       maxWidth="md"
       PaperProps={{
         sx: {
-          bgcolor: "#fffef9",
+          bgcolor: "var(--surface)",
           borderRadius: { xs: 0, sm: 3 },
           overflow: "hidden",
         },
@@ -173,7 +173,7 @@ export function AiPlannerDialog({
     >
       <Box
         sx={{
-          bgcolor: "#181817",
+          bgcolor: "var(--panel)",
           color: "#fff",
           p: { xs: 2.5, sm: 3.5 },
           position: "relative",
@@ -203,8 +203,8 @@ export function AiPlannerDialog({
               height: 44,
               display: "grid",
               placeItems: "center",
-              bgcolor: "#d8ff63",
-              color: "#181817",
+              bgcolor: "var(--acid)",
+              color: "var(--on-accent)",
               borderRadius: 2,
             }}
           >
@@ -226,7 +226,7 @@ export function AiPlannerDialog({
       <Tabs
         value={mode}
         onChange={(_, value) => setMode(value)}
-        sx={{ px: 3, borderBottom: "1px solid #d4d0c5" }}
+        sx={{ px: 3, borderBottom: "1px solid var(--line)" }}
       >
         <Tab
           value="plan"
@@ -345,8 +345,8 @@ export function AiPlannerDialog({
                     <Box
                       key={list.name}
                       sx={{
-                        bgcolor: "#eeebe2",
-                        border: "1px solid #d4d0c5",
+                        bgcolor: "var(--surface-2)",
+                        border: "1px solid var(--line)",
                         borderRadius: 2,
                         p: 2,
                       }}
@@ -369,10 +369,10 @@ export function AiPlannerDialog({
                           <Box
                             key={task.title}
                             sx={{
-                              bgcolor: "#fffef9",
+                              bgcolor: "var(--surface)",
                               p: 1.25,
                               borderRadius: 1.5,
-                              border: "1px solid #ddd9cf",
+                              border: "1px solid var(--line)",
                             }}
                           >
                             <Typography fontSize={14} fontWeight={700}>
@@ -387,10 +387,10 @@ export function AiPlannerDialog({
                                 fontSize: 10,
                                 bgcolor:
                                   task.priority === "high"
-                                    ? "#ffd8cf"
+                                    ? "var(--tint-orange)"
                                     : task.priority === "medium"
-                                      ? "#fff1b8"
-                                      : "#dff3d1",
+                                      ? "var(--tint-warn)"
+                                      : "var(--tint-green)",
                               }}
                             />
                             <Typography
@@ -461,7 +461,7 @@ export function AiPlannerDialog({
             {summary && (
               <Box
                 sx={{
-                  bgcolor: "#181817",
+                  bgcolor: "var(--panel)",
                   color: "#fff",
                   borderRadius: 3,
                   p: { xs: 2.5, sm: 3.5 },
@@ -488,18 +488,18 @@ export function AiPlannerDialog({
                         label={summary.overallStatus.replaceAll("_", " ")}
                         sx={{
                           bgcolor: statusColor(summary.overallStatus),
-                          color: "#181817",
+                          color: "var(--ink)",
                           textTransform: "capitalize",
                           fontWeight: 800,
                         }}
                       />
                       <Chip
                         label={`${document.metrics.completed} of ${document.metrics.total} completed`}
-                        sx={{ bgcolor: "#343430", color: "#fff" }}
+                        sx={{ bgcolor: "var(--panel-2)", color: "#fff" }}
                       />
                       <Chip
                         label={`${document.metrics.overdue} overdue`}
-                        sx={{ bgcolor: "#343430", color: "#fff" }}
+                        sx={{ bgcolor: "var(--panel-2)", color: "#fff" }}
                       />
                     </Stack>
                     <DocumentSection

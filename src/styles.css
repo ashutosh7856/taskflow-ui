@@ -1,11 +1,89 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap");
 
-:root {
+/*
+ * Colour tokens. Components use these instead of hex values so the app can
+ * switch between light and dark (MUI sets data-theme on <html>; public pages
+ * force light with a data-theme="light" wrapper).
+ *  --panel     the deliberately dark cards (hero, order summary, activity);
+ *              they stay dark in both modes, so text on them stays light.
+ *  --on-accent text on the lime accent: always dark, in both modes.
+ */
+:root,
+[data-theme="light"] {
   color-scheme: light;
-  --ink: #181817;
-  --paper: #f2f0e9;
   --acid: #d8ff63;
+  --acid-hover: #e5ff94;
   --orange: #ff5c35;
+  --bg: #f2f0e9;
+  --paper: var(--bg);
+  --surface: #fffef9;
+  --surface-2: #eeebe2;
+  --surface-3: #e8e5dc;
+  --ink: #181817;
+  --ink-soft: #3e3b36;
+  --muted: #67635b;
+  --muted-2: #8a867d;
+  --line: #d4d0c5;
+  --line-strong: #aaa59a;
+  --field-line: #969187;
+  --panel: #181817;
+  --panel-2: #343430;
+  --panel-line: #181817;
+  --on-accent: #181817;
+  --primary-hover: #2c2c2a;
+  --selected-bg: #181817;
+  --selected-fg: #ffffff;
+  --logo-bg: transparent;
+  --logo-pad: 0px;
+  --hover: rgba(24, 24, 23, 0.06);
+  --tint-lime: #f4ffd6;
+  --tint-lime-line: #c5e06a;
+  --tint-green: #e3f6c8;
+  --tint-warn: #fff1c2;
+  --tint-orange: #ffe1d8;
+  --tint-danger: #fff5f2;
+  --tint-danger-line: #e9a89a;
+  --tint-blue: #dbeafe;
+  --success-ink: #4f6c00;
+  --warn-ink: #8a4b00;
+  --danger-ink: #b42318;
+  background: var(--bg);
+  color: var(--ink);
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211;
+  --surface: #1c1b19;
+  --surface-2: #26251f;
+  --surface-3: #2e2d28;
+  --ink: #f2f0e9;
+  --ink-soft: #dcd9cf;
+  --muted: #b5b2a8;
+  --muted-2: #918e85;
+  --line: #36352f;
+  --line-strong: #55534c;
+  --field-line: #6b685f;
+  --panel: #24231f;
+  --panel-2: #36352f;
+  --panel-line: #3d3c36;
+  --on-accent: #181817;
+  --primary-hover: #ffffff;
+  --selected-bg: #f2f0e9;
+  --selected-fg: #181817;
+  --logo-bg: #f2f0e9;
+  --logo-pad: 3px;
+  --hover: rgba(255, 255, 255, 0.08);
+  --tint-lime: #1f2711;
+  --tint-lime-line: #4d6120;
+  --tint-green: #1c2714;
+  --tint-warn: #2c2410;
+  --tint-orange: #301b12;
+  --tint-danger: #2e1915;
+  --tint-danger-line: #6e3428;
+  --tint-blue: #172338;
+  --success-ink: #c5f06a;
+  --warn-ink: #ffc46b;
+  --danger-ink: #ff8a7a;
 }
 * {
   box-sizing: border-box;
@@ -133,16 +211,16 @@ textarea {
 }
 .board-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #98948a transparent;
+  scrollbar-color: var(--line-strong) transparent;
 }
 .workspace-board-card {
   appearance: none;
   width: 100%;
   min-height: 160px;
   padding: 20px;
-  border: 1px solid #aaa59a;
+  border: 1px solid var(--line-strong);
   border-radius: 16px;
-  background: #fffef9;
+  background: var(--surface);
   color: var(--ink);
   text-align: left;
   cursor: pointer;
@@ -155,7 +233,7 @@ textarea {
     border-color 0.2s ease;
 }
 .workspace-board-card:nth-of-type(3n + 1) {
-  background-color: #e9f7b9;
+  background-color: var(--tint-lime);
 }
 .workspace-board-card:hover {
   transform: translateY(-4px) rotate(-0.3deg);
@@ -174,7 +252,7 @@ textarea {
   position: relative;
   z-index: 1;
   margin-top: 5px;
-  color: #625f58;
+  color: var(--muted);
   font-size: 12px;
   text-transform: capitalize;
 }
@@ -184,12 +262,12 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #625f58;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 700;
 }
 .ai-plan-preview {
-  border-top: 1px solid #aaa59a;
+  border-top: 1px solid var(--line-strong);
   padding-top: 24px;
 }
 .ai-source-grid {
@@ -200,9 +278,9 @@ textarea {
 .ai-source-option {
   appearance: none;
   padding: 15px;
-  border: 1px solid #d4d0c5;
+  border: 1px solid var(--line);
   border-radius: 14px;
-  background: #f2f0e9;
+  background: var(--bg);
   color: var(--ink);
   text-align: left;
   cursor: pointer;
@@ -212,7 +290,7 @@ textarea {
 }
 .ai-source-option.selected {
   border: 2px solid var(--ink);
-  background: #e9f7b9;
+  background: var(--tint-lime);
   box-shadow: 3px 3px 0 var(--ink);
 }
 .command-center-hero {
@@ -227,7 +305,7 @@ textarea {
       rgba(216, 255, 99, 0.22),
       transparent 30%
     ),
-    var(--ink);
+    var(--panel);
   color: #fff;
   box-shadow: 7px 7px 0 var(--orange);
 }
@@ -239,15 +317,15 @@ textarea {
 .command-metric {
   min-width: 0;
   padding: 20px;
-  border: 1px solid #d4d0c5;
+  border: 1px solid var(--line);
   border-top: 5px solid var(--ink);
   border-radius: 16px;
-  background: #fffef9;
+  background: var(--surface);
 }
 .command-brief {
   padding: clamp(26px, 4vw, 48px);
   border-radius: 24px;
-  background: var(--ink);
+  background: var(--panel);
   color: #fff;
 }
 .command-brief-grid {
@@ -260,9 +338,9 @@ textarea {
 }
 .command-panel {
   padding: clamp(22px, 4vw, 36px);
-  border: 1px solid #d4d0c5;
+  border: 1px solid var(--line);
   border-radius: 22px;
-  background: #fffef9;
+  background: var(--surface);
 }
 .command-board-grid {
   display: grid;
@@ -271,9 +349,9 @@ textarea {
 }
 .command-board-card {
   padding: 20px;
-  border: 1px solid #d4d0c5;
+  border: 1px solid var(--line);
   border-radius: 16px;
-  background: #f2f0e9;
+  background: var(--bg);
 }
 .assignment-table {
   width: 100%;
@@ -284,11 +362,11 @@ textarea {
 .assignment-table th,
 .assignment-table td {
   padding: 14px 12px;
-  border-bottom: 1px solid #ddd9cf;
+  border-bottom: 1px solid var(--line);
   font-size: 13px;
 }
 .assignment-table th {
-  color: #77736b;
+  color: var(--muted);
   font-family: "DM Mono", monospace;
   font-size: 10px;
   letter-spacing: 0.08em;
@@ -300,21 +378,21 @@ textarea {
 }
 .assignment-table td:first-child span {
   margin-top: 3px;
-  color: #77736b;
+  color: var(--muted);
   font-size: 11px;
   text-transform: capitalize;
 }
 .pricing-card {
   min-height: 390px;
   padding: 24px;
-  border: 1px solid #aaa59a;
+  border: 1px solid var(--line-strong);
   border-radius: 18px;
-  background: #fffef9;
+  background: var(--surface);
   display: flex;
   flex-direction: column;
 }
 .pricing-card.is-featured {
-  background: #e9f7b9;
+  background: var(--tint-lime);
   border-color: var(--ink);
   box-shadow: 5px 5px 0 var(--ink);
   transform: translateY(-4px);
@@ -804,7 +882,7 @@ html {
   font-size: 12px !important;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #77736b;
+  color: var(--muted);
 }
 .landing-steps {
   display: grid;
@@ -869,9 +947,9 @@ html {
 }
 .admin-table-wrap {
   overflow-x: auto;
-  border: 1px solid #d4d0c5;
+  border: 1px solid var(--line);
   border-radius: 16px;
-  background: #fffef9;
+  background: var(--surface);
 }
 .admin-table {
   width: 100%;
@@ -884,15 +962,15 @@ html {
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #77736b;
+  color: var(--muted);
   font-weight: 500;
   padding: 12px 16px;
-  border-bottom: 1px solid #e1ddd3;
+  border-bottom: 1px solid var(--line);
   white-space: nowrap;
 }
 .admin-table td {
   padding: 12px 16px;
-  border-bottom: 1px solid #efece4;
+  border-bottom: 1px solid var(--line);
   white-space: nowrap;
   vertical-align: middle;
 }
@@ -900,7 +978,7 @@ html {
   cursor: pointer;
 }
 .admin-table tbody tr:hover {
-  background: #f7f5ee;
+  background: var(--surface-2);
 }
 .admin-table tbody tr:last-child td {
   border-bottom: 0;
@@ -1279,7 +1357,9 @@ html {
 }
 .lp-demo-stage-list li.current .dot {
   border-color: #5b3df5;
-  box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 8px #5b3df5;
+  box-shadow:
+    inset 0 0 0 3px #fff,
+    inset 0 0 0 8px #5b3df5;
 }
 .lp-demo-approval {
   margin-top: 12px;
@@ -1366,8 +1446,20 @@ html {
   width: max-content;
   margin-top: 16px;
   animation: lp-audience-scroll 38s linear infinite;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
 }
 .lp-audience:hover .lp-audience-track {
   animation-play-state: paused;
@@ -1964,18 +2056,18 @@ html {
   gap: 10px;
 }
 .file-tile {
-  border: 1px solid var(--mui-palette-divider, #d4d0c5);
+  border: 1px solid var(--mui-palette-divider, var(--line));
   border-radius: 10px;
   overflow: hidden;
-  background: #fffef9;
+  background: var(--surface);
   min-width: 0;
 }
 .file-tile-preview {
   display: grid;
   place-items: center;
   aspect-ratio: 4 / 3;
-  background: #f1efe8;
-  color: #57534a;
+  background: var(--surface-2);
+  color: var(--muted);
 }
 .file-tile-preview img {
   width: 100%;
@@ -1991,7 +2083,7 @@ html {
   font-size: 32px;
 }
 .file-dropzone {
-  border: 1px dashed #c9c4b7;
+  border: 1px dashed var(--line-strong);
   border-radius: 10px;
   padding: 14px;
   text-align: center;

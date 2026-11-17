@@ -47,7 +47,7 @@ export function CreateBoardDialog({
       onClose={close}
       fullWidth
       maxWidth="md"
-      PaperProps={{ sx: { bgcolor: "#fffef9", borderRadius: 3 } }}
+      PaperProps={{ sx: { bgcolor: "var(--surface)", borderRadius: 3 } }}
     >
       <DialogTitle sx={{ fontSize: 28, pb: 1 }}>Start a board</DialogTitle>
       <DialogContent sx={{ pt: "12px !important" }}>
@@ -111,9 +111,12 @@ export function CreateBoardDialog({
                       color: "inherit",
                       border:
                         template === item.id
-                          ? "2px solid #181817"
-                          : "1px solid #d4d0c5",
-                      bgcolor: template === item.id ? "#e9f7b9" : "transparent",
+                          ? "2px solid var(--ink)"
+                          : "1px solid var(--line)",
+                      bgcolor:
+                        template === item.id
+                          ? "var(--tint-lime)"
+                          : "transparent",
                       cursor: "pointer",
                     }}
                   >
@@ -146,7 +149,8 @@ export function CreateBoardDialog({
                   key={list.name}
                   sx={{
                     fontWeight: list.role === "review" ? 800 : 400,
-                    color: list.role === "done" ? "#4f6c00" : "inherit",
+                    color:
+                      list.role === "done" ? "var(--success-ink)" : "inherit",
                   }}
                 >
                   {index > 0 && " → "}

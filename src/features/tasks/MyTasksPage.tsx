@@ -133,10 +133,10 @@ export function MyTasksPage() {
           aria-label="Back to boards"
           onClick={() => navigate("/app")}
           sx={{
-            color: "#181817",
-            bgcolor: "#d8ff63",
-            border: "1px solid #181817",
-            "&:hover": { bgcolor: "#e5ff94" },
+            color: "var(--on-accent)",
+            bgcolor: "var(--acid)",
+            border: "1px solid var(--panel-line)",
+            "&:hover": { bgcolor: "var(--acid-hover)" },
           }}
         >
           <ArrowBackRounded />
@@ -145,7 +145,7 @@ export function MyTasksPage() {
           component={Link}
           to="/app"
           fontWeight={800}
-          sx={{ color: "#181817", textDecoration: "none" }}
+          sx={{ color: "var(--ink)", textDecoration: "none" }}
         >
           All boards
         </Typography>
@@ -177,10 +177,15 @@ export function MyTasksPage() {
                 onClick={() => setWorkspace(id)}
                 sx={{
                   fontWeight: 750,
-                  bgcolor: workspace === id ? "#181817" : "#e8e5dc",
-                  color: workspace === id ? "#fff" : "#4b4842",
+                  bgcolor:
+                    workspace === id
+                      ? "var(--selected-bg)"
+                      : "var(--surface-3)",
+                  color:
+                    workspace === id ? "var(--selected-fg)" : "var(--muted)",
                   "&:hover": {
-                    bgcolor: workspace === id ? "#181817" : "#dcd8cc",
+                    bgcolor:
+                      workspace === id ? "var(--selected-bg)" : "var(--line)",
                   },
                 }}
               />
@@ -214,7 +219,9 @@ export function MyTasksPage() {
             textAlign: "center",
           }}
         >
-          <CheckCircleRounded sx={{ fontSize: 40, color: "#4f6c00" }} />
+          <CheckCircleRounded
+            sx={{ fontSize: 40, color: "var(--success-ink)" }}
+          />
           <Typography variant="h6" mt={1}>
             Nothing assigned to you
           </Typography>
@@ -248,9 +255,9 @@ export function MyTasksPage() {
           </Stack>
           <Stack
             sx={{
-              border: "1px solid #dedad0",
+              border: "1px solid var(--line)",
               borderRadius: 3,
-              bgcolor: "#fffef9",
+              bgcolor: "var(--surface)",
               overflow: "hidden",
             }}
           >
@@ -288,16 +295,18 @@ function TaskRow({
       alignItems="center"
       gap={0.5}
       sx={{
-        borderTop: first ? "none" : "1px solid #ebe8df",
+        borderTop: first ? "none" : "1px solid var(--line)",
         pl: 0.5,
         pr: 2,
-        "&:hover": { bgcolor: "#f7f5ee" },
+        "&:hover": { bgcolor: "var(--hover)" },
       }}
     >
       <IconButton
         aria-label={task.isCompleted ? "Reopen" : "Mark done"}
         onClick={onToggle}
-        sx={{ color: task.isCompleted ? "#4f6c00" : "#8a867c" }}
+        sx={{
+          color: task.isCompleted ? "var(--success-ink)" : "var(--muted-2)",
+        }}
       >
         {task.isCompleted ? (
           <CheckCircleRounded />
@@ -325,7 +334,7 @@ function TaskRow({
             noWrap
             sx={{
               textDecoration: task.isCompleted ? "line-through" : "none",
-              color: task.isCompleted ? "#8a867c" : "inherit",
+              color: task.isCompleted ? "var(--muted-2)" : "inherit",
             }}
           >
             {task.title}
@@ -352,7 +361,7 @@ function TaskRow({
               size="small"
               label="With client"
               sx={{
-                bgcolor: "#fff1c2",
+                bgcolor: "var(--tint-warn)",
                 fontWeight: 800,
                 height: 22,
                 display: { xs: "none", sm: "inline-flex" },
@@ -364,7 +373,7 @@ function TaskRow({
               size="small"
               label="Changes requested"
               sx={{
-                bgcolor: "#ffe2dc",
+                bgcolor: "var(--tint-orange)",
                 fontWeight: 800,
                 height: 22,
                 display: { xs: "none", sm: "inline-flex" },
@@ -376,7 +385,10 @@ function TaskRow({
               <Typography
                 className="mono-label"
                 sx={{
-                  color: task.priority === "urgent" ? "#b42318" : "#8a4b00",
+                  color:
+                    task.priority === "urgent"
+                      ? "var(--danger-ink)"
+                      : "var(--warn-ink)",
                   display: { xs: "none", sm: "block" },
                 }}
               >
@@ -388,7 +400,7 @@ function TaskRow({
               fontSize={13}
               fontWeight={700}
               sx={{
-                color: tone || "#4b4842",
+                color: tone || "var(--muted)",
                 minWidth: 64,
                 textAlign: "right",
               }}

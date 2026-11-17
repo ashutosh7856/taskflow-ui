@@ -613,8 +613,7 @@ export function LandingPage() {
           ))}
           <Typography color="text.secondary" mt={4}>
             Still have a question? Email{" "}
-            <SupportLink className="lp-inline-link" />{" "}
-            and a person will reply.
+            <SupportLink className="lp-inline-link" /> and a person will reply.
           </Typography>
         </Container>
 

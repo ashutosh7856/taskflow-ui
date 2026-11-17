@@ -10,9 +10,9 @@ export function FeatureMark({ inverse = false }: { inverse?: boolean }) {
         flex: "0 0 18px",
         display: "grid",
         placeItems: "center",
-        border: inverse ? "1px solid #74716a" : "1px solid #a6a197",
+        border: inverse ? "1px solid #74716a" : "1px solid var(--line-strong)",
         borderRadius: "5px",
-        bgcolor: inverse ? "#282826" : "#f8f6ef",
+        bgcolor: inverse ? "#282826" : "var(--surface)",
         mt: "1px",
         "&::after": {
           content: '""',

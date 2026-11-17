@@ -125,7 +125,12 @@ export function CommandCenterPage() {
             <Chip
               icon={<AutoAwesomeRounded />}
               label="Team plan"
-              sx={{ bgcolor: "#d8ff63", color: "#181817", fontWeight: 800 }}
+              sx={{
+                bgcolor: "var(--acid)",
+                color: "var(--on-accent)",
+                "& .MuiChip-icon": { color: "var(--on-accent)" },
+                fontWeight: 800,
+              }}
             />
             {data && (
               <Button
@@ -133,7 +138,12 @@ export function CommandCenterPage() {
                 startIcon={<RefreshRounded />}
                 disabled={report.isFetching}
                 onClick={() => report.refetch()}
-                sx={{ bgcolor: "#fff", color: "#181817" }}
+                sx={{
+                  // On the dark hero panel in both themes.
+                  bgcolor: "#fff",
+                  color: "#181817",
+                  "&:hover": { bgcolor: "#ecebe5" },
+                }}
               >
                 Refresh Pulse
               </Button>
@@ -215,7 +225,7 @@ export function CommandCenterPage() {
                 sx={{
                   alignSelf: "flex-start",
                   bgcolor: healthColor(data.brief.overallHealth),
-                  color: "#181817",
+                  color: "var(--ink)",
                   fontWeight: 850,
                   textTransform: "capitalize",
                 }}
@@ -369,7 +379,7 @@ function Metric({
   return (
     <Box
       className="command-metric"
-      sx={{ borderTopColor: accent || "#181817" }}
+      sx={{ borderTopColor: accent || "var(--ink)" }}
     >
       <Typography className="display-type" fontSize={38}>
         {value}

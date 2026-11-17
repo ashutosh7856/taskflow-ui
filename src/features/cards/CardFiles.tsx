@@ -40,11 +40,14 @@ export function formatBytes(bytes: number) {
   return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
 }
 
-const isImage = (type: string) => /^image\/(png|jpe?g|gif|webp|avif)$/.test(type);
+const isImage = (type: string) =>
+  /^image\/(png|jpe?g|gif|webp|avif)$/.test(type);
 
 function FileIcon({ type }: { type: string }) {
-  if (type === "application/pdf") return <PictureAsPdfOutlined fontSize="small" />;
-  if (type.startsWith("video/")) return <PlayCircleOutlineRounded fontSize="small" />;
+  if (type === "application/pdf")
+    return <PictureAsPdfOutlined fontSize="small" />;
+  if (type.startsWith("video/"))
+    return <PlayCircleOutlineRounded fontSize="small" />;
   return <InsertDriveFileOutlined fontSize="small" />;
 }
 
@@ -153,7 +156,10 @@ export function CardFiles({ cardId }: { cardId: string }) {
   });
 
   // Storage isn't switched on for this deployment yet: hide the section.
-  if ((files.error as { response?: { status?: number } } | null)?.response?.status === 503)
+  if (
+    (files.error as { response?: { status?: number } } | null)?.response
+      ?.status === 503
+  )
     return null;
 
   const pick = (list: FileList | null) => {

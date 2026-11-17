@@ -18,6 +18,7 @@ import { useAuthStore } from "../store/auth";
 import { Brand } from "./Brand";
 import { TrialBanner } from "./TrialBanner";
 import { InvitesBanner } from "./InvitesBanner";
+import { ThemeModeSwitch } from "./ThemeModeSwitch";
 
 export function AppShell() {
   const user = useAuthStore((state) => state.user);
@@ -46,7 +47,7 @@ export function AppShell() {
         minHeight: "100dvh",
         display: "flex",
         flexDirection: "column",
-        bgcolor: "#f2f0e9",
+        bgcolor: "var(--bg)",
       }}
     >
       <Box
@@ -54,9 +55,9 @@ export function AppShell() {
         sx={{
           height: { xs: 68, md: 78 },
           px: { xs: 2, md: 4 },
-          bgcolor: "rgba(242,240,233,.88)",
+          bgcolor: "color-mix(in srgb, var(--bg) 88%, transparent)",
           backdropFilter: "blur(18px)",
-          borderBottom: "1px solid #d4d0c5",
+          borderBottom: "1px solid var(--line)",
           display: "flex",
           alignItems: "center",
           gap: 3,
@@ -81,9 +82,9 @@ export function AppShell() {
             </Badge>
           }
           sx={{
-            color: "#181817",
+            color: "var(--ink)",
             fontWeight: 800,
-            "&.active": { bgcolor: "#e2dfd5" },
+            "&.active": { bgcolor: "var(--surface-3)" },
           }}
         >
           My tasks
@@ -100,9 +101,9 @@ export function AppShell() {
             sx={{
               width: 42,
               height: 42,
-              bgcolor: "#181817",
+              bgcolor: "var(--panel)",
               color: "#d8ff63",
-              border: "2px solid #fffef9",
+              border: "2px solid var(--surface)",
               boxShadow: "2px 2px 0 #ff5c35",
               fontSize: 15,
               fontWeight: 850,
@@ -123,7 +124,7 @@ export function AppShell() {
               sx: {
                 mt: 1,
                 minWidth: 240,
-                border: "1px solid #deded8",
+                border: "1px solid var(--line)",
                 borderRadius: 2,
                 boxShadow: "0 16px 40px rgba(0,0,0,.14)",
               },
@@ -136,6 +137,8 @@ export function AppShell() {
               {user?.email}
             </Typography>
           </Box>
+          <Divider />
+          <ThemeModeSwitch />
           <Divider />
           <MenuItem
             onClick={() => {
@@ -172,7 +175,11 @@ export function AppShell() {
       </Box>
       <Box
         component="footer"
-        sx={{ borderTop: "1px solid #d4d0c5", px: { xs: 2, md: 4 }, py: 2.5 }}
+        sx={{
+          borderTop: "1px solid var(--line)",
+          px: { xs: 2, md: 4 },
+          py: 2.5,
+        }}
       >
         <Stack direction="row" gap={2} alignItems="center" flexWrap="wrap">
           <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>

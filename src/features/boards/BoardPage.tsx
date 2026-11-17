@@ -1,5 +1,8 @@
 import AddRounded from "@mui/icons-material/AddRounded";
-import { PendingInvites, pendingInvitesKey } from "../../components/PendingInvites";
+import {
+  PendingInvites,
+  pendingInvitesKey,
+} from "../../components/PendingInvites";
 import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import GroupAddRounded from "@mui/icons-material/GroupAddRounded";
@@ -240,7 +243,7 @@ export function BoardPage() {
         maxWidth: "100%",
         overflow: "hidden",
         p: { xs: 2, sm: 3, lg: 4 },
-        background: "#f2f0e9",
+        background: "var(--bg)",
       }}
     >
       <Stack
@@ -248,10 +251,10 @@ export function BoardPage() {
         alignItems="center"
         gap={1}
         mb={{ xs: 3, md: 4 }}
-        color="#181817"
+        color="var(--ink)"
         flexWrap="wrap"
         sx={{
-          borderBottom: "1px solid #aaa59a",
+          borderBottom: "1px solid var(--line-strong)",
           pb: { xs: 2, sm: 2.5 },
         }}
       >
@@ -259,11 +262,11 @@ export function BoardPage() {
           aria-label="Back to workspaces"
           onClick={() => navigate("/app")}
           sx={{
-            color: "#181817",
-            bgcolor: "#d8ff63",
+            color: "var(--on-accent)",
+            bgcolor: "var(--acid)",
             ml: -1,
-            border: "1px solid #181817",
-            "&:hover": { bgcolor: "#e5ff94" },
+            border: "1px solid var(--panel-line)",
+            "&:hover": { bgcolor: "var(--acid-hover)" },
           }}
         >
           <ArrowBackRounded />
@@ -311,9 +314,9 @@ export function BoardPage() {
                   width: 32,
                   height: 32,
                   fontSize: 13,
-                  bgcolor: "#181817",
+                  bgcolor: "var(--panel)",
                   color: "#d8ff63",
-                  borderColor: "#f2f0e9",
+                  borderColor: "var(--bg)",
                   fontWeight: 800,
                 },
               }}
@@ -334,7 +337,7 @@ export function BoardPage() {
           <IconButton
             onClick={() => setActivityOpen((value) => !value)}
             sx={{
-              color: "#475569",
+              color: "var(--muted)",
             }}
           >
             <HistoryRounded />
@@ -346,7 +349,7 @@ export function BoardPage() {
             onClick={() => setInviteOpen(true)}
             sx={{
               display: { xs: "inline-flex", md: "none" },
-              color: "#475569",
+              color: "var(--muted)",
             }}
           >
             <GroupAddRounded />
@@ -360,7 +363,10 @@ export function BoardPage() {
                 setDeleteConfirm("");
                 setDeleteOpen(true);
               }}
-              sx={{ color: "#475569", "&:hover": { color: "#c62828" } }}
+              sx={{
+                color: "var(--muted)",
+                "&:hover": { color: "var(--danger-ink)" },
+              }}
             >
               <DeleteOutlineRounded />
             </IconButton>
@@ -390,7 +396,10 @@ export function BoardPage() {
                         ? "none"
                         : undefined,
                     }
-                  : { borderColor: "#aaa59a", color: "#343430" }),
+                  : {
+                      borderColor: "var(--line-strong)",
+                      color: "var(--ink-soft)",
+                    }),
               }}
             >
               {isClientBoard ? (
@@ -422,8 +431,8 @@ export function BoardPage() {
             startIcon={<AutoAwesomeRounded />}
             onClick={() => setAiOpen(true)}
             sx={{
-              bgcolor: "#d8ff63",
-              color: "#181817",
+              bgcolor: "var(--acid)",
+              color: "var(--on-accent)",
               boxShadow: "none",
               "&:hover": { bgcolor: "#e5ff94", boxShadow: "none" },
             }}
@@ -446,7 +455,10 @@ export function BoardPage() {
           color="inherit"
           startIcon={<GroupAddRounded />}
           onClick={() => setInviteOpen(true)}
-          sx={{ display: { xs: "none", md: "inline-flex" }, color: "#343430" }}
+          sx={{
+            display: { xs: "none", md: "inline-flex" },
+            color: "var(--ink-soft)",
+          }}
         >
           Members
         </Button>
@@ -468,7 +480,7 @@ export function BoardPage() {
               slotProps={{
                 input: {
                   startAdornment: (
-                    <SearchRounded sx={{ mr: 1, color: "#77736b" }} />
+                    <SearchRounded sx={{ mr: 1, color: "var(--muted-2)" }} />
                   ),
                 },
               }}
@@ -481,8 +493,20 @@ export function BoardPage() {
                   label={value === "all" ? "All priorities" : value}
                   onClick={() => setPriority(value)}
                   sx={{
-                    bgcolor: priority === value ? "#181817" : "#e8e5dc",
-                    color: priority === value ? "#fff" : "#4b4842",
+                    bgcolor:
+                      priority === value
+                        ? "var(--selected-bg)"
+                        : "var(--surface-3)",
+                    color:
+                      priority === value
+                        ? "var(--selected-fg)"
+                        : "var(--muted)",
+                    "&:hover": {
+                      bgcolor:
+                        priority === value
+                          ? "var(--selected-bg)"
+                          : "var(--line)",
+                    },
                     textTransform: "capitalize",
                   }}
                 />
@@ -496,8 +520,11 @@ export function BoardPage() {
                   onClick={() => setStatus(value)}
                   sx={{
                     bgcolor: status === value ? "#356000" : "transparent",
-                    color: status === value ? "#fff" : "#4b4842",
-                    border: "1px solid #aaa59a",
+                    color: status === value ? "#fff" : "var(--muted)",
+                    "&:hover": {
+                      bgcolor: status === value ? "#356000" : "var(--hover)",
+                    },
+                    border: "1px solid var(--line-strong)",
                     textTransform: "capitalize",
                   }}
                 />
@@ -544,13 +571,17 @@ export function BoardPage() {
                 startIcon={<AddRounded />}
                 sx={{
                   minWidth: { xs: "86vw", sm: 280 },
-                  bgcolor: "rgba(255,254,249,.55)",
-                  color: "#3e3b36",
-                  border: "1px dashed #807c73",
+                  bgcolor:
+                    "color-mix(in srgb, var(--surface) 55%, transparent)",
+                  color: "var(--ink-soft)",
+                  border: "1px dashed var(--line-strong)",
                   borderRadius: 3,
                   p: 2,
                   justifyContent: "flex-start",
-                  "&:hover": { bgcolor: "#fff", borderColor: "#111" },
+                  "&:hover": {
+                    bgcolor: "var(--surface)",
+                    borderColor: "var(--ink)",
+                  },
                 }}
               >
                 Add another list
@@ -568,9 +599,9 @@ export function BoardPage() {
               zIndex: { xs: 1250, lg: "auto" },
               width: { xs: "min(88vw, 360px)", lg: 320 },
               flex: "0 0 320px",
-              bgcolor: "#181817",
+              bgcolor: "var(--panel)",
               color: "#fff",
-              border: "1px solid #181817",
+              border: "1px solid var(--panel-line)",
               borderRadius: { xs: 0, lg: 3 },
               p: 2.5,
               maxHeight: {
@@ -595,7 +626,7 @@ export function BoardPage() {
                   width: 9,
                   height: 9,
                   borderRadius: "50%",
-                  bgcolor: "#d8ff63",
+                  bgcolor: "var(--acid)",
                   mr: 1.5,
                 }}
               />
@@ -622,13 +653,16 @@ export function BoardPage() {
                     <strong>{entry.user?.name || "A member"}</strong>{" "}
                     {activityMessage(entry.action)}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: "#918f88" }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "var(--muted-2)" }}
+                  >
                     {new Date(entry.createdAt).toLocaleString()}
                   </Typography>
                 </Box>
               ))}
               {!activity.isLoading && !activity.data?.length && (
-                <Typography variant="body2" sx={{ color: "#918f88" }}>
+                <Typography variant="body2" sx={{ color: "var(--muted-2)" }}>
                   No activity yet.
                 </Typography>
               )}
@@ -712,11 +746,11 @@ export function BoardPage() {
                 direction="row"
                 alignItems="center"
                 gap={1.5}
-                sx={{ p: 1.25, borderRadius: 2, bgcolor: "#eeebe2" }}
+                sx={{ p: 1.25, borderRadius: 2, bgcolor: "var(--surface-2)" }}
               >
                 <Avatar
                   src={member.user?.avatarUrl || undefined}
-                  sx={{ bgcolor: "#181817", color: "#d8ff63" }}
+                  sx={{ bgcolor: "var(--panel)", color: "#d8ff63" }}
                 >
                   {member.user?.name?.[0]?.toUpperCase() || "?"}
                 </Avatar>
@@ -780,7 +814,7 @@ export function BoardPage() {
                     gap={1.25}
                     sx={{
                       p: 1.25,
-                      border: "1px solid #d4d0c5",
+                      border: "1px solid var(--line)",
                       borderRadius: 2,
                     }}
                   >
@@ -976,13 +1010,13 @@ function BoardList({
     <Box
       ref={setNodeRef}
       sx={{
-        bgcolor: isOver ? "#e9f7b9" : "#e8e5dc",
+        bgcolor: isOver ? "var(--tint-lime)" : "var(--surface-3)",
         width: { xs: "86vw", sm: 300 },
         minWidth: { xs: "86vw", sm: 300 },
         maxWidth: 340,
         scrollSnapAlign: "start",
         borderRadius: 3,
-        border: isOver ? "2px solid #181817" : "1px solid #d4d0c5",
+        border: isOver ? "2px solid var(--ink)" : "1px solid var(--line)",
         boxShadow: isOver ? "5px 5px 0 #181817" : "none",
         p: 1.25,
         transition: ".15s",
@@ -993,7 +1027,7 @@ function BoardList({
         alignItems="center"
         px={1}
         mb={1.5}
-        sx={{ borderBottom: "1px solid #aaa59a", pb: 1.25 }}
+        sx={{ borderBottom: "1px solid var(--line-strong)", pb: 1.25 }}
       >
         <Box
           sx={{
@@ -1037,7 +1071,11 @@ function BoardList({
       <Button
         fullWidth
         startIcon={<AddRounded />}
-        sx={{ mt: 1.25, justifyContent: "flex-start", color: "#565650" }}
+        sx={{
+          mt: 1.25,
+          justifyContent: "flex-start",
+          color: "var(--ink-soft)",
+        }}
         onClick={() => setNewCard(true)}
       >
         Add a card
@@ -1086,15 +1124,15 @@ function TaskCard({
         borderRadius: 2.5,
         boxShadow: "none",
         transition: "border-color .15s, transform .15s",
-        bgcolor: "#fffef9",
+        bgcolor: "var(--surface)",
         border: card.isCompleted
-          ? "1px solid #86a82c"
+          ? "1px solid var(--tint-lime-line)"
           : "1px solid transparent",
         opacity: card.isCompleted ? 0.78 : 1,
         "&:hover": {
-          borderColor: "#181817",
+          borderColor: "var(--ink)",
           transform: "translateY(-2px) rotate(-.3deg)",
-          boxShadow: "3px 3px 0 #181817",
+          boxShadow: "3px 3px 0 var(--ink)",
         },
       }}
       {...listeners}
@@ -1158,7 +1196,9 @@ function TaskCard({
               sx={{
                 display: "inline-flex",
                 cursor: "pointer",
-                color: card.isCompleted ? "#638000" : "#aaa59a",
+                color: card.isCompleted
+                  ? "var(--success-ink)"
+                  : "var(--muted-2)",
               }}
             >
               {card.isCompleted ? (
@@ -1194,7 +1234,10 @@ function TaskCard({
               sx={{
                 display: "inline-block",
                 mt: 1,
-                color: card.priority === "urgent" ? "#b42318" : "#8a4b00",
+                color:
+                  card.priority === "urgent"
+                    ? "var(--danger-ink)"
+                    : "var(--warn-ink)",
               }}
             >
               {card.priority} priority
@@ -1207,21 +1250,33 @@ function TaskCard({
                 <Chip
                   size="small"
                   label="Awaiting client"
-                  sx={{ bgcolor: "#fff1c2", fontWeight: 800, height: 22 }}
+                  sx={{
+                    bgcolor: "var(--tint-warn)",
+                    fontWeight: 800,
+                    height: 22,
+                  }}
                 />
               )}
               {card.approvalStatus === "approved" && (
                 <Chip
                   size="small"
                   label="Client approved"
-                  sx={{ bgcolor: "#e3f6c8", fontWeight: 800, height: 22 }}
+                  sx={{
+                    bgcolor: "var(--tint-green)",
+                    fontWeight: 800,
+                    height: 22,
+                  }}
                 />
               )}
               {card.approvalStatus === "changes_requested" && (
                 <Chip
                   size="small"
                   label="Changes requested"
-                  sx={{ bgcolor: "#ffe1d8", fontWeight: 800, height: 22 }}
+                  sx={{
+                    bgcolor: "var(--tint-orange)",
+                    fontWeight: 800,
+                    height: 22,
+                  }}
                 />
               )}
               {card.clientVisible === false && (
@@ -1314,7 +1369,7 @@ function BoardInsightsDialog({
       onClose={onClose}
       fullWidth
       maxWidth="sm"
-      PaperProps={{ sx: { bgcolor: "#fffef9", borderRadius: 3 } }}
+      PaperProps={{ sx: { bgcolor: "var(--surface)", borderRadius: 3 } }}
     >
       <DialogTitle>Board pulse</DialogTitle>
       <DialogContent>
@@ -1332,8 +1387,8 @@ function BoardInsightsDialog({
             <Box
               key={metric.label}
               sx={{
-                bgcolor: index === 0 ? "#181817" : "#eeebe2",
-                color: index === 0 ? "#fff" : "#181817",
+                bgcolor: index === 0 ? "var(--panel)" : "var(--surface-2)",
+                color: index === 0 ? "#fff" : "var(--ink)",
                 borderRadius: 2,
                 p: 2.5,
                 gridColumn: index === 0 ? "span 2" : "auto",
@@ -1347,7 +1402,7 @@ function BoardInsightsDialog({
               </Typography>
               <Typography
                 className="mono-label"
-                sx={{ color: index === 0 ? "#d8ff63" : "#67635b" }}
+                sx={{ color: index === 0 ? "#d8ff63" : "var(--muted)" }}
               >
                 {metric.label}
               </Typography>

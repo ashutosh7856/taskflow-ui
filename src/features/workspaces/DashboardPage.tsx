@@ -85,9 +85,9 @@ export function DashboardPage() {
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               sx={{
                 justifyContent: "flex-start",
-                bgcolor: "#181817",
-                color: "#fff",
-                "&:hover": { bgcolor: "#181817" },
+                bgcolor: "var(--selected-bg)",
+                color: "var(--selected-fg)",
+                "&:hover": { bgcolor: "var(--selected-bg)", opacity: 0.92 },
               }}
             >
               All boards
@@ -95,7 +95,7 @@ export function DashboardPage() {
             <Button
               startIcon={<TaskAltRounded />}
               onClick={() => navigate("/tasks")}
-              sx={{ justifyContent: "flex-start", color: "#3e3b36" }}
+              sx={{ justifyContent: "flex-start", color: "var(--ink-soft)" }}
             >
               My tasks
             </Button>
@@ -116,7 +116,7 @@ export function DashboardPage() {
                 }
                 sx={{
                   justifyContent: "flex-start",
-                  color: "#3e3b36",
+                  color: "var(--ink-soft)",
                   overflow: "hidden",
                   px: 1.5,
                 }}
@@ -126,7 +126,7 @@ export function DashboardPage() {
                   sx={{
                     width: 21,
                     mr: 1,
-                    color: "#918c82",
+                    color: "var(--muted-2)",
                     fontFamily: "DM Mono",
                     fontSize: 11,
                   }}
@@ -162,7 +162,7 @@ export function DashboardPage() {
               sx={{
                 position: "relative",
                 overflow: "hidden",
-                bgcolor: "#181817",
+                bgcolor: "var(--panel)",
                 color: "#fff",
                 borderRadius: { xs: 3, md: 4 },
                 px: { xs: 3, md: 5 },
@@ -239,13 +239,13 @@ export function DashboardPage() {
                       startIcon={<AddRounded />}
                       onClick={() => setDialog(true)}
                       sx={{
-                        bgcolor: "#d8ff63",
-                        color: "#181817",
+                        bgcolor: "var(--acid)",
+                        color: "var(--on-accent)",
                         boxShadow: "3px 3px 0 #ff5c35",
                         whiteSpace: "nowrap",
                         flexShrink: 0,
                         alignSelf: { xs: "flex-start", sm: "auto" },
-                        "&:hover": { bgcolor: "#e5ff94" },
+                        "&:hover": { bgcolor: "var(--acid-hover)" },
                       }}
                     >
                       Create workspace
@@ -310,8 +310,8 @@ export function DashboardPage() {
                 <Box
                   sx={{
                     py: 9,
-                    borderTop: "1px solid #aaa59a",
-                    borderBottom: "1px solid #aaa59a",
+                    borderTop: "1px solid var(--line-strong)",
+                    borderBottom: "1px solid var(--line-strong)",
                     textAlign: "center",
                   }}
                 >
@@ -372,7 +372,7 @@ function WorkspaceSection({
       (
         await api.post<Board>(`/workspaces/${workspace.id}/boards`, {
           ...input,
-          backgroundColor: "#d8ff63",
+          backgroundColor: "var(--acid)",
         })
       ).data,
     onSuccess: (board) => {
@@ -385,7 +385,7 @@ function WorkspaceSection({
     <Box
       component="section"
       aria-labelledby={`workspace-${workspace.id}`}
-      sx={{ borderTop: "1px solid #aaa59a", pt: 2.5 }}
+      sx={{ borderTop: "1px solid var(--line-strong)", pt: 2.5 }}
     >
       <Stack
         direction="row"
@@ -510,12 +510,12 @@ function WorkspaceSection({
             sx={{
               minHeight: 160,
               bgcolor: "transparent",
-              border: "1px dashed #8a867d",
+              border: "1px dashed var(--line-strong)",
               borderRadius: 3,
               cursor: "pointer",
-              color: "#56534d",
+              color: "var(--muted)",
               fontWeight: 700,
-              "&:hover": { bgcolor: "#fffef9", color: "#181817" },
+              "&:hover": { bgcolor: "var(--surface)", color: "var(--ink)" },
             }}
           >
             + Create the first board

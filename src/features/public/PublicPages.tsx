@@ -76,10 +76,9 @@ const pages: Record<string, Page> = {
         title: "Customer support",
         body: (
           <>
-            Email <SupportLink />. Include
-            your account email and, for a payment issue, the provider reference
-            shown on your receipt. Never email passwords or full payment-card
-            details.
+            Email <SupportLink />. Include your account email and, for a payment
+            issue, the provider reference shown on your receipt. Never email
+            passwords or full payment-card details.
           </>
         ),
       },
@@ -96,7 +95,11 @@ const pages: Record<string, Page> = {
             {businessPhone && (
               <>
                 {" "}
-                Phone: <a href={`tel:${businessPhone.replace(/\s/g, "")}`}>{businessPhone}</a>.
+                Phone:{" "}
+                <a href={`tel:${businessPhone.replace(/\s/g, "")}`}>
+                  {businessPhone}
+                </a>
+                .
               </>
             )}{" "}
             The legal seller and applicable tax details are shown during
@@ -131,9 +134,8 @@ const pages: Record<string, Page> = {
         body: (
           <>
             Send a clear description and reproduction steps to{` `}
-            <SupportLink subject="Security report" />
-            . Do not access other users’ data or disrupt the service while
-            testing.
+            <SupportLink subject="Security report" />. Do not access other
+            users’ data or disrupt the service while testing.
           </>
         ),
       },

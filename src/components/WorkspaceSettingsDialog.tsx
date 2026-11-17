@@ -105,7 +105,7 @@ export function WorkspaceSettingsDialog({
       onClose={onClose}
       fullWidth
       maxWidth="sm"
-      PaperProps={{ sx: { bgcolor: "#fffef9", borderRadius: 3 } }}
+      PaperProps={{ sx: { bgcolor: "var(--surface)", borderRadius: 3 } }}
     >
       <DialogTitle sx={{ fontSize: 28 }}>Workspace settings</DialogTitle>
       <DialogContent>
@@ -145,13 +145,13 @@ export function WorkspaceSettingsDialog({
               direction="row"
               alignItems="center"
               gap={1.5}
-              sx={{ border: "1px solid #dedad0", borderRadius: 2, p: 1.25 }}
+              sx={{ border: "1px solid var(--line)", borderRadius: 2, p: 1.25 }}
             >
               <Avatar
                 sx={{
                   width: 34,
                   height: 34,
-                  bgcolor: "#181817",
+                  bgcolor: "var(--panel)",
                   color: "#d8ff63",
                   fontSize: 13,
                 }}
@@ -193,8 +193,8 @@ export function WorkspaceSettingsDialog({
               Invite by email
             </Typography>
             <Typography variant="body2" color="text.secondary" mb={1.5}>
-              They get an email, and if they already use Danto, the invite
-              also shows up on their dashboard.
+              They get an email, and if they already use Danto, the invite also
+              shows up on their dashboard.
             </Typography>
             <Stack
               direction="row"
@@ -220,7 +220,9 @@ export function WorkspaceSettingsDialog({
               <Button
                 type="submit"
                 variant="contained"
-                disabled={!inviteEmail.trim() || !!alreadyMember || invite.isPending}
+                disabled={
+                  !inviteEmail.trim() || !!alreadyMember || invite.isPending
+                }
                 sx={{ whiteSpace: "nowrap" }}
               >
                 {invite.isPending ? "Sending…" : "Send invite"}
@@ -249,8 +251,8 @@ export function WorkspaceSettingsDialog({
             <Divider sx={{ my: 4 }} />
             <Box
               sx={{
-                border: "1px solid #e9a89a",
-                bgcolor: "#fff5f2",
+                border: "1px solid var(--tint-danger-line)",
+                bgcolor: "var(--tint-danger)",
                 borderRadius: 2,
                 p: 2.5,
               }}

@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
 
 const app = (
   <StrictMode>
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={theme} defaultMode="system">
       <CssBaseline />
       <QueryClientProvider client={queryClient}>
         <App />

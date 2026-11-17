@@ -26,6 +26,21 @@
         .animated-content { opacity: 1 !important; transform: none !important; filter: none !important; }
       </style>
     </noscript>
+    <script>
+      // Apply the saved/system colour scheme before React loads (no flash).
+      // Public pages are light-only (see ForceLight).
+      try {
+        var app = /^\/(app|tasks|boards|billing|admin|workspaces)(\/|$)/.test(
+          location.pathname,
+        );
+        var mode = app ? localStorage.getItem("mui-mode") || "system" : "light";
+        if (mode === "system")
+          mode = matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        document.documentElement.setAttribute("data-theme", mode);
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"><!--ssr-html--></div>

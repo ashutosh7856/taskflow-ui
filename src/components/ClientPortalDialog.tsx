@@ -79,7 +79,7 @@ export function ClientPortalDialog({
       maxWidth="md"
       PaperProps={{
         sx: {
-          bgcolor: "#fffef9",
+          bgcolor: "var(--surface)",
           borderRadius: 3,
           boxShadow: "8px 8px 0 #181817",
         },
@@ -95,7 +95,7 @@ export function ClientPortalDialog({
         value={tab}
         onChange={(_, value) => setTab(value)}
         variant="scrollable"
-        sx={{ px: 3, borderBottom: "1px solid #e1ddd3" }}
+        sx={{ px: 3, borderBottom: "1px solid var(--line)" }}
       >
         <Tab value="share" label="Share link" />
         <Tab
@@ -147,7 +147,11 @@ function UpgradeNote({ children }: { children: React.ReactNode }) {
     <Alert
       icon={<LockRounded />}
       severity="info"
-      sx={{ bgcolor: "#f3f9dc", color: "#181817", border: "1px solid #c9e07a" }}
+      sx={{
+        bgcolor: "var(--tint-lime)",
+        color: "var(--ink)",
+        border: "1px solid var(--tint-lime-line)",
+      }}
       action={
         <Button component={Link} to="/billing" size="small" variant="contained">
           Upgrade
@@ -216,7 +220,7 @@ function ShareTab({
         sx={{
           p: 2.5,
           borderRadius: 3,
-          bgcolor: settings.enabled ? "#181817" : "#eeebe2",
+          bgcolor: settings.enabled ? "var(--panel)" : "var(--surface-2)",
           color: settings.enabled ? "#fff" : "inherit",
         }}
       >
@@ -272,11 +276,17 @@ function ShareTab({
             disabled={save.isPending}
             sx={
               settings.enabled
-                ? { bgcolor: "#fff", color: "#181817", boxShadow: "none" }
-                : {
-                    bgcolor: "#d8ff63",
+                ? {
+                    bgcolor: "#fff",
                     color: "#181817",
+                    boxShadow: "none",
+                    "&:hover": { bgcolor: "#ecebe5" },
+                  }
+                : {
+                    bgcolor: "var(--acid)",
+                    color: "var(--on-accent)",
                     boxShadow: "3px 3px 0 #181817",
+                    "&:hover": { bgcolor: "var(--acid-hover)" },
                   }
             }
           >
@@ -287,8 +297,8 @@ function ShareTab({
       {settings.paused && (
         <UpgradeNote>
           This portal is paused: your current plan includes{" "}
-          {settings.entitlements.clientPortals} live portal. Upgrade to bring
-          it back. Nothing was deleted.
+          {settings.entitlements.clientPortals} live portal. Upgrade to bring it
+          back. Nothing was deleted.
         </UpgradeNote>
       )}
       {upgradeRequired ? (
@@ -339,7 +349,12 @@ function ShareTab({
           }
           label="Email the client an AI-written update every Friday"
         />
-        <Typography variant="caption" color="text.secondary" display="block" ml={6}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          display="block"
+          ml={6}
+        >
           {!canAutoUpdate
             ? "Available on Pro and Team."
             : !clientEmail.trim()
@@ -387,8 +402,8 @@ function InboxTab({
   );
   if (!settings.feedback.length)
     return (
-      <Box sx={{ textAlign: "center", py: 8, color: "#77736b" }}>
-        <Typography fontWeight={800} color="#181817">
+      <Box sx={{ textAlign: "center", py: 8, color: "var(--muted)" }}>
+        <Typography fontWeight={800} color="var(--ink)">
           No client activity yet
         </Typography>
         <Typography variant="body2" mt={0.5}>
@@ -398,10 +413,10 @@ function InboxTab({
       </Box>
     );
   const kindStyle = {
-    approved: { label: "Approved", bg: "#e3f6c8" },
-    changes_requested: { label: "Changes requested", bg: "#ffe1d8" },
-    comment: { label: "Comment", bg: "#eeebe2" },
-    request: { label: "New request", bg: "#dbeafe" },
+    approved: { label: "Approved", bg: "var(--tint-green)" },
+    changes_requested: { label: "Changes requested", bg: "var(--tint-orange)" },
+    comment: { label: "Comment", bg: "var(--surface-2)" },
+    request: { label: "New request", bg: "var(--tint-blue)" },
   } as const;
   return (
     <Stack gap={1.25} pt={2}>
@@ -417,7 +432,7 @@ function InboxTab({
           sx={{
             p: 2,
             borderRadius: 2,
-            border: "1px solid #e1ddd3",
+            border: "1px solid var(--line)",
             bgcolor: entry.readAt ? "transparent" : "#fbfde9",
             color: "inherit",
             textDecoration: "none",
@@ -537,9 +552,10 @@ function UpdateTab({
           onClick={() => generate.mutate()}
           disabled={generate.isPending}
           sx={{
-            bgcolor: "#d8ff63",
-            color: "#181817",
+            bgcolor: "var(--acid)",
+            color: "var(--on-accent)",
             boxShadow: "3px 3px 0 #181817",
+            "&:hover": { bgcolor: "var(--acid-hover)" },
           }}
         >
           {text ? "Regenerate" : "Write update"}
@@ -669,7 +685,7 @@ function BrandTab({
         sx={{
           p: 2,
           borderRadius: 3,
-          border: "1px dashed #aaa59a",
+          border: "1px dashed var(--line-strong)",
           display: "flex",
           alignItems: "center",
           gap: 1.5,

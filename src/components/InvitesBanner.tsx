@@ -68,9 +68,9 @@ export function InvitesBanner() {
                 disabled={busy}
                 onClick={() => decline.mutate(invite.token)}
                 sx={{
-                  color: "#4a4842",
+                  color: "var(--muted)",
                   minHeight: 34,
-                  "&:hover": { bgcolor: "rgba(24,24,23,.08)", color: "#181817" },
+                  "&:hover": { bgcolor: "var(--hover)", color: "var(--ink)" },
                 }}
               >
                 Decline

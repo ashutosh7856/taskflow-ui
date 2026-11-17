@@ -108,7 +108,7 @@ export function CreateCardDialog({
               width: 38,
               height: 38,
               borderRadius: 2,
-              bgcolor: "#d8ff63",
+              bgcolor: "var(--acid)",
               display: "grid",
               placeItems: "center",
             }}
@@ -219,12 +219,16 @@ export function CreateCardDialog({
                         )
                       }
                       sx={{
-                        bgcolor: selected ? label.color : "#eeebe2",
-                        color: selected ? "#fff" : "#35332f",
+                        bgcolor: selected ? label.color : "var(--surface-2)",
+                        color: selected ? "#fff" : "var(--ink-soft)",
                         border: selected
-                          ? "2px solid #181817"
+                          ? "2px solid var(--ink)"
                           : "2px solid transparent",
                         fontWeight: 750,
+                        "&:hover": {
+                          bgcolor: selected ? label.color : "var(--surface-3)",
+                          filter: selected ? "brightness(1.08)" : undefined,
+                        },
                       }}
                     />
                   );
