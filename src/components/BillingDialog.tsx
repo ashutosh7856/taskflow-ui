@@ -76,9 +76,13 @@ export function BillingDialog({
   const deferredDays: number =
     (selectedPlan && billing.data?.deferredDays?.[selectedPlan]) || 0;
   const firstCharge = new Date(Date.now() + deferredDays * 86_400_000);
+  // Paying subscribers switch plans in place (prorated, charged now). During
+  // the free trial a switch goes through checkout instead, keeping the
+  // remaining trial days, so nothing is charged before the trial ends.
   const hasSubscription =
     Boolean(billing.data?.subscriptionId) &&
-    billing.data?.billingStatus === "active";
+    billing.data?.billingStatus === "active" &&
+    deferredDays === 0;
   const chosenOffer = offers.find((offer) => offer.plan === selectedPlan);
   const close = () => {
     setSelectedPlan(null);
@@ -147,7 +151,11 @@ export function BillingDialog({
               sx={{ mt: 1, fontSize: { xs: 36, md: 52 } }}
             >
               {selectedPlan
-                ? `Upgrade to ${chosenOffer?.name}.`
+                ? selectedPlan === billing.data?.plan
+                  ? `Keep ${chosenOffer?.name}.`
+                  : hasSubscription
+                    ? `Switch to ${chosenOffer?.name}.`
+                    : `Upgrade to ${chosenOffer?.name}.`
                 : "Invest in momentum."}
             </Typography>
             <Typography sx={{ color: "#b9b7af", mt: 1 }}>
@@ -308,15 +316,16 @@ export function BillingDialog({
                     ? "Switching plan…"
                     : "Opening secure checkout…"
                   : hasSubscription
-                    ? `Switch to ${chosenOffer?.name}`
+                    ? `Switch to ${chosenOffer?.name} · charged now`
                     : deferredDays > 0
                       ? "Add payment method · $0 today"
                       : "Continue to secure checkout"}
               </Button>
               {hasSubscription && (
                 <Typography fontSize={12} color="text.secondary" mt={1}>
-                  Your saved payment method is used. The price difference for
-                  the rest of this period is charged or credited now.
+                  Your saved payment method is charged right away for the price
+                  difference for the rest of this billing period (or credited,
+                  if the new plan costs less).
                 </Typography>
               )}
               <Stack

@@ -556,6 +556,9 @@ function CardDialog({
   const [name, setName] = useState(storedName);
   const [message, setMessage] = useState("");
   const [mode, setMode] = useState<"comment" | "changes_requested">("comment");
+  // Hide Approve / Request changes as soon as the client has answered, even
+  // before the refreshed portal data arrives, so nobody answers twice.
+  const [answered, setAnswered] = useState(false);
   const respond = useMutation({
     mutationFn: (kind: "approved" | "changes_requested" | "comment") =>
       publicApi.post(`/portal/${token}/cards/${card.id}/respond`, {
@@ -563,13 +566,16 @@ function CardDialog({
         authorName: name.trim(),
         message: message.trim(),
       }),
-    onSuccess: () => {
+    onSuccess: (_, kind) => {
       rememberName(name.trim());
       setMessage("");
+      if (kind !== "comment") setAnswered(true);
       client.invalidateQueries({ queryKey: ["portal", token] });
     },
+    // E.g. already answered in another tab: show the current status.
+    onError: () => client.invalidateQueries({ queryKey: ["portal", token] }),
   });
-  const canAct = card.approvalStatus === "pending";
+  const canAct = card.approvalStatus === "pending" && !answered;
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pb: 1 }} className="wrap-anywhere">

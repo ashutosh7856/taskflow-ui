@@ -208,6 +208,33 @@ export function BillingPage() {
       )}
       {data && (
         <Stack spacing={3}>
+          {data.billingStatus === "past_due" && data.plan !== "free" && (
+            <Alert
+              severity="warning"
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  sx={{ fontWeight: 800, whiteSpace: "nowrap" }}
+                  onClick={() => {
+                    if (data.plan === "pro" || data.plan === "business") {
+                      setCheckoutPlan(data.plan);
+                      setPlansOpen(true);
+                    }
+                  }}
+                >
+                  Update payment
+                </Button>
+              }
+            >
+              Your last payment didn’t go through, so nothing was charged.
+              {data.currentPeriodEnd
+                ? ` Your plan stays on until ${new Date(data.currentPeriodEnd).toLocaleDateString(undefined, { month: "long", day: "numeric" })}; `
+                : " "}
+              add a working payment method to keep it, or do nothing and the
+              account moves to Free.
+            </Alert>
+          )}
           {isAdmin && data.checkout.environment !== "live" && (
             <Alert severity="warning">
               Admin note: Dodo Payments is in test mode. Use test cards only;
@@ -241,14 +268,19 @@ export function BillingPage() {
                 <Chip
                   label={billingStatusLabel(data)}
                   sx={{
+                    // On the dark panel in both themes: fixed colours.
                     bgcolor:
                       data.billingStatus === "active"
                         ? "#d8ff63"
-                        : "var(--ink-soft)",
+                        : data.billingStatus === "past_due"
+                          ? "#ffc46b"
+                          : "#3e3d38",
                     color:
-                      data.billingStatus === "active"
-                        ? "var(--on-accent)"
+                      data.billingStatus === "active" ||
+                      data.billingStatus === "past_due"
+                        ? "#181817"
                         : "#fff",
+                    fontWeight: 800,
                     textTransform: "capitalize",
                   }}
                 />
@@ -290,7 +322,9 @@ export function BillingPage() {
               </Stack>
               {data.currentPeriodEnd && (
                 <Typography sx={{ mt: 3, color: "#d8ff63" }}>
-                  Next renewal:{" "}
+                  {data.subscriptionId && data.billingStatus === "active"
+                    ? "Next payment: "
+                    : "Access until: "}
                   {new Date(data.currentPeriodEnd).toLocaleDateString()}
                 </Typography>
               )}
@@ -406,7 +440,11 @@ export function BillingPage() {
                         <Chip
                           size="small"
                           label="Current plan"
-                          sx={{ bgcolor: "var(--acid)", fontWeight: 800 }}
+                          sx={{
+                            bgcolor: "var(--acid)",
+                            color: "var(--on-accent)",
+                            fontWeight: 800,
+                          }}
                         />
                       )}
                     </Stack>
@@ -562,9 +600,11 @@ export function BillingPage() {
                       new Date(data.currentPeriodEnd) > new Date()
                       ? `Cancelled. Your plan stays active until ${new Date(data.currentPeriodEnd).toLocaleDateString()} and won’t renew.`
                       : "This subscription is cancelled and will not renew."
-                    : data.currentPeriodEnd
-                      ? `Your next renewal is ${new Date(data.currentPeriodEnd).toLocaleDateString()}. Cancel before then to prevent the next charge.`
-                      : "Cancel to stop future subscription charges."}
+                    : data.billingStatus === "past_due"
+                      ? "Your last payment didn’t go through. Nothing renews until a working payment method is added."
+                      : data.currentPeriodEnd
+                        ? `Your next payment is on ${new Date(data.currentPeriodEnd).toLocaleDateString()}. Cancel before then to prevent it.`
+                        : "Cancel to stop future subscription charges."}
                 </Typography>
                 {data.canManagePayment && (
                   <Button
@@ -737,8 +777,8 @@ function ReceiptsCard() {
       )}
       {receipts.data && !receipts.data.length && (
         <Typography color="text.secondary">
-          No payments yet. After each payment we email you a receipt, and it
-          also appears here.
+          No payments yet. After each payment, Dodo Payments emails you an
+          invoice, and the payment also appears here.
         </Typography>
       )}
       <Stack divider={<Box sx={{ borderTop: "1px solid var(--line)" }} />}>

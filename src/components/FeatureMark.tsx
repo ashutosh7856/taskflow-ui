@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
 
+/** "Included" tick for plan feature lists. */
 export function FeatureMark({ inverse = false }: { inverse?: boolean }) {
   return (
     <Box
@@ -10,16 +11,22 @@ export function FeatureMark({ inverse = false }: { inverse?: boolean }) {
         flex: "0 0 18px",
         display: "grid",
         placeItems: "center",
-        border: inverse ? "1px solid #74716a" : "1px solid var(--line-strong)",
-        borderRadius: "5px",
-        bgcolor: inverse ? "#282826" : "var(--surface)",
+        borderRadius: "50%",
+        bgcolor: inverse ? "rgba(216,255,99,.16)" : "var(--tint-lime)",
+        border: inverse
+          ? "1px solid rgba(216,255,99,.35)"
+          : "1px solid var(--tint-lime-line)",
         mt: "1px",
+        // Checkmark drawn with two borders, rotated.
         "&::after": {
           content: '""',
-          width: 7,
-          height: 2,
-          bgcolor: "#ff5c35",
-          borderRadius: 2,
+          width: 4,
+          height: 8,
+          mt: "-2px",
+          borderRight: "2px solid",
+          borderBottom: "2px solid",
+          borderColor: inverse ? "#d8ff63" : "var(--success-ink)",
+          transform: "rotate(45deg)",
         },
       }}
     />
