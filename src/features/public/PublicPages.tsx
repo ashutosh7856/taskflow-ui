@@ -32,8 +32,10 @@ type Page = {
 
 const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || "support@danto.app";
 const legalName = import.meta.env.VITE_LEGAL_BUSINESS_NAME || "Danto";
-const businessAddress = import.meta.env.VITE_BUSINESS_ADDRESS || "";
-const businessPhone = import.meta.env.VITE_BUSINESS_PHONE || "";
+const businessAddress =
+  import.meta.env.VITE_BUSINESS_ADDRESS ||
+  "E-247, Gamma 1, Greater Noida, Uttar Pradesh 201308, India";
+const businessPhone = import.meta.env.VITE_BUSINESS_PHONE || "+91 70119 43774";
 
 const pages: Record<string, Page> = {
   "/about": {
@@ -90,7 +92,7 @@ const pages: Record<string, Page> = {
             {businessPhone && (
               <>
                 {" "}
-                Phone: <a href={`tel:${businessPhone}`}>{businessPhone}</a>.
+                Phone: <a href={`tel:${businessPhone.replace(/\s/g, "")}`}>{businessPhone}</a>.
               </>
             )}{" "}
             The legal seller and applicable tax details are shown during

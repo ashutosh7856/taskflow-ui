@@ -100,7 +100,7 @@ export function SiteFooter() {
         </Box>
         <Typography className="site-footer-legal" color="text.secondary">
           © {new Date().getFullYear()} Danto. Payments are processed securely by
-          PayPal.
+          Dodo Payments, our merchant of record.
         </Typography>
       </Container>
     </Box>

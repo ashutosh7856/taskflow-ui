@@ -30,6 +30,6 @@ export const faqs = [
   },
   {
     q: "How do monthly and yearly billing work?",
-    a: "Pay monthly, or yearly and get two months free. Payments go through PayPal. Cancel from your billing page at any time and you keep paid access until the end of the period.",
+    a: "Pay monthly, or yearly and get two months free. Payments are processed by Dodo Payments, our merchant of record. On a trial, adding a card charges nothing until the trial ends. Cancel from your billing page at any time and you keep paid access until the end of the period.",
   },
 ];

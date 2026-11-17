@@ -16,8 +16,8 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { BillingDialog } from "../../components/BillingDialog";
 import { FeatureMark } from "../../components/FeatureMark";
 import { api, errorMessage } from "../../lib/api";
@@ -35,7 +35,8 @@ interface BillingDetails {
   plan: "free" | "pro" | "business";
   billingStatus: "inactive" | "active" | "past_due" | "cancelled";
   currentPeriodEnd?: string | null;
-  paypalSubscriptionId?: string | null;
+  subscriptionId?: string | null;
+  canManagePayment?: boolean;
   aiRequestsThisMonth: number;
   aiPeriodStart: string;
   storage?: { enabled?: boolean; usedBytes: number; limitBytes: number };
@@ -50,7 +51,7 @@ interface BillingDetails {
     clientPortals?: number | null;
   };
   billingInterval?: "month" | "year";
-  paypal: { configured: boolean; environment: "live" | "sandbox" };
+  checkout: { configured: boolean; environment: "live" | "test" };
 }
 
 export function BillingPage() {
@@ -83,6 +84,53 @@ export function BillingPage() {
       client.invalidateQueries({ queryKey: ["billing"] });
     },
   });
+  const portal = useMutation({
+    mutationFn: async () =>
+      (await api.post<{ url: string }>("/billing/portal")).data,
+    onSuccess: ({ url }) => window.location.assign(url),
+  });
+
+  // Back from Dodo checkout: /billing?checkout=done&subscription_id=…&status=…
+  const navigate = useNavigate();
+  const returnedId = searchParams.get("subscription_id");
+  const returnedStatus = searchParams.get("status");
+  const [checkoutResult, setCheckoutResult] = useState<
+    "confirming" | "done" | "failed" | null
+  >(returnedId ? "confirming" : null);
+  const confirmedOnce = useRef(false);
+  useEffect(() => {
+    if (!returnedId || confirmedOnce.current) return;
+    confirmedOnce.current = true;
+    if (returnedStatus && !["active", "succeeded"].includes(returnedStatus)) {
+      setCheckoutResult("failed");
+      navigate("/billing", { replace: true });
+      return;
+    }
+    (async () => {
+      // The subscription can take a few seconds to turn active after payment.
+      for (let attempt = 0; attempt < 6; attempt++) {
+        try {
+          const response = await api.post("/billing/checkout/confirm", {
+            subscriptionId: returnedId,
+          });
+          if (response.status !== 202) {
+            setCheckoutResult("done");
+            break;
+          }
+        } catch {
+          setCheckoutResult("failed");
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+      setCheckoutResult((value) => (value === "confirming" ? "done" : value));
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ["billing"] }),
+        client.invalidateQueries({ queryKey: ["workspaces"] }),
+      ]);
+      navigate("/billing", { replace: true });
+    })();
+  }, [returnedId, returnedStatus, client, navigate]);
   const data = billing.data;
   const aiPercent = data
     ? data.entitlements.aiRequests === null
@@ -131,17 +179,36 @@ export function BillingPage() {
           <CircularProgress />
         </Box>
       )}
-      {(billing.error || cancel.error) && (
+      {(billing.error || cancel.error || portal.error) && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          {errorMessage(billing.error || cancel.error)}
+          {errorMessage(billing.error || cancel.error || portal.error)}
+        </Alert>
+      )}
+      {checkoutResult === "confirming" && (
+        <Alert severity="info" icon={<CircularProgress size={18} />} sx={{ mb: 3 }}>
+          Confirming your subscription…
+        </Alert>
+      )}
+      {checkoutResult === "done" && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          You’re all set. Your plan is active across every workspace you own.
+          {data?.currentPeriodEnd && data.billingStatus === "active"
+            ? ` Next payment: ${new Date(data.currentPeriodEnd).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}.`
+            : ""}
+        </Alert>
+      )}
+      {checkoutResult === "failed" && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          Checkout wasn’t completed, so nothing was charged. You can try again
+          anytime.
         </Alert>
       )}
       {data && (
         <Stack spacing={3}>
-          {isAdmin && data.paypal.environment !== "live" && (
+          {isAdmin && data.checkout.environment !== "live" && (
             <Alert severity="warning">
-              Admin note: PayPal is in sandbox mode. Set PAYPAL_ENV=live before
-              accepting real payments. Only admins see this.
+              Admin note: Dodo Payments is in test mode. Use test cards only;
+              switch DODO_ENV to live after approval. Only admins see this.
             </Alert>
           )}
           <Box
@@ -306,7 +373,7 @@ export function BillingPage() {
                 const keepable =
                   current &&
                   offer.plan !== "free" &&
-                  !data.paypalSubscriptionId;
+                  !(data.subscriptionId && data.billingStatus === "active");
                 return (
                   <Box
                     key={offer.plan}
@@ -431,24 +498,23 @@ export function BillingPage() {
             >
               <TrustItem
                 icon={<CreditCardRounded />}
-                title="PayPal checkout"
-                body="Pay securely with PayPal. Available payment methods are shown by PayPal for your country and account."
+                title="Secure checkout"
+                body="Pay by card, UPI, wallets or local methods. Dodo Payments processes payments as our merchant of record and handles sales tax and invoices."
               />
               <TrustItem
                 icon={<LockRounded />}
                 title="No card storage"
-                body="Danto never receives or stores your card number, bank credentials, or PayPal password."
+                body="Danto never receives or stores your card number or bank credentials."
               />
               <TrustItem
                 icon={<ShieldRounded />}
                 title="Recurring and cancellable"
-                body="Paid plans renew monthly in USD. Cancel here before renewal to stop future charges."
+                body="Paid plans renew monthly or yearly in USD. Cancel here before renewal to stop future charges."
               />
             </Box>
-            {data.paypalSubscriptionId && (
+            {data.subscriptionId && (
               <Typography variant="body2" color="text.secondary" mt={3}>
-                PayPal subscription reference: ••••
-                {data.paypalSubscriptionId.slice(-8)}
+                Subscription reference: ••••{data.subscriptionId.slice(-8)}
               </Typography>
             )}
           </Box>
@@ -465,17 +531,17 @@ export function BillingPage() {
               Subscription management
             </Typography>
             <Typography variant="h5" mt={1}>
-              {data.paypalSubscriptionId
-                ? "Manage your PayPal renewal"
+              {data.subscriptionId
+                ? "Manage your subscription"
                 : "No recurring payment"}
             </Typography>
             {cancelledNotice && (
               <Alert severity="success" sx={{ mt: 2 }}>
-                Your PayPal subscription was cancelled. No future renewal will
-                be charged.
+                Renewal cancelled. You won’t be charged again, and your plan
+                stays active until the end of the current period.
               </Alert>
             )}
-            {data.paypalSubscriptionId ? (
+            {data.subscriptionId ? (
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 gap={2}
@@ -484,11 +550,23 @@ export function BillingPage() {
               >
                 <Typography color="text.secondary" sx={{ flex: 1 }}>
                   {data.billingStatus === "cancelled"
-                    ? "This subscription is cancelled and will not renew."
+                    ? data.currentPeriodEnd &&
+                      new Date(data.currentPeriodEnd) > new Date()
+                      ? `Cancelled. Your plan stays active until ${new Date(data.currentPeriodEnd).toLocaleDateString()} and won’t renew.`
+                      : "This subscription is cancelled and will not renew."
                     : data.currentPeriodEnd
                       ? `Your next renewal is ${new Date(data.currentPeriodEnd).toLocaleDateString()}. Cancel before then to prevent the next charge.`
-                      : "Cancel to stop future PayPal subscription charges."}
+                      : "Cancel to stop future subscription charges."}
                 </Typography>
+                {data.canManagePayment && (
+                  <Button
+                    variant="outlined"
+                    disabled={portal.isPending}
+                    onClick={() => portal.mutate()}
+                  >
+                    {portal.isPending ? "Opening…" : "Payment method & invoices"}
+                  </Button>
+                )}
                 {data.billingStatus === "active" && (
                   <Button
                     color="error"
@@ -497,7 +575,7 @@ export function BillingPage() {
                     onClick={() => {
                       if (
                         confirm(
-                          "Cancel PayPal renewal? Your subscription will not be charged again.",
+                          "Cancel renewal? You keep your plan until the end of the current period and won't be charged again.",
                         )
                       ) {
                         cancel.mutate();
@@ -512,7 +590,7 @@ export function BillingPage() {
               <Typography color="text.secondary" mt={1.5}>
                 {data.plan === "free"
                   ? "The Free plan has no subscription and nothing to cancel."
-                  : "This plan was assigned without a PayPal subscription. You are not being charged automatically, so no cancellation is required."}
+                  : "This plan has no subscription attached. You are not being charged automatically, so no cancellation is required."}
               </Typography>
             )}
           </Box>
@@ -561,7 +639,7 @@ function billingStatusLabel(data: BillingDetails) {
     return "Free plan";
   }
   if (data.billingStatus === "past_due") return "Payment issue";
-  if (data.billingStatus === "cancelled" && !data.paypalSubscriptionId)
+  if (data.billingStatus === "cancelled" && !data.subscriptionId)
     return "Trial";
   if (data.billingStatus === "cancelled") return "Cancelled";
   if (data.billingStatus === "active") return "Active";
@@ -572,7 +650,7 @@ function planBillingLine(data: BillingDetails) {
   if (data.plan === "free") {
     return "$0 USD · No recurring payment";
   }
-  if (!data.paypalSubscriptionId) {
+  if (!data.subscriptionId) {
     const ends = data.currentPeriodEnd
       ? ` · ends ${new Date(data.currentPeriodEnd).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
       : "";

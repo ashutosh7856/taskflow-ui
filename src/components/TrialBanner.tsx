@@ -8,7 +8,7 @@ interface BillingSummary {
   plan: "free" | "pro" | "business";
   billingStatus: string;
   currentPeriodEnd: string | null;
-  paypalSubscriptionId?: string | null;
+  subscriptionId?: string | null;
 }
 
 /** Shows the remaining Pro trial (or comped access) with an upgrade link. */
@@ -23,7 +23,7 @@ export function TrialBanner() {
   if (
     !data ||
     data.plan === "free" ||
-    data.paypalSubscriptionId ||
+    data.subscriptionId ||
     !data.currentPeriodEnd ||
     location.pathname === "/billing"
   )

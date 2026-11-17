@@ -145,11 +145,6 @@ export function LegalPage() {
             <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
           </Typography>
         </Box>
-        <Typography variant="body2" color="text.secondary">
-          This product-facing policy is a practical baseline and should be
-          reviewed for your business entity, operating country, and customer
-          markets before launch.
-        </Typography>
       </Container>
     </Box>
   );

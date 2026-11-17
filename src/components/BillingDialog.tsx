@@ -11,13 +11,12 @@ import {
   Dialog,
   DialogContent,
   IconButton,
-  Radio,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { api, errorMessage } from "../lib/api";
 import {
   displayPrice,
@@ -25,18 +24,7 @@ import {
   type BillingInterval,
 } from "../lib/billingPlans";
 import { IntervalToggle } from "./IntervalToggle";
-import { useAuthStore } from "../store/auth";
 import { FeatureMark } from "./FeatureMark";
-
-declare global {
-  interface Window {
-    paypal?: {
-      Buttons: (options: Record<string, unknown>) => {
-        render: (node: HTMLElement) => Promise<void>;
-      };
-    };
-  }
-}
 
 type PaidPlan = "pro" | "business";
 
@@ -52,42 +40,48 @@ export function BillingDialog({
   initialInterval?: BillingInterval;
 }) {
   const [selectedPlan, setSelectedPlan] = useState<PaidPlan | null>(null);
-  const [checkout, setCheckout] = useState<{
-    plan: PaidPlan;
-    paypalPlanId: string;
-    discountCode?: string;
-    firstPaymentUsd?: number;
-  } | null>(null);
   const [discountCode, setDiscountCode] = useState("");
   const [interval, setBillingInterval] =
     useState<BillingInterval>(initialInterval);
-  const [providerError, setProviderError] = useState("");
   const [success, setSuccess] = useState(false);
-  const user = useAuthStore((state) => state.user);
-  const paypalNode = useRef<HTMLDivElement>(null);
-  const checkoutSection = useRef<HTMLDivElement>(null);
   const client = useQueryClient();
   const billing = useQuery({
     queryKey: ["billing"],
     enabled: open,
     queryFn: async () => (await api.get("/billing")).data,
   });
-  const setup = useMutation({
+  const checkout = useMutation({
     mutationFn: async ({ plan, code }: { plan: PaidPlan; code?: string }) =>
       (
-        await api.post("/billing/paypal/setup", {
+        await api.post("/billing/checkout", {
           plan,
           interval,
           ...(code && interval === "month" ? { discountCode: code } : {}),
         })
-      ).data,
-    onSuccess: (data) => setCheckout(data),
+      ).data as { checkoutUrl?: string; changed?: boolean },
+    onSuccess: async (data) => {
+      if (data.checkoutUrl) {
+        window.location.assign(data.checkoutUrl);
+        return;
+      }
+      // Existing subscribers switch plans in place, no new checkout.
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ["billing"] }),
+        client.invalidateQueries({ queryKey: ["workspaces"] }),
+      ]);
+      setSuccess(true);
+    },
   });
+  const deferredDays: number =
+    (selectedPlan && billing.data?.deferredDays?.[selectedPlan]) || 0;
+  const firstCharge = new Date(Date.now() + deferredDays * 86_400_000);
+  const hasSubscription =
+    Boolean(billing.data?.subscriptionId) &&
+    billing.data?.billingStatus === "active";
   const chosenOffer = offers.find((offer) => offer.plan === selectedPlan);
   const close = () => {
     setSelectedPlan(null);
-    setCheckout(null);
-    setProviderError("");
+    checkout.reset();
     setDiscountCode("");
     setSuccess(false);
     onClose();
@@ -97,97 +91,6 @@ export function BillingDialog({
     if (open && initialPlan) setSelectedPlan(initialPlan);
     if (open) setBillingInterval(initialInterval);
   }, [initialPlan, initialInterval, open]);
-
-  useEffect(() => {
-    if (!checkout) return;
-    const frame = requestAnimationFrame(() => {
-      checkoutSection.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [checkout]);
-
-  useEffect(() => {
-    if (!checkout || !billing.data?.paypal?.clientId || !paypalNode.current)
-      return;
-    let cancelled = false;
-    const mount = async () => {
-      if (!window.paypal) {
-        await new Promise<void>((resolve, reject) => {
-          const existing = document.querySelector<HTMLScriptElement>(
-            "script[data-taskflow-paypal]",
-          );
-          if (existing) {
-            if (window.paypal) resolve();
-            else {
-              existing.addEventListener("load", () => resolve(), {
-                once: true,
-              });
-              existing.addEventListener(
-                "error",
-                () => reject(new Error("PayPal checkout could not load")),
-                { once: true },
-              );
-            }
-            return;
-          }
-          const script = document.createElement("script");
-          script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(billing.data.paypal.clientId)}&components=buttons&vault=true&intent=subscription`;
-          script.dataset.taskflowPaypal = "true";
-          script.onload = () => resolve();
-          script.onerror = () =>
-            reject(new Error("PayPal checkout could not load"));
-          document.head.appendChild(script);
-        });
-      }
-      if (cancelled || !window.paypal || !paypalNode.current) return;
-      paypalNode.current.innerHTML = "";
-      await window.paypal
-        .Buttons({
-          style: {
-            layout: "vertical",
-            shape: "pill",
-            label: "subscribe",
-            height: 48,
-          },
-          createSubscription: (_data: unknown, actions: any) =>
-            actions.subscription.create({
-              plan_id: checkout.paypalPlanId,
-              custom_id: user?.id,
-            }),
-          onApprove: async (data: any) => {
-            await api.post("/billing/paypal/activate", {
-              subscriptionId: data.subscriptionID,
-            });
-            await Promise.all([
-              client.invalidateQueries({ queryKey: ["billing"] }),
-              client.invalidateQueries({ queryKey: ["workspaces"] }),
-            ]);
-            setCheckout(null);
-            setSuccess(true);
-          },
-          onCancel: () => setCheckout(null),
-          onError: () => {
-            setProviderError(
-              "PayPal could not complete checkout. No charge was made.",
-            );
-            setCheckout(null);
-          },
-        })
-        .render(paypalNode.current);
-    };
-    mount().catch(() => {
-      setProviderError(
-        "PayPal checkout could not load. Check your connection and try again.",
-      );
-      setCheckout(null);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [checkout, billing.data, client, user?.id]);
 
   return (
     <Dialog
@@ -248,7 +151,7 @@ export function BillingDialog({
             </Typography>
             <Typography sx={{ color: "#b9b7af", mt: 1 }}>
               {selectedPlan
-                ? "Review the plan, then continue securely with PayPal."
+                ? "Review the plan, then continue to secure checkout."
                 : "One plan covers every workspace you own. Cancel anytime."}
             </Typography>
           </Box>
@@ -267,9 +170,9 @@ export function BillingDialog({
           WebkitOverflowScrolling: "touch",
         }}
       >
-        {(billing.error || setup.error || providerError) && (
+        {(billing.error || checkout.error) && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {providerError || errorMessage(billing.error || setup.error)}
+            {errorMessage(billing.error || checkout.error)}
           </Alert>
         )}
         {billing.isLoading ? (
@@ -298,7 +201,7 @@ export function BillingDialog({
                 startIcon={<ArrowBackRounded />}
                 onClick={() => {
                   setSelectedPlan(null);
-                  setCheckout(null);
+                  checkout.reset();
                 }}
                 sx={{ color: "#d8ff63", px: 0, mb: 2 }}
               >
@@ -330,7 +233,7 @@ export function BillingDialog({
                   value={interval}
                   onChange={(value) => {
                     setBillingInterval(value);
-                    setCheckout(null);
+                    checkout.reset();
                   }}
                 />
                 {chosenOffer && (
@@ -362,7 +265,24 @@ export function BillingDialog({
                 Payment method
               </Typography>
               <PaymentMethod />
-              {!checkout && interval === "month" && (
+              {deferredDays > 0 && !hasSubscription && (
+                <Alert
+                  severity="success"
+                  icon={<VerifiedUserRounded />}
+                  sx={{ mt: 2 }}
+                >
+                  <strong>Nothing charged today.</strong> Your first payment is
+                  on{" "}
+                  {firstCharge.toLocaleDateString(undefined, {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                  , when your trial ends. Cancel before then and you won’t be
+                  charged.
+                </Alert>
+              )}
+              {interval === "month" && !hasSubscription && (
                 <TextField
                   fullWidth
                   label="Discount code (optional)"
@@ -375,82 +295,33 @@ export function BillingDialog({
                   helperText="Valid codes discount the first payment; renewals return to the regular monthly price."
                 />
               )}
-              {!checkout && (
-                <Button
-                  variant="contained"
-                  fullWidth
-                  disabled={setup.isPending}
-                  onClick={() => {
-                    setProviderError("");
-                    setup.mutate({
-                      plan: selectedPlan,
-                      code: discountCode.trim() || undefined,
-                    });
-                  }}
-                  sx={{ mt: 2, minHeight: 48 }}
-                >
-                  {setup.isPending
-                    ? "Preparing PayPal…"
-                    : "Continue with PayPal"}
-                </Button>
-              )}
-              {setup.isPending && (
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="center"
-                  gap={1.5}
-                  sx={{
-                    bgcolor: "#fffef9",
-                    border: "1px solid #d4d0c5",
-                    borderRadius: 2,
-                    p: 2.5,
-                    mt: 2,
-                  }}
-                >
-                  <CircularProgress size={22} />
-                  <Box>
-                    <Typography fontWeight={800}>
-                      Preparing secure PayPal checkout
-                    </Typography>
-                    <Typography fontSize={13} color="text.secondary">
-                      This usually takes a few seconds.
-                    </Typography>
-                  </Box>
-                </Stack>
-              )}
-              {checkout && (
-                <Box
-                  ref={checkoutSection}
-                  sx={{
-                    bgcolor: "#fffef9",
-                    border: "1px solid #d4d0c5",
-                    borderRadius: 3,
-                    p: { xs: 2, sm: 3 },
-                    mt: 2,
-                    scrollMarginTop: 12,
-                  }}
-                >
-                  <Stack direction="row" alignItems="center" gap={1} mb={2}>
-                    <VerifiedUserRounded sx={{ color: "#4f6c00" }} />
-                    <Box>
-                      <Typography fontWeight={800}>
-                        Approve with PayPal
-                      </Typography>
-                      <Typography fontSize={13} color="text.secondary">
-                        PayPal securely handles your payment details.
-                      </Typography>
-                    </Box>
-                  </Stack>
-                  {checkout.discountCode && (
-                    <Alert severity="success" sx={{ mb: 2 }}>
-                      {checkout.discountCode} applied: your first payment is $
-                      {checkout.firstPaymentUsd?.toFixed(2)} USD. Later payments
-                      renew at ${chosenOffer?.price} USD per month.
-                    </Alert>
-                  )}
-                  <div ref={paypalNode} />
-                </Box>
+              <Button
+                variant="contained"
+                fullWidth
+                disabled={checkout.isPending || checkout.isSuccess}
+                onClick={() =>
+                  checkout.mutate({
+                    plan: selectedPlan,
+                    code: discountCode.trim() || undefined,
+                  })
+                }
+                sx={{ mt: 2, minHeight: 48 }}
+              >
+                {checkout.isPending || checkout.isSuccess
+                  ? hasSubscription
+                    ? "Switching plan…"
+                    : "Opening secure checkout…"
+                  : hasSubscription
+                    ? `Switch to ${chosenOffer?.name}`
+                    : deferredDays > 0
+                      ? "Add payment method · $0 today"
+                      : "Continue to secure checkout"}
+              </Button>
+              {hasSubscription && (
+                <Typography fontSize={12} color="text.secondary" mt={1}>
+                  Your saved payment method is used. The price difference for
+                  the rest of this period is charged or credited now.
+                </Typography>
               )}
               <Stack
                 direction="row"
@@ -483,7 +354,8 @@ export function BillingDialog({
                 const current =
                   billing.data?.plan === offer.plan &&
                   (offer.plan === "free" ||
-                    Boolean(billing.data?.paypalSubscriptionId));
+                    (Boolean(billing.data?.subscriptionId) &&
+                      billing.data?.billingStatus === "active"));
                 const onTrial = billing.data?.plan === offer.plan && !current;
                 return (
                   <Box
@@ -546,7 +418,7 @@ export function BillingDialog({
                           offer.plan === "pro" ? "contained" : "outlined"
                         }
                         startIcon={<RocketLaunchRounded />}
-                        disabled={current || !billing.data?.paypal?.configured}
+                        disabled={current || !billing.data?.checkout?.configured}
                         fullWidth
                         onClick={() => setSelectedPlan(offer.plan)}
                       >
@@ -563,7 +435,7 @@ export function BillingDialog({
             </Box>
           </>
         )}
-        {!billing.isLoading && !billing.data?.paypal?.configured && (
+        {!billing.isLoading && !billing.data?.checkout?.configured && (
           <Alert severity="info" sx={{ mt: 2 }}>
             Checkout is temporarily unavailable. Please try again shortly or
             email support@danto.app.
@@ -590,23 +462,15 @@ function PaymentMethod() {
         color: "#181817",
       }}
     >
-      <Radio
-        checked
-        readOnly
-        inputProps={{ "aria-label": "PayPal selected" }}
-        sx={{ p: 0.5, color: "#0070ba", "&.Mui-checked": { color: "#0070ba" } }}
-      />
-      <Box
-        component="img"
-        src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-color.svg"
-        alt="PayPal"
-        sx={{
-          width: 88,
-          height: 28,
-          objectFit: "contain",
-          objectPosition: "left center",
-        }}
-      />
+      <VerifiedUserRounded sx={{ color: "#4f6c00" }} />
+      <Box>
+        <Typography fontWeight={800} fontSize={14}>
+          Card, UPI, wallets & local methods
+        </Typography>
+        <Typography fontSize={12} color="text.secondary">
+          Processed by Dodo Payments, our merchant of record
+        </Typography>
+      </Box>
       <Box sx={{ flex: 1 }}>
         <Typography fontSize={13} color="text.secondary" textAlign="right">
           Secure checkout
