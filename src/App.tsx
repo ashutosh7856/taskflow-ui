@@ -10,6 +10,8 @@ import {
 import { LandingPage } from "./features/landing/LandingPage";
 import { applyMeta } from "./content/seo";
 import { useAuthStore } from "./store/auth";
+import { RouteError } from "./components/RouteError";
+import { isChunkLoadError, reloadForNewBuild } from "./lib/staleBuild";
 
 // The landing page ships in the main bundle (it's the first paint for most
 // visitors). Everything else loads on demand.
@@ -17,7 +19,16 @@ const named = <T extends Record<string, unknown>, K extends keyof T>(
   loader: () => Promise<T>,
   key: K,
 ) =>
-  lazy(async () => ({ default: (await loader())[key] as React.ComponentType }));
+  lazy(async () => {
+    try {
+      return { default: (await loader())[key] as React.ComponentType };
+    } catch (error) {
+      // Old build's files are gone after a deploy: load the new build.
+      if (isChunkLoadError(error) && reloadForNewBuild())
+        return new Promise<never>(() => {});
+      throw error;
+    }
+  });
 
 const AppShell = named(() => import("./components/AppShell"), "AppShell");
 const AuthPage = named(() => import("./features/auth/AuthPage"), "AuthPage");
@@ -205,7 +216,11 @@ export const routes = [
 
 export function App() {
   // Created on mount (not at import) so the server prerenderer can import routes.
-  const [router] = useState(() => createBrowserRouter(routes));
+  const [router] = useState(() =>
+    createBrowserRouter(
+      routes.map((route) => ({ ...route, errorElement: <RouteError /> })),
+    ),
+  );
   useEffect(() => {
     applyMeta(router.state.location.pathname);
     return router.subscribe((state) => applyMeta(state.location.pathname));

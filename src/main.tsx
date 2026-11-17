@@ -6,8 +6,14 @@ import { App } from "./App";
 import "./styles.css";
 import { theme } from "./theme";
 import { captureAttribution } from "./lib/attribution";
+import { reloadForNewBuild } from "./lib/staleBuild";
 
 captureAttribution();
+
+// Vite's own preload step fails the same way after a deploy.
+window.addEventListener("vite:preloadError", (event) => {
+  if (reloadForNewBuild()) event.preventDefault();
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
