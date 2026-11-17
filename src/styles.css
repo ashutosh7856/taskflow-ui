@@ -134,7 +134,7 @@ select:focus-visible,
 }
 ::selection {
   background: var(--acid);
-  color: var(--ink);
+  color: var(--on-accent);
 }
 ::-webkit-scrollbar {
   width: 10px;
@@ -204,7 +204,7 @@ select:focus-visible,
   position: relative;
   display: inline-block;
   z-index: 0;
-  color: var(--ink);
+  color: var(--on-accent);
   padding: 0 0.06em;
 }
 .dashboard-hero-word::after {
