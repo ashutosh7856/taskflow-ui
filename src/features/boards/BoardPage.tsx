@@ -1,4 +1,5 @@
 import AddRounded from "@mui/icons-material/AddRounded";
+import { PendingInvites, pendingInvitesKey } from "../../components/PendingInvites";
 import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import GroupAddRounded from "@mui/icons-material/GroupAddRounded";
@@ -158,8 +159,10 @@ export function BoardPage() {
         role: "member",
       }),
     onSuccess: async ({ data }) => {
-      setInviteOpen(false);
       setInviteEmail("");
+      client.invalidateQueries({
+        queryKey: pendingInvitesKey("board", boardId!),
+      });
       if (!data.emailSent && data.token) {
         await navigator.clipboard?.writeText(
           `${window.location.origin}/invites/${data.token}`,
@@ -829,6 +832,14 @@ export function BoardPage() {
                 }
               />
             </>
+          )}
+          {canManageMembers && boardId && (
+            <PendingInvites scope="board" id={boardId} />
+          )}
+          {invite.error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {errorMessage(invite.error)}
+            </Alert>
           )}
           {(addWorkspaceMember.error || removeBoardMember.error) && (
             <Alert severity="error" sx={{ mt: 2 }}>

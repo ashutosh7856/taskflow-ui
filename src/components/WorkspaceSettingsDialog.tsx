@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { api, errorMessage } from "../lib/api";
 import type { Workspace } from "../types";
 import { SlackSettings } from "./SlackSettings";
+import { PendingInvites, pendingInvitesKey } from "./PendingInvites";
 
 export function WorkspaceSettingsDialog({
   open,
@@ -31,6 +32,8 @@ export function WorkspaceSettingsDialog({
 }) {
   const [name, setName] = useState(workspace.name);
   const [confirmation, setConfirmation] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteNotice, setInviteNotice] = useState("");
   const client = useQueryClient();
   useEffect(() => setName(workspace.name), [workspace.name]);
   const details = useQuery({
@@ -58,6 +61,35 @@ export function WorkspaceSettingsDialog({
     onSuccess: () =>
       client.invalidateQueries({ queryKey: ["workspace", workspace.id] }),
   });
+  const invite = useMutation({
+    mutationFn: async () =>
+      (
+        await api.post<{ emailSent: boolean; token: string }>(
+          `/workspaces/${workspace.id}/invites`,
+          { email: inviteEmail.trim(), role: "member" },
+        )
+      ).data,
+    onSuccess: async (data) => {
+      setInviteEmail("");
+      if (!data.emailSent)
+        await navigator.clipboard?.writeText(
+          `${window.location.origin}/invites/${data.token}`,
+        );
+      setInviteNotice(
+        data.emailSent
+          ? "Invitation email sent."
+          : "Invitation created. Email was unavailable, so the invite link was copied.",
+      );
+      client.invalidateQueries({
+        queryKey: pendingInvitesKey("workspace", workspace.id),
+      });
+    },
+  });
+  const canManage = workspace.role === "owner" || workspace.role === "admin";
+  const alreadyMember = details.data?.members?.some(
+    (member) =>
+      member.user?.email?.toLowerCase() === inviteEmail.trim().toLowerCase(),
+  );
   const remove = useMutation({
     mutationFn: () => api.delete(`/workspaces/${workspace.id}`),
     onSuccess: () => {
@@ -65,7 +97,8 @@ export function WorkspaceSettingsDialog({
       onClose();
     },
   });
-  const error = rename.error || updateMember.error || remove.error;
+  const error =
+    rename.error || updateMember.error || remove.error || invite.error;
   return (
     <Dialog
       open={open}
@@ -154,7 +187,58 @@ export function WorkspaceSettingsDialog({
             </Stack>
           ))}
         </Stack>
-        {(workspace.role === "owner" || workspace.role === "admin") && (
+        {canManage && (
+          <>
+            <Typography fontWeight={850} mt={3} mb={0.5}>
+              Invite by email
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={1.5}>
+              They get an email, and if they already use Danto, the invite
+              also shows up on their dashboard.
+            </Typography>
+            <Stack
+              direction="row"
+              gap={1}
+              component="form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (inviteEmail.trim() && !alreadyMember) invite.mutate();
+              }}
+            >
+              <TextField
+                fullWidth
+                size="small"
+                type="email"
+                label="Email address"
+                value={inviteEmail}
+                onChange={(event) => setInviteEmail(event.target.value)}
+                error={!!alreadyMember}
+                helperText={
+                  alreadyMember ? "Already in this workspace." : undefined
+                }
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={!inviteEmail.trim() || !!alreadyMember || invite.isPending}
+                sx={{ whiteSpace: "nowrap" }}
+              >
+                {invite.isPending ? "Sending…" : "Send invite"}
+              </Button>
+            </Stack>
+            {inviteNotice && (
+              <Alert
+                severity="success"
+                sx={{ mt: 1.5 }}
+                onClose={() => setInviteNotice("")}
+              >
+                {inviteNotice}
+              </Alert>
+            )}
+            {open && <PendingInvites scope="workspace" id={workspace.id} />}
+          </>
+        )}
+        {canManage && (
           <>
             <Divider sx={{ my: 4 }} />
             <SlackSettings workspaceId={workspace.id} />

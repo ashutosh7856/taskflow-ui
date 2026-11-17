@@ -17,6 +17,7 @@ import { useMyTasks } from "../lib/tasks";
 import { useAuthStore } from "../store/auth";
 import { Brand } from "./Brand";
 import { TrialBanner } from "./TrialBanner";
+import { InvitesBanner } from "./InvitesBanner";
 
 export function AppShell() {
   const user = useAuthStore((state) => state.user);
@@ -164,6 +165,7 @@ export function AppShell() {
           </MenuItem>
         </Menu>
       </Box>
+      <InvitesBanner />
       <TrialBanner />
       <Box component="main" sx={{ flex: 1, minWidth: 0 }}>
         <Outlet />
