@@ -23,7 +23,7 @@ export interface Receipt {
   amount: number;
   currency: string;
   plan: string;
-  interval: string;
+  interval: string | null;
   paymentMethod: string;
   reference: string;
   subscriptionId: string | null;
@@ -157,7 +157,10 @@ export function ReceiptPage() {
               <tbody>
                 <tr>
                   <td>
-                    Danto {data.plan} plan, billed {data.interval.toLowerCase()}
+                    Danto {data.plan} plan
+                    {data.interval
+                      ? `, billed ${data.interval.toLowerCase()}`
+                      : ""}
                     {data.subscriptionId && (
                       <Typography
                         component="span"
