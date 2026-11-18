@@ -1,7 +1,7 @@
 import AttachFileRounded from "@mui/icons-material/AttachFileRounded";
 import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CloseRounded from "@mui/icons-material/CloseRounded";
-import { Alert, Box, CircularProgress, Dialog, TextField } from "@mui/material";
+import { Alert, CircularProgress, Dialog, TextField } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { format, formatDistanceToNow, isBefore, startOfDay } from "date-fns";
@@ -107,6 +107,10 @@ export function PortalPage() {
   }, [data]);
   const openCard = allCards.find((card) => card.id === openCardId) || null;
   const pending = allCards.filter((card) => card.approvalStatus === "pending");
+  const needed = allCards.filter(
+    (card) => card.waitingOnClient && card.approvalStatus !== "pending",
+  );
+  const forYou = pending.length + needed.length;
 
   useEffect(() => {
     if (data) document.title = `${data.board.name} · ${data.brand.name}`;
@@ -221,11 +225,11 @@ export function PortalPage() {
                   {data.stats.total === 1 ? "item" : "items"} done
                 </span>
               )}
-              {pending.length > 0 && (
+              {forYou > 0 && (
                 <a href="#review" className="pp-summary-alert">
-                  {pending.length === 1
-                    ? "1 item needs your OK"
-                    : `${pending.length} items need your OK`}
+                  {forYou === 1
+                    ? "1 item is waiting for you"
+                    : `${forYou} items are waiting for you`}
                 </a>
               )}
               <span className="pp-summary-updated">
@@ -236,13 +240,39 @@ export function PortalPage() {
           </section>
         )}
 
-        {pending.length > 0 && (
+        {forYou > 0 && (
           <section id="review" className="pp-review">
             <div className="pp-review-head">
-              <h2>Waiting for your OK</h2>
-              <p>Open an item to approve it or ask for changes.</p>
+              <h2>Waiting for you</h2>
+              <p>
+                {needed.length && pending.length
+                  ? "Approve finished work, and send what the team needs to keep going."
+                  : needed.length
+                    ? `${data.brand.name} needs something from you to keep going.`
+                    : "Open an item to approve it or ask for changes."}
+              </p>
             </div>
             <ul className="pp-review-list">
+              {needed.map((card) => (
+                <li key={card.id} className="pp-review-item">
+                  <div className="pp-review-text">
+                    <h3>{card.title}</h3>
+                    <p className="pp-meta">
+                      <span>{stageOf.get(card.id)}</span>
+                    </p>
+                    <p className="pp-need">
+                      <strong>We need:</strong> {card.waitingOnClient}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="pp-btn pp-btn-primary"
+                    onClick={() => setOpenCardId(card.id)}
+                  >
+                    Reply
+                  </button>
+                </li>
+              ))}
               {pending.map((card) => (
                 <li key={card.id} className="pp-review-item">
                   <div className="pp-review-text">
@@ -398,9 +428,12 @@ function ItemRow({
               {status}
             </span>
           )}
+          {card.waitingOnClient && (
+            <span className="pp-status is-pending">Needs you</span>
+          )}
           {card.dueDate && !card.isCompleted && (
             <span className={overdue ? "is-late" : undefined}>
-              {overdue ? "Was due " : "Due "}
+              {overdue ? "Delayed, was due " : "Due "}
               {format(new Date(card.dueDate), "MMM d")}
             </span>
           )}
@@ -427,6 +460,9 @@ function ItemRow({
             </span>
           )}
         </span>
+        {overdue && card.delayReason && (
+          <span className="pp-item-note">Why: {card.delayReason}</span>
+        )}
       </span>
     </button>
   );
@@ -551,6 +587,18 @@ function CardDialog({
       <h2 className="pp-dialog-title">{card.title}</h2>
 
       <div className="pp-dialog-body">
+        {card.waitingOnClient && (
+          <p className="pp-callout is-need">
+            <strong>{brand} needs from you:</strong> {card.waitingOnClient}
+            <br />
+            Reply with a comment below, or send it the way you usually do.
+          </p>
+        )}
+        {card.delayReason && (
+          <p className="pp-callout is-late">
+            <strong>Running late:</strong> {card.delayReason}
+          </p>
+        )}
         {!!card.fields?.length && <PortalFields fields={card.fields} />}
         {card.description && <p className="pp-desc">{card.description}</p>}
         {!!card.files?.length && (

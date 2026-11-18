@@ -46,35 +46,35 @@ const sourceTypes = [
   {
     value: "brief",
     label: "Project brief",
-    detail: "Turn a goal, deadline, and constraints into an execution board.",
+    detail: "Goals, deadline and must-haves.",
     placeholder:
       "Paste the project goal, deadline, constraints, people involved, and expected outcome…",
   },
   {
     value: "meeting_notes",
     label: "Meeting notes",
-    detail: "Extract decisions, owners, follow-ups, risks, and due work.",
+    detail: "Decisions, follow-ups and owners.",
     placeholder:
       "Paste raw meeting notes or a transcript. Danto will find decisions and follow-up work…",
   },
   {
     value: "pull_request",
     label: "PR / commit log",
-    detail: "Create release, QA, documentation, and follow-up tasks.",
+    detail: "Release, testing and docs work.",
     placeholder:
       "Paste a pull request description, git log, or commit messages here…",
   },
   {
     value: "content_calendar",
-    label: "Creator content plan",
-    detail: "Build creation, approval, repurposing, and publishing tasks.",
+    label: "Content plan",
+    detail: "Posts to create, approve and publish.",
     placeholder:
       "Paste content ideas, channels, dates, campaign notes, or an existing calendar…",
   },
   {
     value: "email",
-    label: "Email or client request",
-    detail: "Separate requirements, questions, deliverables, and next actions.",
+    label: "Client email",
+    detail: "Requests, questions and deliverables.",
     placeholder:
       "Paste an email thread or client request. Remove anything sensitive first…",
   },
@@ -212,10 +212,10 @@ export function AiPlannerDialog({
           </Box>
           <Box sx={{ flex: 1 }}>
             <Typography className="mono-label" sx={{ color: "#d8ff63" }}>
-              Create from existing material
+              Plan with AI
             </Typography>
             <Typography variant="h4" mt={0.5}>
-              Move from idea to execution.
+              Turn a brief into cards
             </Typography>
           </Box>
           <IconButton onClick={onClose} sx={{ color: "#fff" }}>
@@ -232,13 +232,13 @@ export function AiPlannerDialog({
           value="plan"
           icon={<BoltRounded />}
           iconPosition="start"
-          label="Build a plan"
+          label="Plan cards"
         />
         <Tab
           value="summary"
           icon={<SummarizeRounded />}
           iconPosition="start"
-          label="Executive update"
+          label="Status summary"
         />
       </Tabs>
       <DialogContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
@@ -265,12 +265,12 @@ export function AiPlannerDialog({
           <Stack spacing={3}>
             <Box>
               <Typography fontWeight={800} mb={0.5}>
-                Paste the messy source. Get an execution plan.
+                Paste what you have. Get cards on this board.
               </Typography>
               <Typography color="text.secondary">
-                Danto extracts concrete work from a brief, meeting, email, pull
-                request, commit log, or content plan. You review the board
-                before anything is created.
+                Paste a client email, brief or meeting notes. AI picks out the
+                work and puts it into this board’s lists. You check it before
+                anything is added.
               </Typography>
             </Box>
             <Box className="ai-source-grid">
@@ -291,15 +291,6 @@ export function AiPlannerDialog({
                 </Box>
               ))}
             </Box>
-            <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
-              {[
-                "1. Paste source",
-                "2. Review AI plan",
-                "3. Apply to board",
-              ].map((step) => (
-                <Chip key={step} label={step} size="small" variant="outlined" />
-              ))}
-            </Stack>
             <TextField
               multiline
               minRows={4}
@@ -320,12 +311,12 @@ export function AiPlannerDialog({
               disabled={prompt.trim().length < 12 || generate.isPending}
               onClick={() => generate.mutate()}
             >
-              {plan ? "Regenerate plan" : "Turn source into a board"}
+              {plan ? "Try again" : "Draft the cards"}
             </Button>
             {plan && (
               <Box className="ai-plan-preview">
                 <Typography className="mono-label" color="text.secondary">
-                  Preview — nothing created yet
+                  Preview. Nothing is added until you confirm.
                 </Typography>
                 <Typography variant="h5" mt={1}>
                   {plan.projectName}
@@ -414,19 +405,21 @@ export function AiPlannerDialog({
                   mt={3}
                 >
                   <Typography color="text.secondary" fontSize={13}>
-                    {plan.lists.length} lists ·{" "}
                     {plan.lists.reduce(
                       (total, list) => total + list.tasks.length,
                       0,
                     )}{" "}
-                    cards
+                    cards in {plan.lists.length}{" "}
+                    {plan.lists.length === 1 ? "list" : "lists"}
                   </Typography>
                   <Button
                     variant="contained"
                     disabled={apply.isPending}
                     onClick={() => apply.mutate()}
                   >
-                    {apply.isPending ? "Creating board…" : "Create this plan"}
+                    {apply.isPending
+                      ? "Adding cards…"
+                      : `Add ${plan.lists.reduce((total, list) => total + list.tasks.length, 0)} cards to the board`}
                   </Button>
                 </Stack>
               </Box>
@@ -436,12 +429,12 @@ export function AiPlannerDialog({
           <Stack spacing={3}>
             <Box>
               <Typography fontWeight={800} mb={0.5}>
-                A stakeholder-ready status update
+                A status summary for your manager or client
               </Typography>
               <Typography color="text.secondary">
-                AI reads the current board structure, deadlines, and task
-                state—then drafts progress, risks, and next actions without
-                inventing data.
+                AI reads this board’s progress, deadlines and blockers, then
+                writes what’s done, what’s at risk and what’s next. It doesn’t
+                invent anything.
               </Typography>
             </Box>
             <Button
@@ -456,7 +449,7 @@ export function AiPlannerDialog({
               disabled={summarize.isPending}
               onClick={() => summarize.mutate()}
             >
-              {summary ? "Refresh update" : "Generate executive update"}
+              {summary ? "Refresh summary" : "Write summary"}
             </Button>
             {summary && (
               <Box

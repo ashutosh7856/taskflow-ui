@@ -57,6 +57,8 @@ export interface List {
   cards: Card[];
 }
 
+export type BlockedOn = "client" | "team" | "other";
+
 export interface Card {
   id: string;
   listId: string;
@@ -75,6 +77,12 @@ export interface Card {
   clientVisible?: boolean;
   approvalStatus?: ApprovalStatus;
   approvalRequestedAt?: string | null;
+  /** Set when work can't continue; who it's waiting on. */
+  blockedReason?: string | null;
+  blockedOn?: BlockedOn | null;
+  blockedAt?: string | null;
+  /** Why a late card is late (shown to the client). */
+  delayReason?: string | null;
   members?: Array<{ userId: string; user: User }>;
   labels?: Array<{ labelId: string; label: Label }>;
   checklists?: Checklist[];
@@ -178,6 +186,10 @@ export interface PublicPortalCard {
   completedAt?: string | null;
   approvalStatus: ApprovalStatus;
   approvalRequestedAt?: string | null;
+  /** What the team needs from the client before this can continue. */
+  waitingOnClient?: string | null;
+  /** Why this late item is late, if the team said. */
+  delayReason?: string | null;
   checklist: { done: number; total: number };
   /** Client-visible template fields, already labelled by the API. */
   fields?: PortalField[];

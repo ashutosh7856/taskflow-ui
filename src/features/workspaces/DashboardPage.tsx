@@ -17,6 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AttentionPanel } from "../../components/AttentionPanel";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatedContent } from "../../components/bits/AnimatedContent";
@@ -458,6 +459,7 @@ function WorkspaceSection({
             Open Workspace Pulse
           </Button>
         )}
+      <AttentionPanel workspaceId={workspace.id} />
       <Box
         sx={{
           display: "grid",

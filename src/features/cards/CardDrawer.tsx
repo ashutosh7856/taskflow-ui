@@ -1,5 +1,6 @@
 import AddRounded from "@mui/icons-material/AddRounded";
 import { EstimateHoursField } from "../../components/EstimateHoursField";
+import { CardStatusPanel } from "../../components/CardStatusPanel";
 import CheckCircleOutlineRounded from "@mui/icons-material/CheckCircleOutlineRounded";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
@@ -265,6 +266,11 @@ export function CardDrawer({ board }: { board: Board }) {
                   }
                 />
               </Box>
+              <CardStatusPanel
+                card={card.data}
+                busy={update.isPending}
+                onSave={(patch) => update.mutate(patch)}
+              />
               <ClientPanel
                 card={card.data}
                 portalEnabled={!!portal.data?.enabled}

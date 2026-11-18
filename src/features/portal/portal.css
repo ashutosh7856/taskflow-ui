@@ -751,8 +751,71 @@
     gap: 0;
   }
 }
+/* Phones: a bottom sheet that fits its content, instead of the app's
+   full-screen dialog (theme.ts), which left a blank half-screen below. */
+@media (max-width: 600px) {
+  .MuiDialog-scrollBody:has(> .pp-dialog)::after {
+    vertical-align: bottom;
+  }
+  .pp-dialog.MuiPaper-root {
+    vertical-align: bottom;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: none;
+    margin: 48px 0 0;
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -12px 40px rgba(16, 18, 24, 0.18);
+  }
+  .pp-dialog::before {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 10px auto 0;
+    border-radius: 2px;
+    background: var(--pp-line-2);
+  }
+  .pp-dialog-top {
+    padding-top: 4px;
+  }
+  .pp-dialog > :last-child {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .pp-actions .MuiButton-root,
+  .pp-actions button {
+    flex: 1 1 auto;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .pp-bar-fill {
     transition: none;
   }
+}
+
+/* Blockers and delays */
+.pp-need {
+  margin-top: 8px !important;
+  font-size: 15px;
+  color: var(--pp-ink-2);
+}
+.pp-item-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  color: #9a4d00;
+}
+.pp-callout {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.pp-callout.is-need {
+  background: #fff6e0;
+  border: 1px solid #f1d58b;
+}
+.pp-callout.is-late {
+  background: #fff1e8;
+  border: 1px solid #f3c3a2;
 }

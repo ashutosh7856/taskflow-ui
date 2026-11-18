@@ -55,6 +55,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { CreateDialog } from "../../components/CreateDialog";
+import { daysLate } from "../../lib/cardStatus";
 import {
   CreateCardDialog,
   type NewCardInput,
@@ -96,6 +97,7 @@ export function BoardPage() {
   const [search, setSearch] = useState("");
   const [priority, setPriority] = useState<"all" | "high" | "urgent">("all");
   const [status, setStatus] = useState<"all" | "active" | "completed">("all");
+  const [flag, setFlag] = useState<Flag>("none");
   const [insightsOpen, setInsightsOpen] = useState(false);
   const [portalOpen, setPortalOpen] = useState(false);
   const portalSettings = usePortalSettings(boardId);
@@ -530,6 +532,29 @@ export function BoardPage() {
                 />
               ))}
             </Stack>
+            <Stack direction="row" gap={0.75} flexWrap="wrap">
+              {flagChips.map(({ key, label, color }) => {
+                const count = (board.data!.lists || [])
+                  .flatMap((list) => list.cards)
+                  .filter((card) => matchesFlag(card, key)).length;
+                if (!count && flag !== key) return null;
+                const on = flag === key;
+                return (
+                  <Chip
+                    key={key}
+                    label={`${label} ${count}`}
+                    onClick={() => setFlag(on ? "none" : key)}
+                    sx={{
+                      fontWeight: 800,
+                      bgcolor: on ? color : "transparent",
+                      color: on ? "#fff" : color,
+                      border: `1px solid ${color}`,
+                      "&:hover": { bgcolor: on ? color : "var(--hover)" },
+                    }}
+                  />
+                );
+              })}
+            </Stack>
             <Box sx={{ flex: 1 }} />
             <Button
               startIcon={<InsightsRounded />}
@@ -563,6 +588,7 @@ export function BoardPage() {
                   search={search}
                   priority={priority}
                   status={status}
+                  flag={flag}
                   board={board.data}
                 />
               ))}
@@ -946,6 +972,11 @@ function activityMessage(action: string) {
     "list.deleted": "deleted a list",
     "card.created": "created a card",
     "card.updated": "updated or moved a card",
+    "card.blocked": "marked a card blocked",
+    "card.unblocked": "unblocked a card",
+    "card.delayed": "explained why a card is late",
+    "approval.request": "sent a card for client approval",
+    "approval.cancel": "withdrew an approval request",
     "card.deleted": "deleted a card",
     "card.member_added": "assigned a member to a card",
     "board.member_removed": "removed a member from the board",
@@ -954,12 +985,39 @@ function activityMessage(action: string) {
   return messages[action] || action.replaceAll(".", " ");
 }
 
+type Flag = "none" | "blocked" | "late" | "waiting";
+
+const roleColor: Record<string, string> = {
+  intake: "#9a968c",
+  active: "#2563eb",
+  review: "#d97706",
+  done: "#16a34a",
+};
+
+const flagChips: Array<{ key: Exclude<Flag, "none">; label: string; color: string }> = [
+  { key: "blocked", label: "Blocked", color: "#b42318" },
+  { key: "late", label: "Late", color: "#b45309" },
+  { key: "waiting", label: "Waiting on client", color: "#7c5a00" },
+];
+
+function matchesFlag(card: CardType, flag: Flag) {
+  if (flag === "none") return true;
+  if (card.isCompleted) return false;
+  if (flag === "blocked") return !!card.blockedReason && card.blockedOn !== "client";
+  if (flag === "late") return daysLate(card.dueDate) > 0;
+  return (
+    card.approvalStatus === "pending" ||
+    (!!card.blockedReason && card.blockedOn === "client")
+  );
+}
+
 function BoardList({
   list,
   boardId,
   search,
   priority,
   status,
+  flag,
   board,
 }: {
   list: List;
@@ -967,10 +1025,12 @@ function BoardList({
   search: string;
   priority: "all" | "high" | "urgent";
   status: "all" | "active" | "completed";
+  flag: Flag;
   board: Board;
 }) {
   const workflow = useWorkflow(board.template, board.lists);
   const [newCard, setNewCard] = useState(false);
+  const isReview = list.role === "review";
   const client = useQueryClient();
   const { setNodeRef, isOver } = useDroppable({
     id: list.id,
@@ -1003,6 +1063,7 @@ function BoardList({
     return (
       matchesText &&
       matchesStatus &&
+      matchesFlag(card, flag) &&
       (priority === "all" || card.priority === priority)
     );
   });
@@ -1010,13 +1071,21 @@ function BoardList({
     <Box
       ref={setNodeRef}
       sx={{
-        bgcolor: isOver ? "var(--tint-lime)" : "var(--surface-3)",
+        bgcolor: isOver
+          ? "var(--tint-lime)"
+          : isReview
+            ? "color-mix(in srgb, var(--tint-warn) 55%, var(--surface-3))"
+            : "var(--surface-3)",
         width: { xs: "86vw", sm: 300 },
         minWidth: { xs: "86vw", sm: 300 },
         maxWidth: 340,
         scrollSnapAlign: "start",
         borderRadius: 3,
-        border: isOver ? "2px solid var(--ink)" : "1px solid var(--line)",
+        border: isOver
+          ? "2px solid var(--ink)"
+          : isReview
+            ? "1px dashed color-mix(in srgb, var(--warn-ink) 45%, transparent)"
+            : "1px solid var(--line)",
         boxShadow: isOver ? "5px 5px 0 #181817" : "none",
         p: 1.25,
         transition: ".15s",
@@ -1034,7 +1103,7 @@ function BoardList({
             width: 8,
             height: 8,
             borderRadius: "50%",
-            bgcolor: "#ff5c35",
+            bgcolor: roleColor[list.role || ""] || "#ff5c35",
             mr: 1,
           }}
         />
@@ -1057,6 +1126,27 @@ function BoardList({
           <DeleteOutlineRounded fontSize="small" />
         </IconButton>
       </Stack>
+      {isReview && (
+        <Box px={1} mb={1.5} mt={-0.5}>
+          <Typography variant="body2" color="text.secondary" lineHeight={1.45}>
+            {board.portalEnabled
+              ? "Cards moved here are sent to your client to approve. Approved cards move on by themselves."
+              : "Publish the client portal and cards moved here are sent to your client to approve."}
+          </Typography>
+          {list.cards.length > 0 && (
+            <Typography variant="body2" fontWeight={800} mt={0.75}>
+              {[
+                [list.cards.filter((card) => card.approvalStatus === "pending").length, "waiting"],
+                [list.cards.filter((card) => card.approvalStatus === "changes_requested").length, "changes asked"],
+                [list.cards.filter((card) => card.approvalStatus === "approved").length, "approved"],
+              ]
+                .filter(([count]) => count)
+                .map(([count, label]) => `${count} ${label}`)
+                .join(", ") || "Nothing sent yet"}
+            </Typography>
+          )}
+        </Box>
+      )}
       <Stack spacing={1.25}>
         {visibleCards.map((card) => (
           <TaskCard
@@ -1289,6 +1379,21 @@ function TaskCard({
               )}
             </Stack>
           ) : null}
+          {!card.isCompleted && card.blockedReason && (
+            <StatusStrip
+              tone="danger"
+              title={card.blockedOn === "client" ? "Waiting on client" : "Blocked"}
+              text={card.blockedReason}
+            />
+          )}
+          {!card.isCompleted && daysLate(card.dueDate) > 0 && (
+            <StatusStrip
+              tone="warn"
+              title={`${daysLate(card.dueDate)}d late`}
+              text={card.delayReason || "No reason given yet"}
+              muted={!card.delayReason}
+            />
+          )}
           {card.dueDate && (
             <Typography
               variant="caption"
@@ -1303,6 +1408,57 @@ function TaskCard({
         </CardContent>
       </CardActionArea>
     </Card>
+  );
+}
+
+function StatusStrip({
+  tone,
+  title,
+  text,
+  muted,
+}: {
+  tone: "danger" | "warn";
+  title: string;
+  text: string;
+  muted?: boolean;
+}) {
+  return (
+    <Box
+      sx={{
+        mt: 1,
+        px: 1,
+        py: 0.75,
+        borderRadius: 1.5,
+        bgcolor: tone === "danger" ? "var(--tint-danger)" : "var(--tint-warn)",
+        borderLeft: `3px solid ${tone === "danger" ? "var(--danger-ink)" : "var(--warn-ink)"}`,
+        fontSize: 12.5,
+        lineHeight: 1.4,
+      }}
+    >
+      <Box
+        component="span"
+        sx={{
+          fontWeight: 800,
+          color: tone === "danger" ? "var(--danger-ink)" : "var(--warn-ink)",
+          mr: 0.75,
+        }}
+      >
+        {title}
+      </Box>
+      <Box
+        component="span"
+        sx={{
+          color: muted ? "var(--muted)" : "var(--ink-soft)",
+          fontStyle: muted ? "italic" : "normal",
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}
+      >
+        {text}
+      </Box>
+    </Box>
   );
 }
 
