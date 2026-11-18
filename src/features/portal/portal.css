@@ -751,40 +751,16 @@
     gap: 0;
   }
 }
-/* Phones: a bottom sheet that fits its content, instead of the app's
-   full-screen dialog (theme.ts), which left a blank half-screen below. */
+/* Phones: the same centred card as on a laptop, sized to its content with a
+   margin all round, instead of the app's full-screen dialog (theme.ts). */
 @media (max-width: 600px) {
-  .MuiDialog-scrollBody:has(> .pp-dialog)::after {
-    vertical-align: bottom;
-  }
   .pp-dialog.MuiPaper-root {
-    vertical-align: bottom;
-    width: 100%;
-    max-width: 100%;
+    width: calc(100% - 32px);
+    max-width: calc(100% - 32px);
     height: auto;
     max-height: none;
-    margin: 48px 0 0;
-    border-radius: 22px 22px 0 0;
-    box-shadow: 0 -12px 40px rgba(16, 18, 24, 0.18);
-  }
-  .pp-dialog::before {
-    content: "";
-    display: block;
-    width: 40px;
-    height: 4px;
-    margin: 10px auto 0;
-    border-radius: 2px;
-    background: var(--pp-line-2);
-  }
-  .pp-dialog-top {
-    padding-top: 4px;
-  }
-  .pp-dialog > :last-child {
-    padding-bottom: max(20px, env(safe-area-inset-bottom));
-  }
-  .pp-actions .MuiButton-root,
-  .pp-actions button {
-    flex: 1 1 auto;
+    margin: 24px 16px;
+    border-radius: 20px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
