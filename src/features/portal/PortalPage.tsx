@@ -47,6 +47,46 @@ function rememberName(name: string) {
   }
 }
 
+/**
+ * Who is answering. Pre-filled (from this browser, or the client name set on
+ * the board) and shown as a line; the field only opens to change it.
+ */
+function NameField({
+  name,
+  onChange,
+}: {
+  name: string;
+  onChange: (name: string) => void;
+}) {
+  const [editing, setEditing] = useState(!name.trim());
+  if (!editing && name.trim())
+    return (
+      <p className="pp-as">
+        Answering as <strong>{name}</strong>
+        <button
+          type="button"
+          className="pp-link"
+          onClick={() => {
+            onChange("");
+            setEditing(true);
+          }}
+        >
+          Not you?
+        </button>
+      </p>
+    );
+  return (
+    <TextField
+      label="Your name"
+      size="small"
+      value={name}
+      autoFocus={editing}
+      onChange={(event) => onChange(event.target.value)}
+      slotProps={{ htmlInput: { maxLength: 80 } }}
+    />
+  );
+}
+
 /** Dark or light text, whichever reads better on the brand colour. */
 function textOn(hex: string) {
   const value = hex.replace("#", "");
@@ -365,6 +405,7 @@ export function PortalPage() {
           brand={data.brand.name}
           style={style}
           approveLabel={data.board.workflow?.approve || "Approve"}
+          defaultName={data.board.clientName || ""}
           onClose={() => setOpenCardId(null)}
         />
       )}
@@ -373,6 +414,7 @@ export function PortalPage() {
         open={requestOpen}
         brand={data.brand.name}
         style={style}
+        defaultName={data.board.clientName || ""}
         onClose={() => setRequestOpen(false)}
       />
     </div>
@@ -515,6 +557,7 @@ function CardDialog({
   brand,
   style,
   approveLabel,
+  defaultName,
   onClose,
 }: {
   token: string;
@@ -523,10 +566,11 @@ function CardDialog({
   brand: string;
   style: CSSProperties;
   approveLabel: string;
+  defaultName: string;
   onClose: () => void;
 }) {
   const client = useQueryClient();
-  const [name, setName] = useState(storedName);
+  const [name, setName] = useState(() => storedName() || defaultName);
   const [message, setMessage] = useState("");
   const [mode, setMode] = useState<"comment" | "changes_requested">("comment");
   // Hide Approve / Request changes as soon as the client has answered, even
@@ -671,13 +715,7 @@ function CardDialog({
               </Alert>
             )}
             <div className="pp-form">
-              <TextField
-                label="Your name"
-                size="small"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                slotProps={{ htmlInput: { maxLength: 80 } }}
-              />
+              <NameField name={name} onChange={setName} />
               <TextField
                 label={
                   askingChanges
@@ -756,22 +794,24 @@ function RequestDialog({
   open,
   brand,
   style,
+  defaultName,
   onClose,
 }: {
   token: string;
   open: boolean;
   brand: string;
   style: CSSProperties;
+  defaultName: string;
   onClose: () => void;
 }) {
   const client = useQueryClient();
-  const [name, setName] = useState(storedName);
+  const [name, setName] = useState(() => storedName() || defaultName);
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   // Pick up a name typed in a review since the page loaded.
   useEffect(() => {
-    if (open) setName((current) => current || storedName());
-  }, [open]);
+    if (open) setName((current) => storedName() || current || defaultName);
+  }, [open, defaultName]);
   const submit = useMutation({
     mutationFn: () =>
       publicApi.post(`/portal/${token}/requests`, {
@@ -845,13 +885,7 @@ function RequestDialog({
               </Alert>
             )}
             <div className="pp-form">
-              <TextField
-                label="Your name"
-                size="small"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                slotProps={{ htmlInput: { maxLength: 80 } }}
-              />
+              <NameField name={name} onChange={setName} />
               <TextField
                 label="What do you need?"
                 value={title}

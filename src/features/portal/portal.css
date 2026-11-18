@@ -795,3 +795,32 @@
   background: #fff1e8;
   border: 1px solid #f3c3a2;
 }
+
+/* "Answering as Harbor Coffee. Not you?" */
+.pp-as {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  font-size: 15px;
+  color: var(--pp-ink-2);
+}
+.pp-as strong {
+  color: var(--pp-ink);
+}
+.pp-link {
+  all: unset;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pp-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pp-link:hover {
+  color: var(--pp-ink);
+}
+.pp-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
