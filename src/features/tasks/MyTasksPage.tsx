@@ -31,8 +31,8 @@ function groupTasks(tasks: MyTask[]): Group[] {
   const tomorrow = new Date(today.getTime() + 864e5);
   const weekEnd = new Date(today.getTime() + 7 * 864e5);
   const groups: Group[] = [
-    { key: "overdue", title: "Overdue", tone: "#b42318", tasks: [] },
-    { key: "today", title: "Today", tone: "#8a4b00", tasks: [] },
+    { key: "overdue", title: "Overdue", tone: "var(--danger-ink)", tasks: [] },
+    { key: "today", title: "Today", tone: "var(--warn-ink)", tasks: [] },
     { key: "week", title: "Next 7 days", tasks: [] },
     { key: "later", title: "Later", tasks: [] },
     { key: "none", title: "No date", tasks: [] },
@@ -267,7 +267,7 @@ export function MyTasksPage() {
                 task={task}
                 first={index === 0}
                 onToggle={() => toggle.mutate(task)}
-                tone={group.key === "overdue" ? "#b42318" : undefined}
+                tone={group.key === "overdue" ? "var(--danger-ink)" : undefined}
               />
             ))}
           </Stack>

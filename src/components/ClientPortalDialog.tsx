@@ -432,8 +432,10 @@ function InboxTab({
           sx={{
             p: 2,
             borderRadius: 2,
-            border: "1px solid var(--line)",
-            bgcolor: entry.readAt ? "transparent" : "#fbfde9",
+            border: entry.readAt
+              ? "1px solid var(--line)"
+              : "1px solid var(--tint-lime-line)",
+            bgcolor: entry.readAt ? "transparent" : "var(--tint-lime)",
             color: "inherit",
             textDecoration: "none",
             display: "block",

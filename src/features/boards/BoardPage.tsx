@@ -995,9 +995,9 @@ const roleColor: Record<string, string> = {
 };
 
 const flagChips: Array<{ key: Exclude<Flag, "none">; label: string; color: string }> = [
-  { key: "blocked", label: "Blocked", color: "#b42318" },
-  { key: "late", label: "Late", color: "#b45309" },
-  { key: "waiting", label: "Waiting on client", color: "#7c5a00" },
+  { key: "blocked", label: "Blocked", color: "var(--danger-ink)" },
+  { key: "late", label: "Late", color: "var(--warn-ink)" },
+  { key: "waiting", label: "Waiting on client", color: "var(--ink-soft)" },
 ];
 
 function matchesFlag(card: CardType, flag: Flag) {

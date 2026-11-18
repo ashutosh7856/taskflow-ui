@@ -148,7 +148,7 @@ export function OnboardingChecklist() {
                 fontWeight={800}
                 sx={{
                   textDecoration: step.done ? "line-through" : "none",
-                  color: step.done ? "#77736b" : "var(--ink)",
+                  color: step.done ? "var(--muted)" : "var(--ink)",
                 }}
               >
                 {step.title}

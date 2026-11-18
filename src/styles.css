@@ -47,6 +47,7 @@
   --success-ink: #4f6c00;
   --warn-ink: #8a4b00;
   --danger-ink: #b42318;
+  --orange-ink: #c2410c;
   background: var(--bg);
   color: var(--ink);
 }
@@ -84,6 +85,7 @@
   --success-ink: #c5f06a;
   --warn-ink: #ffc46b;
   --danger-ink: #ff8a7a;
+  --orange-ink: #ffa27a;
 }
 * {
   box-sizing: border-box;

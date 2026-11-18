@@ -27,7 +27,7 @@ type Attention = { counts: Record<Kind, number>; items: Item[] };
 const kinds: Record<Kind, { label: string; color: string; bg: string }> = {
   blocked: { label: "Blocked", color: "var(--danger-ink)", bg: "var(--tint-danger)" },
   late: { label: "Late", color: "var(--warn-ink)", bg: "var(--tint-warn)" },
-  changes: { label: "Changes asked", color: "#c2410c", bg: "var(--tint-orange)" },
+  changes: { label: "Changes asked", color: "var(--orange-ink)", bg: "var(--tint-orange)" },
   waiting: { label: "Waiting on client", color: "var(--ink-soft)", bg: "var(--surface-3)" },
 };
 
