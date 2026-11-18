@@ -5,7 +5,7 @@ import type { Guide, GuideImage } from "./guides";
  * Screenshots are generated from demo data by tools/guide-screenshots
  * (run it again after UI changes so the pictures stay accurate).
  */
-const UPDATED = "2026-11-17";
+const UPDATED = "2026-11-18";
 
 const approveHeights: Record<string, number> = {
   "social-media": 648,
@@ -115,7 +115,7 @@ function templateGuide(t: TemplateGuide): Guide {
       {
         heading: "4. Send it to your client for approval",
         paragraphs: [
-          `When a ${t.noun} is ready, open it, keep “Visible to client” on and click ${t.sendLabel}. The card moves into the review stage and your client gets an email with a link. They don't need an account.`,
+          `When a ${t.noun} is ready, open it, keep “Visible to client” on and click ${t.sendLabel}. Or just drag the card into the review stage: that asks the client too. Your client gets an email with a link and doesn't need an account. Dragging a card back out of review withdraws the request.`,
           t.portalIntro,
         ],
         images: [s.portal(...t.portalImage)],
@@ -130,7 +130,7 @@ function templateGuide(t: TemplateGuide): Guide {
       {
         heading: `6. Finish with “${t.completeLabel}”`,
         paragraphs: [
-          `Drag the card into ${t.doneList}, or tick ${t.completeLabel} in the card. Both do the same thing: the card counts as finished, and the client's progress bar moves. If you drag it back out, it's reopened.`,
+          `Drag the card into ${t.doneList}, or tick ${t.completeLabel} in the card. Both do the same thing: the card counts as finished, and the client's progress bar moves. If you drag it back out, it's reopened. Not every card needs an approval: anything you don't send for review can go straight to ${t.doneList}.`,
         ],
       },
       {
@@ -200,7 +200,7 @@ export const howToGuides: Guide[] = [
       {
         heading: "4. Send your first approval",
         paragraphs: [
-          "Open a card that's ready, click the send-for-approval button and your client gets an email. When they approve, the card moves on by itself.",
+          "Open a card that's ready and click the send-for-approval button, or drag it into the review stage. Your client gets an email, and when they approve, the card moves on by itself. See “How client approvals work” for the full picture.",
         ],
       },
     ],
@@ -212,6 +212,89 @@ export const howToGuides: Guide[] = [
       {
         q: "Do my clients need a Danto account?",
         a: "No. They open the portal link and approve with their name. Only you and your team need accounts.",
+      },
+    ],
+  },
+  {
+    slug: "how-client-approvals-work",
+    kind: "howto",
+    title: "How client approvals, the portal and the done tick work in Danto",
+    description:
+      "What your client sees, when they're asked to approve, what the tick on a card means, and how blockers, late work and Needs attention keep everyone informed.",
+    answer:
+      "Your client only sees cards marked Visible to client. They're only asked to approve a card when it enters the review stage, either by dragging it there or clicking Send for client review. Everything else just shows as progress. The tick on a card means finished: any card in the last stage is ticked, whether the client approved it or you simply finished it.",
+    readMinutes: 5,
+    updated: UPDATED,
+    sections: [
+      {
+        heading: "The board has four kinds of stage",
+        paragraphs: [
+          "Every template board has the same shape, whatever the list names are. The coloured dot next to a list name shows its kind.",
+        ],
+        list: [
+          "Intake (grey): new requests and ideas. Requests your client sends from the portal land in the first stage of the board.",
+          "Working stages (blue): where your team does the work, e.g. Design and Build.",
+          "Review (amber, dashed border): cards waiting for the client's OK. This is the only stage that asks the client anything.",
+          "Done (green): the last stage, e.g. Live, Delivered or Published. Every card here is ticked as finished.",
+        ],
+      },
+      {
+        heading: "Approval only happens in the review stage",
+        paragraphs: [
+          "Most cards never need an approval. Internal tasks and small fixes go straight from a working stage to Done. When something needs the client's OK, drag it into the review stage or open it and click Send for client review. Either way the client gets one email and the card shows Needs your OK in their portal.",
+          "When the client approves, the card moves on to the next stage by itself. If that's the done stage, it's ticked. When they ask for changes, it goes back to the working stage with their comment, and you see it in the card, the client inbox and Needs attention.",
+        ],
+      },
+      {
+        heading: "What the tick means",
+        paragraphs: [
+          "The tick means finished. It does not mean approved. A card is ticked when it reaches the done stage, whether the client approved it or you moved it there yourself. Ticking a card in its drawer (Mark live, Mark delivered…) moves it to the done stage, and dragging it out unticks it. Approved cards also carry a Client approved label, so you can tell the two apart.",
+        ],
+      },
+      {
+        heading: "What your client sees in the portal",
+        list: [
+          "Waiting for you: cards to approve, and anything you're blocked on them for, with what you need.",
+          "Progress: how many visible cards are finished, and what's being worked on.",
+          "Late work and why: if a card is past its due date and you wrote a reason, the client sees the reason instead of silence.",
+          "Send a request: the client can add something new. It lands in the first stage of your board and you're notified.",
+          "Hidden: internal cards (Visible to client off), comments, labels, estimates, team members and anything you're blocked on internally.",
+        ],
+      },
+      {
+        heading: "Blocked and late: tell people why",
+        paragraphs: [
+          "Open a card and click Mark as blocked. Choose who you're waiting on: the client, your team or someone else, and write what's needed. Blocked on the client shows in their portal and emails them. The other two stay internal, and the workspace owner is emailed.",
+          "When a card is past its due date, the drawer asks Why is it late? The answer shows to the client and goes into the Friday AI update. Setting a new due date clears it.",
+        ],
+      },
+      {
+        heading: "Needs attention: the manager's view",
+        paragraphs: [
+          "On the dashboard, Needs attention lists everything that's blocked, late, sent back with changes, or waiting on a client, across every board, with the reasons. Click a row to open the card. Close it with the × and it stays hidden until something new comes up.",
+        ],
+      },
+      {
+        heading: "Which board should I use?",
+        list: [
+          "Client work you want approved: any Client work template (website, design, social media, video, writing, photography, client projects). These have a review stage and work with the portal.",
+          "Internal work: Marketing, Software or Operations. They still have a done stage, so ticks work the same way.",
+          "Older boards made before stages had kinds are upgraded automatically the first time you open them: a list called Done, Live or Delivered becomes the done stage, and one called Client review becomes the review stage.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: "Why is only the approved card ticked in my done list?",
+        a: "On boards made before stages had kinds, the done list wasn't marked as one, so only the approval ticked its card. Opening the board now upgrades it and ticks every card already in the done list.",
+      },
+      {
+        q: "Do I have to send every card for approval?",
+        a: "No. Only cards that enter the review stage ask the client. Everything else shows as progress.",
+      },
+      {
+        q: "Can the client approve something that isn't in review?",
+        a: "No. Approve and Request changes only appear on cards waiting for their OK. They can comment on any visible card.",
       },
     ],
   },
