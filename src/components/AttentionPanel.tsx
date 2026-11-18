@@ -1,4 +1,5 @@
-import { Box, Button, ButtonBase, Stack, Typography } from "@mui/material";
+import CloseRounded from "@mui/icons-material/CloseRounded";
+import { Box, Button, ButtonBase, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -58,8 +59,27 @@ export function AttentionPanel({ workspaceId }: { workspaceId: string }) {
       (await api.get<Attention>(`/workspaces/${workspaceId}/attention`)).data,
     refetchInterval: 60_000,
   });
+  const storageKey = `danto-attention-closed:${workspaceId}`;
+  const [closed, setClosed] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(storageKey) || "[]");
+    } catch {
+      return [];
+    }
+  });
   const data = attention.data;
   if (!data || !data.items.length) return null;
+  const keys = data.items.map((item) => `${item.kind}:${item.cardId}`);
+  // Closed stays closed until something new needs attention.
+  if (keys.every((key) => closed.includes(key))) return null;
+  const close = () => {
+    setClosed(keys);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(keys));
+    } catch {
+      /* private mode: closes for this visit only */
+    }
+  };
   const items = data.items.filter((item) => filter === "all" || item.kind === filter);
   const shown = expanded ? items : items.slice(0, 5);
 
@@ -112,6 +132,12 @@ export function AttentionPanel({ workspaceId }: { workspaceId: string }) {
             </ButtonBase>
           );
         })}
+        <Box sx={{ flex: 1 }} />
+        <Tooltip title="Hide until something new comes up">
+          <IconButton size="small" aria-label="Close Needs attention" onClick={close}>
+            <CloseRounded fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Stack>
       <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
         {shown.map((item) => (
