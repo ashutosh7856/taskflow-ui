@@ -13,7 +13,17 @@ export function isChunkLoadError(error: unknown) {
 }
 
 /** Reloads the page unless we already did so in the last 30 seconds. */
+let reloading = false;
+
+/** True once this tab has started reloading into the new build. */
+export function isReloadingForNewBuild() {
+  return reloading;
+}
+
 export function reloadForNewBuild() {
+  // Several failed imports can arrive together (Vite's preload step and the
+  // import itself): they all share the reload already under way.
+  if (reloading) return true;
   try {
     const last = Number(sessionStorage.getItem(KEY) || 0);
     if (Date.now() - last < 30_000) return false;
@@ -21,6 +31,7 @@ export function reloadForNewBuild() {
   } catch {
     // Storage blocked: still reload; worst case the error page shows.
   }
+  reloading = true;
   window.location.reload();
   return true;
 }

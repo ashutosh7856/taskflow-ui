@@ -18,7 +18,9 @@ function page(path, body = "", styles = "") {
   return template
     .replace(/<!--seo-start-->[\s\S]*?<!--seo-end-->/, headTags(metaFor(path)))
     .replace("<!--ssr-styles-->", styles)
-    .replace("<!--ssr-html-->", body);
+    .replace("<!--ssr-html-->", body)
+    // Lets the app check the HTML was rendered for the page being opened.
+    .replace('<div id="root">', `<div id="root" data-prerendered="${path}">`);
 }
 
 let count = 0;

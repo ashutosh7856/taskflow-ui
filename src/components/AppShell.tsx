@@ -11,7 +11,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { type MouseEvent, useState } from "react";
+import { type MouseEvent, useState, useEffect } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useMyTasks } from "../lib/tasks";
 import { useAuthStore } from "../store/auth";
@@ -20,12 +20,33 @@ import { TrialBanner } from "./TrialBanner";
 import { InvitesBanner } from "./InvitesBanner";
 import { ThemeModeSwitch } from "./ThemeModeSwitch";
 
+/**
+ * Fetch the main app screens once the app is idle. A tab left open keeps
+ * working after a deploy (its files would otherwise be gone), and switching
+ * screens is instant.
+ */
+function prefetchScreens() {
+  const load = () => {
+    void Promise.allSettled([
+      import("../features/workspaces/DashboardPage"),
+      import("../features/boards/BoardPage"),
+      import("../features/tasks/MyTasksPage"),
+      import("../features/billing/BillingPage"),
+      import("../features/workspaces/CommandCenterPage"),
+      import("../features/feedback/FeedbackPage"),
+    ]);
+  };
+  if ("requestIdleCallback" in window) window.requestIdleCallback(load, { timeout: 4000 });
+  else setTimeout(load, 2500);
+}
+
 export function AppShell() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   const location = useLocation();
   const [accountAnchor, setAccountAnchor] = useState<HTMLElement | null>(null);
+  useEffect(prefetchScreens, []);
   const tasks = useMyTasks();
   const dueSoon =
     tasks.data?.filter(

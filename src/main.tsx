@@ -36,12 +36,22 @@ const app = (
 const container = document.getElementById("root")!;
 // Public pages ship prerendered HTML (for search engines and AI crawlers):
 // hydrate it. App screens ship an empty shell: render from scratch.
-if (container.firstElementChild) {
+// Only reuse prerendered HTML made for this exact page. Any other page that
+// was served it (e.g. a route missing from _redirects) renders fresh, since
+// hydrating mismatched HTML flashes an error.
+const trim = (path: string) => path.replace(/\/+$/, "") || "/";
+const prerendered = container.dataset.prerendered;
+if (
+  container.firstElementChild &&
+  prerendered !== undefined &&
+  trim(prerendered) === trim(window.location.pathname)
+) {
   hydrateRoot(container, app, {
     // A signed-in visitor sees slightly different buttons than the
     // prerendered anonymous HTML; React patches that up on its own.
     onRecoverableError: () => {},
   });
 } else {
+  container.replaceChildren();
   createRoot(container).render(app);
 }

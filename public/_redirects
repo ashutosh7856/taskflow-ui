@@ -8,6 +8,9 @@
 /boards/*         /spa                       200
 /workspaces/*     /spa                       200
 /billing          /spa                       200
+/tasks            /spa                       200
+/tasks/*          /spa                       200
+/feedback         /spa                       200
 /admin            /spa                       200
 /admin/*          /spa                       200
 /billing/*        /spa                       200
