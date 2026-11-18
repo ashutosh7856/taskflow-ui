@@ -29,7 +29,8 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
+import { FeedbackTab } from "./FeedbackTab";
 import { api, errorMessage } from "../../lib/api";
 import { useAuthStore } from "../../store/auth";
 
@@ -108,9 +109,13 @@ const ago = (value: string | null) =>
 
 export function AdminPage() {
   const user = useAuthStore((state) => state.user);
-  const [tab, setTab] = useState<
-    "overview" | "users" | "discounts" | "payments" | "audit"
-  >("overview");
+  const [params, setParams] = useSearchParams();
+  const tabs = ["overview", "users", "feedback", "discounts", "payments", "audit"] as const;
+  type AdminTab = (typeof tabs)[number];
+  const asked = params.get("tab") as AdminTab | null;
+  const tab: AdminTab = asked && tabs.includes(asked) ? asked : "overview";
+  const setTab = (value: AdminTab) =>
+    setParams(value === "overview" ? {} : { tab: value }, { replace: true });
   // Same query as the Overview tab, so it costs no extra request.
   const session = useQuery(overviewQuery);
   if (user && !user.isAdmin) return <Navigate to="/app" replace />;
@@ -139,12 +144,14 @@ export function AdminPage() {
       >
         <Tab value="overview" label="Overview" />
         <Tab value="users" label="Users" />
+        <Tab value="feedback" label="Feedback" />
         <Tab value="discounts" label="Discounts" />
         <Tab value="payments" label="Payments" />
         <Tab value="audit" label="Audit log" />
       </Tabs>
       {tab === "overview" && <OverviewTab />}
       {tab === "users" && <UsersTab />}
+      {tab === "feedback" && <FeedbackTab />}
       {tab === "discounts" && <DiscountsTab />}
       {tab === "payments" && <PaymentsTab />}
       {tab === "audit" && <AuditTab />}

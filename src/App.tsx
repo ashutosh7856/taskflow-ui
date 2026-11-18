@@ -68,6 +68,10 @@ const BillingPage = named(
   () => import("./features/billing/BillingPage"),
   "BillingPage",
 );
+const FeedbackPage = named(
+  () => import("./features/feedback/FeedbackPage"),
+  "FeedbackPage",
+);
 const LegalPage = named(
   () => import("./features/legal/LegalPage"),
   "LegalPage",
@@ -201,6 +205,7 @@ export const routes = [
           },
           { path: "/boards/:boardId", element: page(<BoardPage />) },
           { path: "/billing", element: page(<BillingPage />) },
+          { path: "/feedback", element: page(<FeedbackPage />) },
           { path: "/admin", element: page(<AdminPage />) },
         ],
       },

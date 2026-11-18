@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import { type MouseEvent, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useMyTasks } from "../lib/tasks";
 import { useAuthStore } from "../store/auth";
 import { Brand } from "./Brand";
@@ -24,6 +24,7 @@ export function AppShell() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
+  const location = useLocation();
   const [accountAnchor, setAccountAnchor] = useState<HTMLElement | null>(null);
   const tasks = useMyTasks();
   const dueSoon =
@@ -148,6 +149,17 @@ export function AppShell() {
             sx={{ mx: 1, mt: 0.75, borderRadius: 1.5, fontWeight: 700 }}
           >
             Billing & plan
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setAccountAnchor(null);
+              navigate("/feedback", {
+                state: { from: location.pathname + location.search },
+              });
+            }}
+            sx={{ mx: 1, borderRadius: 1.5, fontWeight: 700 }}
+          >
+            Report a bug or idea
           </MenuItem>
           {user?.isAdmin && (
             <MenuItem
