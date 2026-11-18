@@ -1,4 +1,5 @@
 import AddRounded from "@mui/icons-material/AddRounded";
+import { EstimateHoursField } from "../../components/EstimateHoursField";
 import CheckCircleOutlineRounded from "@mui/icons-material/CheckCircleOutlineRounded";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
@@ -439,20 +440,12 @@ export function CardDrawer({ board }: { board: Board }) {
                     ),
                   )}
                 </TextField>
-                <TextField
-                  type="number"
-                  label="Estimate (minutes)"
+                <EstimateHoursField
                   size="small"
                   sx={{ minWidth: 0, flex: "1 1 170px" }}
-                  key={`estimate-${card.data.id}-${card.data.estimateMinutes ?? "empty"}`}
-                  defaultValue={card.data.estimateMinutes ?? ""}
-                  inputProps={{ min: 0, max: 100000 }}
-                  onBlur={(event) =>
-                    update.mutate({
-                      estimateMinutes: event.target.value
-                        ? Number(event.target.value)
-                        : null,
-                    })
+                  minutes={card.data.estimateMinutes}
+                  onCommit={(estimateMinutes) =>
+                    update.mutate({ estimateMinutes })
                   }
                 />
               </Stack>

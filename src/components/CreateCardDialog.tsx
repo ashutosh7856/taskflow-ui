@@ -1,4 +1,5 @@
 import AddTaskRounded from "@mui/icons-material/AddTaskRounded";
+import { EstimateHoursField } from "./EstimateHoursField";
 import {
   Alert,
   Box,
@@ -58,7 +59,9 @@ export function CreateCardDialog({
   const [priority, setPriority] = useState<NewCardInput["priority"]>("medium");
   const [category, setCategory] = useState(workflow.categories[0].value);
   const [dueDate, setDueDate] = useState("");
-  const [estimate, setEstimate] = useState("");
+  // Minutes; undefined while the typed text isn't a valid duration.
+  const [estimate, setEstimate] = useState<number | null | undefined>(null);
+  const [estimateKey, setEstimateKey] = useState(0);
   const [labelIds, setLabelIds] = useState<string[]>([]);
   const [completed, setCompleted] = useState(false);
 
@@ -72,7 +75,8 @@ export function CreateCardDialog({
     setPriority("medium");
     setCategory(workflow.categories[0].value);
     setDueDate("");
-    setEstimate("");
+    setEstimate(null);
+    setEstimateKey((key) => key + 1);
     setLabelIds([]);
     setCompleted(false);
     onClose();
@@ -87,7 +91,7 @@ export function CreateCardDialog({
       dueDate: dueDate
         ? new Date(`${dueDate}T12:00:00`).toISOString()
         : undefined,
-      estimateMinutes: estimate ? Number(estimate) : undefined,
+      estimateMinutes: estimate ?? undefined,
       labelIds,
       isCompleted: completed || undefined,
     });
@@ -190,12 +194,10 @@ export function CreateCardDialog({
               onChange={(event) => setDueDate(event.target.value)}
               InputLabelProps={{ shrink: true }}
             />
-            <TextField
-              type="number"
-              label="Estimate (minutes)"
-              value={estimate}
-              onChange={(event) => setEstimate(event.target.value)}
-              inputProps={{ min: 0, max: 100000 }}
+            <EstimateHoursField
+              key={estimateKey}
+              minutes={null}
+              onTextChange={(minutes) => setEstimate(minutes)}
             />
           </Box>
           {!!board.labels?.length && (
@@ -258,9 +260,7 @@ export function CreateCardDialog({
         <Button onClick={resetAndClose}>Cancel</Button>
         <Button
           variant="contained"
-          disabled={
-            !title.trim() || pending || (!!estimate && Number(estimate) < 0)
-          }
+          disabled={!title.trim() || pending || estimate === undefined}
           onClick={submit}
         >
           {pending ? "Creating…" : `Create ${workflow.cardNoun}`}

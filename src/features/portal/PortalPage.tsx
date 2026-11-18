@@ -1,37 +1,30 @@
-import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
+import AttachFileRounded from "@mui/icons-material/AttachFileRounded";
 import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
-import EditNoteRounded from "@mui/icons-material/EditNoteRounded";
-import EventRounded from "@mui/icons-material/EventRounded";
-import HourglassTopRounded from "@mui/icons-material/HourglassTopRounded";
-import RadioButtonUncheckedRounded from "@mui/icons-material/RadioButtonUncheckedRounded";
-import SendRounded from "@mui/icons-material/SendRounded";
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  LinearProgress,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import CloseRounded from "@mui/icons-material/CloseRounded";
+import { Alert, Box, CircularProgress, Dialog, TextField } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { format, formatDistanceToNow } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { format, formatDistanceToNow, isBefore, startOfDay } from "date-fns";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import BlurText from "../../components/bits/BlurText";
-import CountUp from "../../components/bits/CountUp";
 import { errorMessage } from "../../lib/api";
 import type { PortalField, PublicPortal, PublicPortalCard } from "../../types";
 import { FileGrid } from "../cards/CardFiles";
-import AttachFileRounded from "@mui/icons-material/AttachFileRounded";
+import "./portal.css";
+
+// The portal is the agency's page, not Danto's: its own typeface, loaded only
+// when a client opens a portal.
+if (
+  typeof document !== "undefined" &&
+  !document.getElementById("portal-font")
+) {
+  const link = document.createElement("link");
+  link.id = "portal-font";
+  link.rel = "stylesheet";
+  link.href =
+    "https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap";
+  document.head.appendChild(link);
+}
 
 const publicApi = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
@@ -54,14 +47,21 @@ function rememberName(name: string) {
   }
 }
 
-const statusMeta = {
-  pending: { label: "Awaiting your approval", bg: "#fff1c2", fg: "#7a4d00" },
-  approved: { label: "Approved", bg: "#e3f6c8", fg: "#2f5a00" },
-  changes_requested: {
-    label: "Changes requested",
-    bg: "#ffe1d8",
-    fg: "#9a2a0b",
-  },
+/** Dark or light text, whichever reads better on the brand colour. */
+function textOn(hex: string) {
+  const value = hex.replace("#", "");
+  if (!/^[0-9a-f]{6}$/i.test(value)) return "#fff";
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(value.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.45 ? "#16181d" : "#fff";
+}
+
+const statusText = {
+  pending: "Needs your OK",
+  approved: "Approved",
+  changes_requested: "Changes requested",
   none: null,
 } as const;
 
@@ -81,16 +81,32 @@ export function PortalPage() {
   });
 
   const data = portal.data;
-  const accent = data?.brand.color || "#181817";
+  const accent = data?.brand.color || "#1d1f24";
   const allCards = useMemo(
     () => data?.lists.flatMap((list) => list.cards) || [],
     [data],
   );
+  const stageOf = useMemo(() => {
+    const map = new Map<string, string>();
+    data?.lists.forEach((list) =>
+      list.cards.forEach((card) => map.set(card.id, list.name)),
+    );
+    return map;
+  }, [data]);
+  const stages = useMemo(() => {
+    const rows = (data?.lists || []).map((list) => ({
+      id: list.id,
+      name: list.name,
+      total: list.cards.length,
+      done: list.cards.filter((card) => card.isCompleted).length,
+    }));
+    const current = rows.findIndex(
+      (row) => row.total > 0 && row.done < row.total,
+    );
+    return { rows, current };
+  }, [data]);
   const openCard = allCards.find((card) => card.id === openCardId) || null;
   const pending = allCards.filter((card) => card.approvalStatus === "pending");
-  const percent = data?.stats.total
-    ? Math.round((data.stats.completed / data.stats.total) * 100)
-    : 0;
 
   useEffect(() => {
     if (data) document.title = `${data.board.name} · ${data.brand.name}`;
@@ -98,282 +114,226 @@ export function PortalPage() {
 
   if (portal.isLoading)
     return (
-      <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-        <CircularProgress />
-      </Box>
+      <div className="pp pp-center">
+        <CircularProgress size={28} sx={{ color: "#6b6f78" }} />
+      </div>
     );
   if (portal.isError || !data)
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "grid",
-          placeItems: "center",
-          p: 3,
-          textAlign: "center",
-        }}
-      >
-        <Box>
-          <Typography variant="h4">This portal isn’t available</Typography>
-          <Typography color="text.secondary" mt={1}>
+      <div className="pp pp-center">
+        <div className="pp-empty">
+          <h1>This portal isn’t available</h1>
+          <p>
             The link may have been turned off or replaced. Ask your project
             contact for a new link.
-          </Typography>
-        </Box>
-      </Box>
+          </p>
+        </div>
+      </div>
     );
 
+  const style = {
+    "--accent": accent,
+    "--on-accent": textOn(accent),
+  } as CSSProperties;
+  const { rows, current } = stages;
+  const allDone =
+    data.stats.total > 0 && data.stats.completed === data.stats.total;
+
   return (
-    <Box
-      className="portal-page"
-      sx={{ minHeight: "100vh", "--portal-accent": accent } as never}
-    >
-      <Box component="header" className="portal-header">
-        <Container maxWidth="lg">
-          <Stack direction="row" alignItems="center" gap={1.5} minHeight={68}>
+    <div className="pp" style={style}>
+      <header className="pp-header">
+        <div className="pp-wrap pp-header-row">
+          <div className="pp-brand">
             {data.brand.logoUrl ? (
-              <Box
-                component="img"
-                src={data.brand.logoUrl}
-                alt={data.brand.name}
-                sx={{ height: 34, maxWidth: 160, objectFit: "contain" }}
-              />
+              <img src={data.brand.logoUrl} alt="" className="pp-logo" />
             ) : (
-              <Box className="portal-monogram">
+              <span className="pp-mark" aria-hidden>
                 {data.brand.name.slice(0, 1).toUpperCase()}
-              </Box>
+              </span>
             )}
-            <Typography fontWeight={850} letterSpacing="-.03em" noWrap>
-              {data.brand.name}
-            </Typography>
-            <Box sx={{ flex: 1 }} />
-            <Chip
-              size="small"
-              label="Live"
-              sx={{
-                bgcolor: "#e3f6c8",
-                fontWeight: 800,
-                "&::before": {
-                  content: '""',
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  bgcolor: "#3f8a00",
-                  ml: 1,
-                  animation: "portal-pulse 1.8s infinite",
-                },
-              }}
-            />
-          </Stack>
-        </Container>
-      </Box>
+            <span className="pp-brand-name">{data.brand.name}</span>
+          </div>
+          <span className="pp-updated">
+            <span className="pp-live" aria-hidden />
+            Updated {formatDistanceToNow(new Date(data.board.updatedAt))} ago
+          </span>
+        </div>
+      </header>
 
-      <Container maxWidth="lg" sx={{ py: { xs: 4, md: 7 } }}>
-        <Typography className="eyebrow">
-          {data.board.clientName
-            ? `Project portal · ${data.board.clientName}`
-            : "Project portal"}
-        </Typography>
-        <BlurText
-          text={data.board.name}
-          className="portal-title"
-          animateBy="words"
-          delay={60}
-          trigger="load"
-        />
-        {data.board.welcome && (
-          <Typography
-            sx={{
-              mt: 2,
-              maxWidth: 720,
-              color: "#56534d",
-              fontSize: 18,
-              whiteSpace: "pre-line",
-            }}
-          >
-            {data.board.welcome}
-          </Typography>
+      <main className="pp-wrap">
+        <section className="pp-intro">
+          {data.board.clientName && (
+            <p className="pp-for">For {data.board.clientName}</p>
+          )}
+          <h1 className="pp-title">{data.board.name}</h1>
+          {data.board.welcome && (
+            <p className="pp-welcome">{data.board.welcome}</p>
+          )}
+        </section>
+
+        {rows.length > 0 && (
+          <section className="pp-track" aria-label="Project progress">
+            <ol
+              className="pp-stages"
+              style={{ "--stages": rows.length } as CSSProperties}
+            >
+              {rows.map((row, index) => {
+                const state =
+                  row.total === 0
+                    ? "empty"
+                    : row.done === row.total
+                      ? "done"
+                      : index === current
+                        ? "current"
+                        : "next";
+                return (
+                  <li key={row.id} className={`pp-stage is-${state}`}>
+                    <span className="pp-stage-name">{row.name}</span>
+                    <span className="pp-bar" aria-hidden>
+                      <span
+                        className="pp-bar-fill"
+                        style={{
+                          width: `${row.total ? (row.done / row.total) * 100 : 0}%`,
+                        }}
+                      />
+                    </span>
+                    <span className="pp-stage-note">
+                      {state === "empty"
+                        ? "Nothing here yet"
+                        : state === "done"
+                          ? "Done"
+                          : state === "current"
+                            ? `In progress, ${row.done} of ${row.total}`
+                            : `${row.done} of ${row.total} done`}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+            <p className="pp-summary">
+              {allDone ? (
+                <strong>Everything is done.</strong>
+              ) : (
+                <span>
+                  <strong>
+                    {data.stats.completed} of {data.stats.total}
+                  </strong>{" "}
+                  {data.stats.total === 1 ? "item" : "items"} done
+                </span>
+              )}
+              {pending.length > 0 && (
+                <a href="#review" className="pp-summary-alert">
+                  {pending.length === 1
+                    ? "1 item needs your OK"
+                    : `${pending.length} items need your OK`}
+                </a>
+              )}
+              <span className="pp-summary-updated">
+                Updated {formatDistanceToNow(new Date(data.board.updatedAt))}{" "}
+                ago
+              </span>
+            </p>
+          </section>
         )}
-
-        <Box className="portal-stats">
-          <Box className="portal-stat portal-stat-main">
-            <Typography className="portal-stat-label">
-              Overall progress
-            </Typography>
-            <Typography className="portal-stat-value">
-              <CountUp to={percent} duration={1.4} />%
-            </Typography>
-            <LinearProgress
-              variant="determinate"
-              value={percent}
-              sx={{
-                mt: 1.5,
-                height: 10,
-                borderRadius: 99,
-                bgcolor: "rgba(255,255,255,.18)",
-                "& .MuiLinearProgress-bar": {
-                  bgcolor: "#d8ff63",
-                  borderRadius: 99,
-                },
-              }}
-            />
-          </Box>
-          <Box className="portal-stat">
-            <Typography className="portal-stat-label">
-              {data.board.workflow?.completed || "Delivered"}
-            </Typography>
-            <Typography className="portal-stat-value">
-              <CountUp to={data.stats.completed} duration={1.2} />
-              <Box
-                component="span"
-                sx={{ fontSize: ".45em", color: "#8a867d" }}
-              >
-                {" "}
-                / {data.stats.total}
-              </Box>
-            </Typography>
-          </Box>
-          <Box
-            className={`portal-stat ${data.stats.awaitingApproval ? "portal-stat-alert" : ""}`}
-          >
-            <Typography className="portal-stat-label">
-              Needs your review
-            </Typography>
-            <Typography className="portal-stat-value">
-              <CountUp to={data.stats.awaitingApproval} duration={1} />
-            </Typography>
-          </Box>
-        </Box>
 
         {pending.length > 0 && (
-          <Box component="section" mt={6}>
-            <SectionTitle
-              title="Waiting on you"
-              detail="Approve or request changes. It takes one click."
-            />
-            <Box className="portal-approval-grid">
+          <section id="review" className="pp-review">
+            <div className="pp-review-head">
+              <h2>Waiting for your OK</h2>
+              <p>Open an item to approve it or ask for changes.</p>
+            </div>
+            <ul className="pp-review-list">
               {pending.map((card) => (
-                <Box key={card.id} className="portal-approval-card">
-                  <Chip
-                    size="small"
-                    icon={<HourglassTopRounded />}
-                    label="Ready for review"
-                    sx={{ bgcolor: "#fff1c2", fontWeight: 800, mb: 1.5 }}
-                  />
-                  <Typography
-                    fontWeight={850}
-                    fontSize={18}
-                    className="wrap-anywhere"
-                  >
-                    {card.title}
-                  </Typography>
-                  {card.description && (
-                    <Typography
-                      color="text.secondary"
-                      mt={0.75}
-                      className="portal-clamp"
-                    >
-                      {card.description}
-                    </Typography>
-                  )}
-                  {card.fields?.some(
-                    (field) =>
-                      field.type === "select" || field.type === "multiselect",
-                  ) && (
-                    <Stack direction="row" gap={0.5} mt={1} flexWrap="wrap">
-                      {card.fields
-                        .filter(
-                          (field) =>
-                            field.type === "select" ||
-                            field.type === "multiselect",
-                        )
-                        .map((field) => (
-                          <Chip
-                            key={field.key}
-                            size="small"
-                            variant="outlined"
-                            title={field.label}
-                            label={fieldText(field)}
-                          />
-                        ))}
-                    </Stack>
-                  )}
-                  <Button
-                    variant="contained"
+                <li key={card.id} className="pp-review-item">
+                  <div className="pp-review-text">
+                    <h3>{card.title}</h3>
+                    <p className="pp-meta">
+                      <span>{stageOf.get(card.id)}</span>
+                      {card.dueDate && (
+                        <span>
+                          Due {format(new Date(card.dueDate), "MMM d")}
+                        </span>
+                      )}
+                      {!!card.files?.length && (
+                        <span>
+                          {card.files.length}{" "}
+                          {card.files.length === 1 ? "file" : "files"}
+                        </span>
+                      )}
+                    </p>
+                    {card.description && (
+                      <p className="pp-review-desc">{card.description}</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="pp-btn pp-btn-primary"
                     onClick={() => setOpenCardId(card.id)}
-                    sx={{ mt: 2 }}
-                    fullWidth
                   >
                     Review
-                  </Button>
-                </Box>
+                  </button>
+                </li>
               ))}
-            </Box>
-          </Box>
+            </ul>
+          </section>
         )}
 
-        <Box component="section" mt={7}>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            alignItems={{ sm: "flex-end" }}
-            gap={2}
-          >
-            <SectionTitle
-              title="Where everything stands"
-              detail={`Updated ${formatDistanceToNow(new Date(data.board.updatedAt))} ago`}
-            />
-            <Box sx={{ flex: 1 }} />
+        <section className="pp-work">
+          <div className="pp-work-head">
+            <h2>All work</h2>
             {data.board.allowRequests && (
-              <Button
-                variant="outlined"
-                startIcon={<EditNoteRounded />}
+              <button
+                type="button"
+                className="pp-btn pp-btn-quiet"
                 onClick={() => setRequestOpen(true)}
-                sx={{ mb: 2.5 }}
               >
-                Submit a request
-              </Button>
+                Send a request
+              </button>
             )}
-          </Stack>
-          <Box className="portal-stages">
+          </div>
+          <div className="pp-columns">
             {data.lists.map((list) => (
-              <Box key={list.id} className="portal-stage">
-                <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                  <Typography fontWeight={850}>{list.name}</Typography>
-                  <Chip size="small" label={list.cards.length} />
-                </Stack>
-                <Stack gap={1}>
-                  {list.cards.map((card) => (
-                    <PortalCardRow
-                      key={card.id}
-                      card={card}
-                      onOpen={() => setOpenCardId(card.id)}
-                    />
-                  ))}
-                  {!list.cards.length && (
-                    <Typography variant="body2" color="text.secondary">
-                      Nothing here right now.
-                    </Typography>
-                  )}
-                </Stack>
-              </Box>
+              <div key={list.id} className="pp-column">
+                <h3 className="pp-column-name">
+                  {list.name}
+                  <span>{list.cards.length}</span>
+                </h3>
+                {list.cards.length ? (
+                  <ul className="pp-items">
+                    {list.cards.map((card) => (
+                      <li key={card.id}>
+                        <ItemRow
+                          card={card}
+                          onOpen={() => setOpenCardId(card.id)}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="pp-none">Nothing here right now.</p>
+                )}
+              </div>
             ))}
-          </Box>
-        </Box>
-      </Container>
+          </div>
+        </section>
+      </main>
 
       {data.brand.showBadge && (
-        <Box component="footer" className="portal-footer">
+        <footer className="pp-footer">
           <Link to="/?ref=portal">
-            Client portal by <strong>danto</strong> · Make one for your clients,
-            free →
+            Client portal by <strong>danto</strong>. Make one for your clients,
+            free.
           </Link>
-        </Box>
+        </footer>
       )}
 
       {openCard && (
         <CardDialog
           token={token}
           card={openCard}
+          stage={stageOf.get(openCard.id) || ""}
+          brand={data.brand.name}
+          style={style}
           approveLabel={data.board.workflow?.approve || "Approve"}
           onClose={() => setOpenCardId(null)}
         />
@@ -381,107 +341,94 @@ export function PortalPage() {
       <RequestDialog
         token={token}
         open={requestOpen}
+        brand={data.brand.name}
+        style={style}
         onClose={() => setRequestOpen(false)}
       />
-    </Box>
+    </div>
   );
 }
 
-function SectionTitle({ title, detail }: { title: string; detail: string }) {
+function StatusIcon({ card }: { card: PublicPortalCard }) {
+  if (card.isCompleted)
+    return (
+      <svg className="pp-icon is-done" viewBox="0 0 20 20" aria-label="Done">
+        <circle cx="10" cy="10" r="9" />
+        <path d="M6 10.4l2.6 2.6L14 7.6" />
+      </svg>
+    );
   return (
-    <Box mb={2.5}>
-      <Typography variant="h5">{title}</Typography>
-      <Typography color="text.secondary" variant="body2">
-        {detail}
-      </Typography>
-    </Box>
+    <svg
+      className={`pp-icon ${card.approvalStatus === "pending" ? "is-waiting" : ""}`}
+      viewBox="0 0 20 20"
+      aria-label="Not done yet"
+    >
+      <circle cx="10" cy="10" r="8.25" />
+    </svg>
   );
 }
 
-function PortalCardRow({
+function ItemRow({
   card,
   onOpen,
 }: {
   card: PublicPortalCard;
   onOpen: () => void;
 }) {
-  const status = statusMeta[card.approvalStatus];
+  const status = statusText[card.approvalStatus];
+  const overdue =
+    !!card.dueDate &&
+    !card.isCompleted &&
+    isBefore(new Date(card.dueDate), startOfDay(new Date()));
+  const selects = card.fields?.filter(
+    (field) => field.type === "select" || field.type === "multiselect",
+  );
   return (
-    <Box
-      component="button"
+    <button
+      type="button"
       onClick={onOpen}
-      className={`portal-card ${card.isCompleted ? "is-done" : ""}`}
+      className={`pp-item ${card.isCompleted ? "is-done" : ""}`}
     >
-      <Stack direction="row" gap={1.25} alignItems="flex-start">
-        {card.isCompleted ? (
-          <CheckCircleRounded sx={{ color: "#3f8a00", mt: "2px" }} />
-        ) : (
-          <RadioButtonUncheckedRounded sx={{ color: "#aaa59a", mt: "2px" }} />
-        )}
-        <Box sx={{ minWidth: 0, flex: 1, textAlign: "left" }}>
-          <Typography
-            fontWeight={750}
-            className="portal-card-title wrap-anywhere"
-          >
-            {card.title}
-          </Typography>
-          <Stack direction="row" gap={1} mt={0.75} flexWrap="wrap">
-            {status && (
-              <Chip
-                size="small"
-                label={status.label}
-                sx={{ bgcolor: status.bg, color: status.fg, fontWeight: 800 }}
-              />
-            )}
-            {card.dueDate && !card.isCompleted && (
-              <Chip
-                size="small"
-                icon={<EventRounded />}
-                label={format(new Date(card.dueDate), "MMM d")}
-                variant="outlined"
-              />
-            )}
-            {card.fields
-              ?.filter(
-                (field) =>
-                  field.type === "multiselect" || field.type === "select",
-              )
-              .map((field) => (
-                <Chip
-                  key={field.key}
-                  size="small"
-                  variant="outlined"
-                  title={field.label}
-                  label={fieldText(field)}
-                />
-              ))}
-            {card.checklist.total > 0 && (
-              <Chip
-                size="small"
-                variant="outlined"
-                label={`${card.checklist.done}/${card.checklist.total} steps`}
-              />
-            )}
-            {!!card.files?.length && (
-              <Chip
-                size="small"
-                variant="outlined"
-                icon={<AttachFileRounded />}
-                label={`${card.files.length} file${card.files.length === 1 ? "" : "s"}`}
-              />
-            )}
-            {card.feedback.length > 0 && (
-              <Chip
-                size="small"
-                variant="outlined"
-                icon={<ChatBubbleOutlineRounded />}
-                label={card.feedback.length}
-              />
-            )}
-          </Stack>
-        </Box>
-      </Stack>
-    </Box>
+      <StatusIcon card={card} />
+      <span className="pp-item-body">
+        <span className="pp-item-title">{card.title}</span>
+        <span className="pp-meta">
+          {status && (
+            <span className={`pp-status is-${card.approvalStatus}`}>
+              {status}
+            </span>
+          )}
+          {card.dueDate && !card.isCompleted && (
+            <span className={overdue ? "is-late" : undefined}>
+              {overdue ? "Was due " : "Due "}
+              {format(new Date(card.dueDate), "MMM d")}
+            </span>
+          )}
+          {selects?.map((field) => (
+            <span key={field.key} title={field.label}>
+              {fieldText(field)}
+            </span>
+          ))}
+          {card.checklist.total > 0 && (
+            <span>
+              {card.checklist.done}/{card.checklist.total} steps
+            </span>
+          )}
+          {!!card.files?.length && (
+            <span className="pp-with-icon">
+              <AttachFileRounded />
+              {card.files.length}
+            </span>
+          )}
+          {card.feedback.length > 0 && (
+            <span className="pp-with-icon">
+              <ChatBubbleOutlineRounded />
+              {card.feedback.length}
+            </span>
+          )}
+        </span>
+      </span>
+    </button>
   );
 }
 
@@ -495,35 +442,12 @@ function fieldText(field: PortalField) {
 /** The details the client needs to judge this item: caption, links, sizes. */
 function PortalFields({ fields }: { fields: PortalField[] }) {
   return (
-    <Box
-      component="dl"
-      sx={{
-        m: 0,
-        display: "grid",
-        gridTemplateColumns: { xs: "1fr", sm: "max-content 1fr" },
-        columnGap: 2,
-        rowGap: { xs: 0.25, sm: 1 },
-        p: 2,
-        borderRadius: 2,
-        bgcolor: "#f6f4ee",
-      }}
-    >
+    <dl className="pp-fields">
       {fields.map((field) => (
-        <Box key={field.key} sx={{ display: "contents" }}>
-          <Typography
-            component="dt"
-            fontSize={13}
-            fontWeight={800}
-            color="text.secondary"
-            sx={{ mt: { xs: 1, sm: 0 } }}
-          >
-            {field.label}
-          </Typography>
-          <Typography
-            component="dd"
-            m={0}
-            className="wrap-anywhere"
-            sx={{
+        <div key={field.key}>
+          <dt>{field.label}</dt>
+          <dd
+            style={{
               whiteSpace: field.type === "longtext" ? "pre-line" : "normal",
             }}
           >
@@ -534,22 +458,35 @@ function PortalFields({ fields }: { fields: PortalField[] }) {
             ) : (
               fieldText(field)
             )}
-          </Typography>
-        </Box>
+          </dd>
+        </div>
       ))}
-    </Box>
+    </dl>
   );
 }
+
+const feedbackVerb = {
+  approved: "approved this",
+  changes_requested: "asked for changes",
+  request: "requested this",
+  comment: "commented",
+} as const;
 
 function CardDialog({
   token,
   card,
+  stage,
+  brand,
+  style,
   approveLabel,
   onClose,
 }: {
   token: string;
-  approveLabel: string;
   card: PublicPortalCard;
+  stage: string;
+  brand: string;
+  style: CSSProperties;
+  approveLabel: string;
   onClose: () => void;
 }) {
   const client = useQueryClient();
@@ -558,7 +495,10 @@ function CardDialog({
   const [mode, setMode] = useState<"comment" | "changes_requested">("comment");
   // Hide Approve / Request changes as soon as the client has answered, even
   // before the refreshed portal data arrives, so nobody answers twice.
-  const [answered, setAnswered] = useState(false);
+  const [answered, setAnswered] = useState<
+    null | "approved" | "changes_requested"
+  >(null);
+  const [commented, setCommented] = useState(false);
   const respond = useMutation({
     mutationFn: (kind: "approved" | "changes_requested" | "comment") =>
       publicApi.post(`/portal/${token}/cards/${card.id}/respond`, {
@@ -569,157 +509,196 @@ function CardDialog({
     onSuccess: (_, kind) => {
       rememberName(name.trim());
       setMessage("");
-      if (kind !== "comment") setAnswered(true);
+      if (kind === "comment") setCommented(true);
+      else setAnswered(kind);
       client.invalidateQueries({ queryKey: ["portal", token] });
     },
     // E.g. already answered in another tab: show the current status.
     onError: () => client.invalidateQueries({ queryKey: ["portal", token] }),
   });
   const canAct = card.approvalStatus === "pending" && !answered;
+  const status = statusText[card.approvalStatus];
+  const busy = respond.isPending;
+  const askingChanges = canAct && mode === "changes_requested";
+
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ pb: 1 }} className="wrap-anywhere">
-        {card.title}
-      </DialogTitle>
-      <DialogContent>
-        <Stack gap={2.5}>
-          {!!card.fields?.length && <PortalFields fields={card.fields} />}
-          {card.description && (
-            <Typography sx={{ whiteSpace: "pre-line" }} color="#3e3b36">
-              {card.description}
-            </Typography>
+    <Dialog
+      open
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      scroll="body"
+      slotProps={{ paper: { className: "pp-dialog", style } }}
+    >
+      <div className="pp-dialog-top">
+        <p className="pp-meta">
+          {stage && <span>{stage}</span>}
+          {status && !answered && (
+            <span className={`pp-status is-${card.approvalStatus}`}>
+              {status}
+            </span>
           )}
-          {!!card.files?.length && (
-            <Box>
-              <Typography fontWeight={800} mb={1}>
-                Files to review
-              </Typography>
-              <FileGrid files={card.files} />
-            </Box>
-          )}
-          {card.checklist.total > 0 && (
-            <Box>
-              <Typography variant="body2" fontWeight={700}>
-                {card.checklist.done} of {card.checklist.total} steps done
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={(card.checklist.done / card.checklist.total) * 100}
-                sx={{ mt: 0.75, height: 8, borderRadius: 99 }}
-              />
-            </Box>
-          )}
-          {card.feedback.length > 0 && (
-            <Stack gap={1}>
-              <Typography fontWeight={800}>Conversation</Typography>
-              {card.feedback.map((entry) => (
-                <Box key={entry.id} className="portal-feedback">
-                  <Typography variant="body2" fontWeight={800}>
-                    {entry.authorName}
-                    <Box
-                      component="span"
-                      sx={{ color: "#8a867d", fontWeight: 500 }}
-                    >
-                      {" · "}
-                      {entry.kind === "approved"
-                        ? "approved"
-                        : entry.kind === "changes_requested"
-                          ? "requested changes"
-                          : entry.kind === "request"
-                            ? "requested this"
-                            : "commented"}
-                      {" · "}
-                      {formatDistanceToNow(new Date(entry.createdAt))} ago
-                    </Box>
-                  </Typography>
-                  {entry.kind !== "approved" && entry.kind !== "request" && (
-                    <Typography
-                      variant="body2"
-                      mt={0.5}
-                      sx={{ whiteSpace: "pre-line" }}
-                    >
-                      {entry.message}
-                    </Typography>
-                  )}
-                </Box>
-              ))}
-            </Stack>
-          )}
-          {respond.isSuccess && (
-            <Alert severity="success">
-              Thanks! The team has been notified.
-            </Alert>
-          )}
-          {respond.isError && (
-            <Alert severity="error">{errorMessage(respond.error)}</Alert>
-          )}
-          <TextField
-            label="Your name"
-            size="small"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            inputProps={{ maxLength: 80 }}
-          />
-          <TextField
-            label={
-              mode === "changes_requested"
-                ? "What should change?"
-                : "Leave a comment (optional)"
-            }
-            multiline
-            minRows={3}
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-            inputProps={{ maxLength: 4000 }}
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions
-        sx={{
-          px: 3,
-          pb: 2.5,
-          flexWrap: "wrap",
-          gap: 1,
-          justifyContent: "flex-start",
-        }}
-      >
-        {canAct && (
-          <Button
-            variant="contained"
-            startIcon={<CheckCircleRounded />}
-            disabled={!name.trim() || respond.isPending}
-            onClick={() => respond.mutate("approved")}
-            sx={{ bgcolor: "#2f6b00", boxShadow: "none" }}
-          >
-            {approveLabel}
-          </Button>
-        )}
-        {canAct && (
-          <Button
-            variant="outlined"
-            disabled={!name.trim() || respond.isPending}
-            onClick={() => {
-              if (mode !== "changes_requested") setMode("changes_requested");
-              else if (message.trim()) respond.mutate("changes_requested");
-            }}
-          >
-            {mode === "changes_requested"
-              ? "Send change request"
-              : "Request changes"}
-          </Button>
-        )}
-        <Button
-          startIcon={<SendRounded />}
-          disabled={!name.trim() || !message.trim() || respond.isPending}
-          onClick={() => respond.mutate("comment")}
+        </p>
+        <button
+          type="button"
+          className="pp-close"
+          onClick={onClose}
+          aria-label="Close"
         >
-          Comment
-        </Button>
-        <Box sx={{ flex: 1 }} />
-        <Button color="inherit" onClick={onClose}>
-          Close
-        </Button>
-      </DialogActions>
+          <CloseRounded />
+        </button>
+      </div>
+      <h2 className="pp-dialog-title">{card.title}</h2>
+
+      <div className="pp-dialog-body">
+        {!!card.fields?.length && <PortalFields fields={card.fields} />}
+        {card.description && <p className="pp-desc">{card.description}</p>}
+        {!!card.files?.length && (
+          <div>
+            <h3 className="pp-sub">Files to review</h3>
+            <FileGrid files={card.files} />
+          </div>
+        )}
+        {card.checklist.total > 0 && (
+          <div>
+            <h3 className="pp-sub">
+              {card.checklist.done} of {card.checklist.total} steps done
+            </h3>
+            <span className="pp-bar" aria-hidden>
+              <span
+                className="pp-bar-fill"
+                style={{
+                  width: `${(card.checklist.done / card.checklist.total) * 100}%`,
+                }}
+              />
+            </span>
+          </div>
+        )}
+        {card.feedback.length > 0 && (
+          <div>
+            <h3 className="pp-sub">Conversation</h3>
+            <ol className="pp-thread">
+              {card.feedback.map((entry) => (
+                <li key={entry.id} className={`is-${entry.kind}`}>
+                  <p className="pp-thread-who">
+                    <strong>{entry.authorName}</strong>{" "}
+                    {feedbackVerb[entry.kind]}
+                    <time>
+                      {formatDistanceToNow(new Date(entry.createdAt))} ago
+                    </time>
+                  </p>
+                  {entry.kind !== "approved" &&
+                    entry.kind !== "request" &&
+                    entry.message && <p>{entry.message}</p>}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+      </div>
+
+      <div className="pp-respond">
+        {answered ? (
+          <div className="pp-done" role="status">
+            <strong>
+              {answered === "approved"
+                ? "Approved. Thank you!"
+                : "Change request sent."}
+            </strong>
+            <span>{brand} has been notified.</span>
+          </div>
+        ) : (
+          <>
+            <h3 className="pp-sub">
+              {canAct ? "Your response" : "Leave a comment"}
+            </h3>
+            {commented && !respond.isError && (
+              <Alert severity="success" sx={{ mb: 1.5 }}>
+                Comment sent. {brand} has been notified.
+              </Alert>
+            )}
+            {respond.isError && (
+              <Alert severity="error" sx={{ mb: 1.5 }}>
+                {errorMessage(respond.error)}
+              </Alert>
+            )}
+            <div className="pp-form">
+              <TextField
+                label="Your name"
+                size="small"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                slotProps={{ htmlInput: { maxLength: 80 } }}
+              />
+              <TextField
+                label={
+                  askingChanges
+                    ? "What should change?"
+                    : canAct
+                      ? "Comment (optional)"
+                      : "Comment"
+                }
+                multiline
+                minRows={askingChanges ? 4 : 2}
+                value={message}
+                autoFocus={askingChanges}
+                onChange={(event) => setMessage(event.target.value)}
+                slotProps={{ htmlInput: { maxLength: 4000 } }}
+              />
+            </div>
+            <div className="pp-actions">
+              {canAct && !askingChanges && (
+                <button
+                  type="button"
+                  className="pp-btn pp-btn-primary"
+                  disabled={!name.trim() || busy}
+                  onClick={() => respond.mutate("approved")}
+                >
+                  {approveLabel}
+                </button>
+              )}
+              {canAct && (
+                <button
+                  type="button"
+                  className={`pp-btn ${askingChanges ? "pp-btn-primary" : "pp-btn-quiet"}`}
+                  disabled={
+                    !name.trim() || busy || (askingChanges && !message.trim())
+                  }
+                  onClick={() => {
+                    if (!askingChanges) setMode("changes_requested");
+                    else respond.mutate("changes_requested");
+                  }}
+                >
+                  {askingChanges ? "Send change request" : "Request changes"}
+                </button>
+              )}
+              {askingChanges ? (
+                <button
+                  type="button"
+                  className="pp-btn pp-btn-text"
+                  onClick={() => setMode("comment")}
+                >
+                  Back
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="pp-btn pp-btn-text"
+                  disabled={!name.trim() || !message.trim() || busy}
+                  onClick={() => respond.mutate("comment")}
+                >
+                  Send comment
+                </button>
+              )}
+            </div>
+            {canAct && !name.trim() && (
+              <p className="pp-hint">
+                Add your name so the team knows who answered.
+              </p>
+            )}
+          </>
+        )}
+      </div>
     </Dialog>
   );
 }
@@ -727,16 +706,24 @@ function CardDialog({
 function RequestDialog({
   token,
   open,
+  brand,
+  style,
   onClose,
 }: {
   token: string;
   open: boolean;
+  brand: string;
+  style: CSSProperties;
   onClose: () => void;
 }) {
   const client = useQueryClient();
   const [name, setName] = useState(storedName);
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
+  // Pick up a name typed in a review since the page loaded.
+  useEffect(() => {
+    if (open) setName((current) => current || storedName());
+  }, [open]);
   const submit = useMutation({
     mutationFn: () =>
       publicApi.post(`/portal/${token}/requests`, {
@@ -751,54 +738,111 @@ function RequestDialog({
       client.invalidateQueries({ queryKey: ["portal", token] });
     },
   });
+  const close = () => {
+    submit.reset();
+    onClose();
+  };
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Submit a request</DialogTitle>
-      <DialogContent>
-        <Stack gap={2} pt={1}>
-          {submit.isSuccess && (
-            <Alert severity="success">
-              Request received. It’s now on the board and the team has been
-              notified.
-            </Alert>
-          )}
-          {submit.isError && (
-            <Alert severity="error">{errorMessage(submit.error)}</Alert>
-          )}
-          <TextField
-            label="Your name"
-            size="small"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-          <TextField
-            label="What do you need?"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            inputProps={{ maxLength: 180 }}
-          />
-          <TextField
-            label="Details, links, deadline"
-            multiline
-            minRows={4}
-            value={details}
-            onChange={(event) => setDetails(event.target.value)}
-            inputProps={{ maxLength: 4000 }}
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2.5 }}>
-        <Button onClick={onClose} color="inherit">
-          Close
-        </Button>
-        <Button
-          variant="contained"
-          disabled={!name.trim() || title.trim().length < 3 || submit.isPending}
-          onClick={() => submit.mutate()}
+    <Dialog
+      open={open}
+      onClose={close}
+      fullWidth
+      maxWidth="sm"
+      scroll="body"
+      slotProps={{ paper: { className: "pp-dialog", style } }}
+    >
+      <div className="pp-dialog-top">
+        <span />
+        <button
+          type="button"
+          className="pp-close"
+          onClick={close}
+          aria-label="Close"
         >
-          Send request
-        </Button>
-      </DialogActions>
+          <CloseRounded />
+        </button>
+      </div>
+      <h2 className="pp-dialog-title">Send a request</h2>
+      <p className="pp-desc pp-dialog-lead">
+        Need something new or changed? It goes straight onto the project and{" "}
+        {brand} is notified.
+      </p>
+      <div className="pp-respond">
+        {submit.isSuccess ? (
+          <div className="pp-done" role="status">
+            <strong>Request sent.</strong>
+            <span>It’s on the project now and {brand} has been notified.</span>
+            <div className="pp-actions">
+              <button
+                type="button"
+                className="pp-btn pp-btn-quiet"
+                onClick={() => submit.reset()}
+              >
+                Send another
+              </button>
+              <button
+                type="button"
+                className="pp-btn pp-btn-text"
+                onClick={close}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {submit.isError && (
+              <Alert severity="error" sx={{ mb: 1.5 }}>
+                {errorMessage(submit.error)}
+              </Alert>
+            )}
+            <div className="pp-form">
+              <TextField
+                label="Your name"
+                size="small"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                slotProps={{ htmlInput: { maxLength: 80 } }}
+              />
+              <TextField
+                label="What do you need?"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                slotProps={{ htmlInput: { maxLength: 180 } }}
+              />
+              <TextField
+                label="Details, links or a deadline"
+                multiline
+                minRows={4}
+                value={details}
+                onChange={(event) => setDetails(event.target.value)}
+                slotProps={{ htmlInput: { maxLength: 4000 } }}
+              />
+            </div>
+            <div className="pp-actions">
+              <button
+                type="button"
+                className="pp-btn pp-btn-primary"
+                disabled={
+                  !name.trim() || title.trim().length < 3 || submit.isPending
+                }
+                onClick={() => submit.mutate()}
+              >
+                Send request
+              </button>
+              <button
+                type="button"
+                className="pp-btn pp-btn-text"
+                onClick={close}
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </Dialog>
   );
 }
+
+export default PortalPage;
