@@ -348,6 +348,173 @@ const articles: Guide[] = [
       },
     ],
   },
+  {
+    slug: "best-client-portal-software-for-freelancers",
+    title: "Best client portal software for freelancers in 2026 (honest comparison)",
+    description:
+      "Danto, Copilot, Plutio, SuiteDash, HoneyBook and Moxie compared for freelancers: what each client portal does well, what it costs and who it's for.",
+    answer:
+      "If you want a full back office (invoices, contracts, CRM) with a portal included, look at Plutio, SuiteDash, HoneyBook or Moxie. If you want a polished portal for a larger agency, Copilot is strong but starts around $39–59 a month. If you mainly need clients to see progress and approve work without logging in, Danto is the simplest option and is free for your first client.",
+    readMinutes: 7,
+    updated: "2026-11-19",
+    sections: [
+      {
+        heading: "First decide what you actually need",
+        paragraphs: [
+          "Client portal tools fall into two groups. All-in-one freelancer suites bundle proposals, contracts, invoicing and scheduling, with a portal as one feature. Focused portals do one job: give each client a page with progress, approvals and requests.",
+          "If you already invoice in another tool and your real problem is “any update?” emails and approvals buried in threads, a suite means moving your whole business for one feature. If you're starting from zero and want everything in one place, a suite can make sense.",
+        ],
+      },
+      {
+        heading: "The tools compared",
+        paragraphs: [
+          "Prices below are the entry prices listed publicly at the time of writing (November 2026). They change often, so check each vendor's pricing page before you decide.",
+        ],
+        list: [
+          "Danto: focused client portal. Free for one client, Pro $19/month for unlimited portals and your branding, Team $49/month white-label. Clients don't log in. Includes one-click approvals, client requests and an AI-written weekly update. No invoicing or contracts.",
+          "Copilot (now also sold as Assembly): polished portal for agencies and firms, with messaging, files and billing. Listed from about $39–59/month; custom domains and full white-label sit on higher plans. No free plan.",
+          "Plutio: all-in-one suite (projects, proposals, invoices, portal). Listed from $19/month. Good if you want one tool for everything; more to set up.",
+          "SuiteDash: all-in-one with white-label portals and CRM, listed from $19/month. Very capable; reviewers often mention a steep learning curve.",
+          "HoneyBook: client flow and payments suite, popular with US creatives. Listed from about $36/month. Strong for bookings, contracts and invoices.",
+          "Moxie: freelancer suite with a low starting price, but the client portal is on its Pro plan (about $25/month).",
+        ],
+      },
+      {
+        heading: "Which one should you pick?",
+        list: [
+          "You want progress, approvals and requests, and already invoice elsewhere: Danto.",
+          "You run an agency and want messaging, files and billing in one branded portal: Copilot.",
+          "You want one tool for proposals, contracts, invoices and projects: Plutio, SuiteDash or HoneyBook.",
+          "You're on a tight budget and need invoicing more than a portal: Moxie's Starter plan.",
+        ],
+      },
+      {
+        heading: "What matters most for clients",
+        paragraphs: [
+          "Whatever you choose, the portal only works if clients open it. The biggest drop-off is a login: every account a client has to create makes them less likely to look. The second is clutter: clients want to see what's done, what's next and what needs them, not your whole project tool.",
+          "You can see the client view of Danto without signing up at danto.app/demo.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: "What is the cheapest client portal for freelancers?",
+        a: "Danto is free for one client portal, including approvals and requests. Among paid tools, Danto Pro, Plutio and SuiteDash start around $19/month.",
+      },
+      {
+        q: "Do my clients need an account?",
+        a: "In Danto, no: clients open a private link. Many suites and portals ask clients to log in, which is worth checking before you choose.",
+      },
+      {
+        q: "Can I use a client portal with my existing invoicing tool?",
+        a: "Yes. A focused portal like Danto doesn't replace invoicing, so you keep Stripe, QuickBooks, Wave or whatever you use today.",
+      },
+    ],
+  },
+  {
+    slug: "copilot-client-portal-alternative",
+    title: "A simpler, cheaper Copilot alternative for freelancers",
+    description:
+      "Copilot (Assembly) is a strong client portal for agencies, but freelancers often need less. How Danto compares on price, setup, branding and client experience.",
+    answer:
+      "Copilot is a full client platform for agencies and firms, with listed plans starting around $39–59 a month and custom domains on higher tiers. Freelancers who mainly need clients to see progress and approve work can use Danto instead: it's free for one client, $19/month for unlimited portals with your branding, and clients don't need to log in.",
+    readMinutes: 4,
+    updated: "2026-11-19",
+    sections: [
+      {
+        heading: "Where Copilot is the better choice",
+        list: [
+          "You want client messaging, file sharing, contracts and billing inside one portal.",
+          "You have many team members and want per-client permissions and integrations.",
+          "Your clients expect to log in to a full client app.",
+        ],
+      },
+      {
+        heading: "Where Danto is the better choice",
+        list: [
+          "You're a freelancer or small studio and want to stop “any update?” emails.",
+          "You want clients to open a link on their phone and tap Approve, with no account.",
+          "You already work in a project board and don't want a second system.",
+          "You want your branding without paying for a top tier: branding is on Danto Pro ($19/month).",
+          "You want a free start: your first client portal is free, with no time limit.",
+        ],
+      },
+      {
+        heading: "Side by side",
+        list: [
+          "Free plan: Danto yes (1 client). Copilot no (trial only).",
+          "Entry price: Danto $19/month. Copilot listed at about $39–59/month.",
+          "Client login: Danto none, a private link. Copilot clients sign in to the portal.",
+          "Approvals: both. Danto approvals are one tap with a timestamped record.",
+          "Invoicing and contracts: Copilot yes. Danto no; keep your current tool.",
+          "Setup: Danto takes minutes from a template or a pasted brief.",
+        ],
+        paragraphs: [
+          "Copilot prices are from public listings in November 2026 and may have changed. Check copilot.com for current plans.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: "Is Copilot the same as Assembly?",
+        a: "Copilot's client portal has also been marketed under the name Assembly. Check their site for the current product name and plans.",
+      },
+      {
+        q: "Can I move from Copilot to Danto?",
+        a: "Yes. Create a board per client (or paste a project brief and let AI set it up), mark which items the client should see, and send the new link.",
+      },
+    ],
+  },
+  {
+    slug: "client-portal-without-honeybook-or-dubsado",
+    title: "Need a client portal but not HoneyBook or Dubsado?",
+    description:
+      "HoneyBook and Dubsado are full business suites. If you only need clients to see progress and approve work, here's a lighter option that works with your current invoicing.",
+    answer:
+      "HoneyBook and Dubsado are built around bookings, contracts and payments, and the client portal is one part of a larger system that takes time to set up. If you already handle invoices elsewhere and just need clients to follow progress and approve deliverables, a focused portal such as Danto is faster to set up and free for your first client.",
+    readMinutes: 4,
+    updated: "2026-11-19",
+    sections: [
+      {
+        heading: "When a full suite is worth it",
+        paragraphs: [
+          "If you want lead forms, proposals, contracts, invoices and scheduling to run as one automated flow, HoneyBook and Dubsado are good at that. Their portals make the most sense when the client is already going through that flow.",
+        ],
+      },
+      {
+        heading: "When it's more than you need",
+        list: [
+          "You already invoice with Stripe, PayPal, QuickBooks or Wave and don't want to switch.",
+          "Your pain is during the project: updates, approvals and feedback, not booking.",
+          "You don't want to spend a weekend building workflows.",
+          "You work with clients outside the US, where some suite features matter less.",
+        ],
+      },
+      {
+        heading: "What a focused portal gives you",
+        list: [
+          "A page per client showing what's done, in progress and next.",
+          "One-tap approvals with a timestamped record, so “I never approved that” doesn't happen.",
+          "A request button, so new asks land on your board instead of in your DMs.",
+          "An AI-written weekly update you can send every Friday.",
+          "Your logo and colours, and no login for clients.",
+        ],
+        paragraphs: [
+          "See what a client sees at danto.app/demo. No signup needed.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: "Can I use Danto alongside HoneyBook or Dubsado?",
+        a: "Yes. Some freelancers keep a suite for contracts and invoices and use Danto for the project itself, because clients find the progress page simpler.",
+      },
+      {
+        q: "How much does Danto cost?",
+        a: "One client portal is free forever. Pro is $19/month (or $190/year) for unlimited portals, branding and AI updates. Team is $49/month with white-label and 10 seats.",
+      },
+    ],
+  },
 ];
 
 export const guides: Guide[] = [...howToGuides, ...articles];

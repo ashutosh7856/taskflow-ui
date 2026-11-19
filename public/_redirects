@@ -16,3 +16,4 @@
 /billing/*        /spa                       200
 /invites/*        /spa                       200
 /p/*              /spa                       200
+/demo             /spa                       200

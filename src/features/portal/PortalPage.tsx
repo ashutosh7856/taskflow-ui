@@ -10,6 +10,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { errorMessage } from "../../lib/api";
 import type { PortalField, PublicPortal, PublicPortalCard } from "../../types";
 import { FileGrid } from "../cards/CardFiles";
+import { DEMO_TOKEN, demoPortal, demoRequest, demoRespond } from "./demoPortal";
 import "./portal.css";
 
 // The portal is the agency's page, not Danto's: its own typeface, loaded only
@@ -105,8 +106,9 @@ const statusText = {
   none: null,
 } as const;
 
-export function PortalPage() {
-  const { token = "" } = useParams();
+export function PortalPage({ demo = false }: { demo?: boolean }) {
+  const params = useParams();
+  const token = demo ? DEMO_TOKEN : params.token || "";
   const [searchParams] = useSearchParams();
   const [openCardId, setOpenCardId] = useState<string | null>(
     searchParams.get("card"),
@@ -115,8 +117,11 @@ export function PortalPage() {
   const portal = useQuery({
     queryKey: ["portal", token],
     queryFn: async () =>
-      (await publicApi.get<PublicPortal>(`/portal/${token}`)).data,
-    refetchInterval: 60_000,
+      demo
+        ? demoPortal()
+        : (await publicApi.get<PublicPortal>(`/portal/${token}`)).data,
+    refetchInterval: demo ? false : 60_000,
+    staleTime: demo ? Infinity : 0,
     retry: false,
   });
 
@@ -153,8 +158,11 @@ export function PortalPage() {
   const forYou = pending.length + needed.length;
 
   useEffect(() => {
-    if (data) document.title = `${data.board.name} · ${data.brand.name}`;
-  }, [data]);
+    if (data)
+      document.title = demo
+        ? "Client portal demo · Danto"
+        : `${data.board.name} · ${data.brand.name}`;
+  }, [data, demo]);
 
   if (portal.isLoading)
     return (
@@ -185,6 +193,17 @@ export function PortalPage() {
 
   return (
     <div className="pp" style={style}>
+      {demo && (
+        <div className="pp-demo" role="note">
+          <span>
+            <strong>Demo:</strong> this is what your client sees. Try
+            approving something. Nothing is saved.
+          </span>
+          <Link to="/login?mode=register&ref=demo" className="pp-demo-cta">
+            Make one for your client, free
+          </Link>
+        </div>
+      )}
       <header className="pp-header">
         <div className="pp-wrap pp-header-row">
           <div className="pp-brand">
@@ -390,7 +409,7 @@ export function PortalPage() {
 
       {data.brand.showBadge && (
         <footer className="pp-footer">
-          <Link to="/?ref=portal">
+          <Link to={demo ? "/login?mode=register&ref=demo" : "/?ref=portal"}>
             Client portal by <strong>danto</strong>. Make one for your clients,
             free.
           </Link>
@@ -580,18 +599,26 @@ function CardDialog({
   >(null);
   const [commented, setCommented] = useState(false);
   const respond = useMutation({
-    mutationFn: (kind: "approved" | "changes_requested" | "comment") =>
-      publicApi.post(`/portal/${token}/cards/${card.id}/respond`, {
+    mutationFn: async (kind: "approved" | "changes_requested" | "comment") => {
+      if (token === DEMO_TOKEN) {
+        client.setQueryData<PublicPortal>(["portal", token], (data) =>
+          data && demoRespond(data, card.id, kind, name.trim(), message.trim()),
+        );
+        return;
+      }
+      await publicApi.post(`/portal/${token}/cards/${card.id}/respond`, {
         kind,
         authorName: name.trim(),
         message: message.trim(),
-      }),
+      });
+    },
     onSuccess: (_, kind) => {
-      rememberName(name.trim());
+      if (token !== DEMO_TOKEN) rememberName(name.trim());
       setMessage("");
       if (kind === "comment") setCommented(true);
       else setAnswered(kind);
-      client.invalidateQueries({ queryKey: ["portal", token] });
+      if (token !== DEMO_TOKEN)
+        client.invalidateQueries({ queryKey: ["portal", token] });
     },
     // E.g. already answered in another tab: show the current status.
     onError: () => client.invalidateQueries({ queryKey: ["portal", token] }),
@@ -813,17 +840,25 @@ function RequestDialog({
     if (open) setName((current) => storedName() || current || defaultName);
   }, [open, defaultName]);
   const submit = useMutation({
-    mutationFn: () =>
-      publicApi.post(`/portal/${token}/requests`, {
+    mutationFn: async () => {
+      if (token === DEMO_TOKEN) {
+        client.setQueryData<PublicPortal>(["portal", token], (data) =>
+          data && demoRequest(data, name.trim(), title.trim(), details.trim()),
+        );
+        return;
+      }
+      await publicApi.post(`/portal/${token}/requests`, {
         authorName: name.trim(),
         title: title.trim(),
         details: details.trim(),
-      }),
+      });
+    },
     onSuccess: () => {
-      rememberName(name.trim());
+      if (token !== DEMO_TOKEN) rememberName(name.trim());
       setTitle("");
       setDetails("");
-      client.invalidateQueries({ queryKey: ["portal", token] });
+      if (token !== DEMO_TOKEN)
+        client.invalidateQueries({ queryKey: ["portal", token] });
     },
   });
   const close = () => {
@@ -928,3 +963,8 @@ function RequestDialog({
 }
 
 export default PortalPage;
+
+/** /demo: a sample portal anyone can click through (nothing is saved). */
+export function DemoPortalPage() {
+  return <PortalPage demo />;
+}

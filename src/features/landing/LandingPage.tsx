@@ -269,13 +269,13 @@ export function LandingPage() {
                   {primaryLabel}
                 </Button>
                 <Button
-                  component="a"
-                  href="#how"
+                  component={Link}
+                  to="/demo"
                   size="large"
                   color="inherit"
                   className="lp-cta-secondary"
                 >
-                  See how it works
+                  See what clients see
                 </Button>
               </Stack>
               <Stack component="ul" className="lp-proof">

@@ -96,6 +96,10 @@ const AdminPage = named(
   () => import("./features/admin/AdminPage"),
   "AdminPage",
 );
+const DemoPortalPage = named(
+  () => import("./features/portal/PortalPage"),
+  "DemoPortalPage",
+);
 const PortalPage = named(
   () => import("./features/portal/PortalPage"),
   "PortalPage",
@@ -144,6 +148,10 @@ export const routes = [
   {
     path: "/p/:token",
     element: <ForceLight>{page(<PortalPage />)}</ForceLight>,
+  },
+  {
+    path: "/demo",
+    element: <ForceLight>{page(<DemoPortalPage />)}</ForceLight>,
   },
   { path: "/privacy", element: <ForceLight>{page(<LegalPage />)}</ForceLight> },
   { path: "/terms", element: <ForceLight>{page(<LegalPage />)}</ForceLight> },
