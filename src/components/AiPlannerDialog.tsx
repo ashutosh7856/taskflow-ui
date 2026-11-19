@@ -178,6 +178,8 @@ export function AiPlannerDialog({
           p: { xs: 2.5, sm: 3.5 },
           position: "relative",
           overflow: "hidden",
+          // Long plans make the dialog scroll; keep the header whole.
+          flexShrink: 0,
         }}
       >
         <Box
@@ -226,7 +228,7 @@ export function AiPlannerDialog({
       <Tabs
         value={mode}
         onChange={(_, value) => setMode(value)}
-        sx={{ px: 3, borderBottom: "1px solid var(--line)" }}
+        sx={{ px: 3, borderBottom: "1px solid var(--line)", flexShrink: 0 }}
       >
         <Tab
           value="plan"
