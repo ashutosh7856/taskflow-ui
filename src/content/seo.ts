@@ -1,5 +1,6 @@
 import { faqs } from "./faqs";
 import { findGuide, guides } from "./guides";
+import { SOCIALS } from "./socials";
 
 export const SITE = "https://danto.app";
 export const SITE_NAME = "Danto";
@@ -22,6 +23,7 @@ const organization = {
   url: SITE,
   logo: `${SITE}/assets/danto-mark.png`,
   email: "support@danto.app",
+  sameAs: SOCIALS.map((s) => s.url),
 };
 
 const website = {

@@ -1,7 +1,13 @@
-import { Box, Container, Typography } from "@mui/material";
+import { Box, Container, IconButton, Typography } from "@mui/material";
+import InstagramIcon from "@mui/icons-material/Instagram";
+import LinkedInIcon from "@mui/icons-material/LinkedIn";
+import XIcon from "@mui/icons-material/X";
+import { SOCIALS } from "../content/socials";
 import { SupportLink } from "./SupportLink";
 import { Link } from "react-router-dom";
 import { Brand } from "./Brand";
+
+const ICONS = { X: XIcon, LinkedIn: LinkedInIcon, Instagram: InstagramIcon };
 
 const columns: Array<{ title: string; links: Array<[string, string]> }> = [
   {
@@ -77,6 +83,24 @@ export function SiteFooter() {
             >
               <SupportLink />
             </Typography>
+            <Box className="site-footer-socials">
+              {SOCIALS.map(({ name, url }) => {
+                const Icon = ICONS[name];
+                return (
+                  <IconButton
+                    key={name}
+                    component="a"
+                    href={url}
+                    target="_blank"
+                    rel="noopener"
+                    aria-label={`Danto on ${name}`}
+                    size="small"
+                  >
+                    <Icon fontSize="small" />
+                  </IconButton>
+                );
+              })}
+            </Box>
           </Box>
           {columns.map((column) => (
             <Box component="nav" key={column.title} aria-label={column.title}>
