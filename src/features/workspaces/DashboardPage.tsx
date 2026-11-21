@@ -23,7 +23,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatedContent } from "../../components/bits/AnimatedContent";
 import { SpotlightCard } from "../../components/bits/SpotlightCard";
 import { CreateDialog } from "../../components/CreateDialog";
-import { CreateBoardDialog } from "../../components/CreateBoardDialog";
+import {
+  CreateBoardDialog,
+  type CreateBoardInput,
+} from "../../components/CreateBoardDialog";
 import { WorkspaceSettingsDialog } from "../../components/WorkspaceSettingsDialog";
 import { useTemplates } from "../../lib/workflows";
 import { api, errorMessage } from "../../lib/api";
@@ -369,7 +372,7 @@ function WorkspaceSection({
       (await api.get<Workspace>(`/workspaces/${workspace.id}`)).data,
   });
   const createBoard = useMutation({
-    mutationFn: async (input: { name: string; template: string }) =>
+    mutationFn: async (input: CreateBoardInput) =>
       (
         await api.post<Board>(`/workspaces/${workspace.id}/boards`, {
           ...input,
@@ -526,6 +529,7 @@ function WorkspaceSection({
       </Box>
       <CreateBoardDialog
         open={open}
+        workspaceId={workspace.id}
         pending={createBoard.isPending}
         error={createBoard.error}
         onClose={() => setOpen(false)}
