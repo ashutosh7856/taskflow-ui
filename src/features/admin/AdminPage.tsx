@@ -7,7 +7,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -30,7 +29,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
+import { Loading, Panel, Stat } from "./AdminParts";
 import { FeedbackTab } from "./FeedbackTab";
+import { RevenueTab } from "./RevenueTab";
 import { api, errorMessage } from "../../lib/api";
 import { useAuthStore } from "../../store/auth";
 
@@ -110,7 +111,15 @@ const ago = (value: string | null) =>
 export function AdminPage() {
   const user = useAuthStore((state) => state.user);
   const [params, setParams] = useSearchParams();
-  const tabs = ["overview", "users", "feedback", "discounts", "payments", "audit"] as const;
+  const tabs = [
+    "overview",
+    "revenue",
+    "users",
+    "feedback",
+    "discounts",
+    "payments",
+    "audit",
+  ] as const;
   type AdminTab = (typeof tabs)[number];
   const asked = params.get("tab") as AdminTab | null;
   const tab: AdminTab = asked && tabs.includes(asked) ? asked : "overview";
@@ -143,6 +152,7 @@ export function AdminPage() {
         sx={{ mt: 2, mb: 3, borderBottom: "1px solid var(--line)" }}
       >
         <Tab value="overview" label="Overview" />
+        <Tab value="revenue" label="Revenue" />
         <Tab value="users" label="Users" />
         <Tab value="feedback" label="Feedback" />
         <Tab value="discounts" label="Discounts" />
@@ -150,6 +160,7 @@ export function AdminPage() {
         <Tab value="audit" label="Audit log" />
       </Tabs>
       {tab === "overview" && <OverviewTab />}
+      {tab === "revenue" && <RevenueTab />}
       {tab === "users" && <UsersTab />}
       {tab === "feedback" && <FeedbackTab />}
       {tab === "discounts" && <DiscountsTab />}
@@ -1536,83 +1547,6 @@ function AuditTab() {
 }
 
 /* ------------------------------ Shared -------------------------------- */
-
-function Loading() {
-  return (
-    <Box sx={{ display: "grid", placeItems: "center", py: 6 }}>
-      <CircularProgress />
-    </Box>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: string | number;
-  hint: string;
-}) {
-  return (
-    <Box
-      sx={{
-        p: 2.25,
-        borderRadius: 3,
-        bgcolor: "var(--surface)",
-        border: "1px solid var(--line)",
-      }}
-    >
-      <Typography className="mono-label" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography
-        sx={{
-          fontSize: 34,
-          fontWeight: 850,
-          letterSpacing: "-.04em",
-          lineHeight: 1.15,
-          mt: 0.5,
-        }}
-      >
-        {typeof value === "number" ? value.toLocaleString() : value}
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        {hint}
-      </Typography>
-    </Box>
-  );
-}
-
-function Panel({
-  title,
-  detail,
-  children,
-}: {
-  title: string;
-  detail: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Box
-      sx={{
-        p: { xs: 2, md: 2.75 },
-        borderRadius: 3,
-        bgcolor: "var(--surface)",
-        border: "1px solid var(--line)",
-        minWidth: 0,
-      }}
-    >
-      <Typography fontWeight={850} fontSize={17}>
-        {title}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" mb={2}>
-        {detail}
-      </Typography>
-      {children}
-    </Box>
-  );
-}
 
 function Section({
   title,
